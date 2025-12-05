@@ -282,3 +282,25 @@ export async function updateMyPassword(req, res, next) {
   }
 }
 
+/**
+ * DELETE /api/v1/users/me
+ * Удалить собственный аккаунт
+ * Доступ: любой авторизованный пользователь
+ * Примечание: Данные (appointments) остаются в клинике, удаляется только аккаунт
+ */
+export async function deleteMyAccount(req, res, next) {
+  try {
+    const userId = req.user.userId;
+
+    console.log('🔵 [USER CONTROLLER] Удаление собственного аккаунта:', userId);
+
+    await userService.removeMyAccount(userId);
+
+    console.log('✅ [USER CONTROLLER] Аккаунт успешно удален:', userId);
+    successResponse(res, { message: 'Account deleted successfully' }, 200);
+  } catch (error) {
+    console.log('🔴 [USER CONTROLLER] Ошибка:', error.message);
+    next(error);
+  }
+}
+

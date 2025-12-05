@@ -39,6 +39,14 @@ router.put('/me', validate(updateMyProfileSchema), userController.updateMyProfil
 router.put('/me/password', validate(updateMyPasswordSchema), userController.updateMyPassword);
 
 /**
+ * DELETE /api/v1/users/me
+ * Удалить собственный аккаунт
+ * Доступ: любой авторизованный пользователь
+ * Примечание: Данные (appointments) остаются в клинике, удаляется только аккаунт
+ */
+router.delete('/me', userController.deleteMyAccount);
+
+/**
  * GET /api/v1/users/doctors
  * Получить список врачей
  * Доступ: все авторизованные

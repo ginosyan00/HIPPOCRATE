@@ -676,6 +676,69 @@ export async function updateMyProfile(userId, data) {
  * @param {string} newPassword - Новый пароль
  * @returns {Promise<void>}
  */
+/**
+ * Удалить собственный аккаунт
+ * Удаляет аккаунт пользователя, но сохраняет данные (appointments остаются)
+ * @param {string} userId - ID пользователя (из токена)
+ */
+export async function removeMyAccount(userId) {
+  console.log('🔵 [USER SERVICE] Удаление собственного аккаунта:', userId);
+
+  // Проверяем что пользователь существует
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    console.log('🔴 [USER SERVICE] Пользователь не найден');
+    throw new Error('User not found');
+  }
+
+  // Если это DOCTOR - обновляем все appointments, устанавливая doctorId в NULL
+  // Это сохранит записи в клинике, но без связи с врачом
+  if (user.role === 'DOCTOR') {
+    console.log('🔵 [USER SERVICE] Обновление appointments для врача...');
+    await prisma.appointment.updateMany({
+      where: { doctorId: userId },
+      data: { doctorId: null },
+    });
+    console.log('✅ [USER SERVICE] Appointments обновлены (doctorId = null)');
+  }
+
+  // Если это ADMIN - проверяем, что это не последний ADMIN клиники
+  if (user.role === 'ADMIN' && user.clinicId) {
+    const admins = await prisma.user.count({
+      where: {
+        clinicId: user.clinicId,
+        role: 'ADMIN',
+        status: 'ACTIVE',
+      },
+    });
+
+    if (admins <= 1) {
+      console.log('🔴 [USER SERVICE] Нельзя удалить последнего админа клиники');
+      throw new Error('Cannot delete the last admin of the clinic');
+    }
+  }
+
+  // Удаляем уведомления пользователя
+  await prisma.notification.deleteMany({
+    where: { userId: userId },
+  });
+
+  // Удаляем беседы пользователя
+  await prisma.conversation.deleteMany({
+    where: { userId: userId },
+  });
+
+  // Удаляем пользователя
+  await prisma.user.delete({
+    where: { id: userId },
+  });
+
+  console.log('✅ [USER SERVICE] Аккаунт успешно удален:', userId);
+}
+
 export async function updateMyPassword(userId, currentPassword, newPassword) {
   console.log('🔵 [USER SERVICE] Изменение пароля пользователя:', userId);
 

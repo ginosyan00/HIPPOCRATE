@@ -105,9 +105,16 @@ export const patientService = {
     page?: number;
     limit?: number;
   }): Promise<PaginatedResponse<any>> {
-    const { data } = await api.get<ApiResponse<PaginatedResponse<any>>>('/patients/visits', {
+    const { data } = await api.get<ApiResponse<any>>('/patients/visits', {
       params,
     });
+    // Backend возвращает { visits: [...], meta: {...} }, преобразуем в { data: [...], meta: {...} }
+    if (data.data?.visits) {
+      return {
+        data: data.data.visits,
+        meta: data.data.meta,
+      };
+    }
     return data.data;
   },
 

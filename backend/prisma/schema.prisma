@@ -129,7 +129,7 @@ model Patient {
 model Appointment {
   id                 String    @id @default(uuid())
   clinicId           String
-  doctorId           String
+  doctorId           String?   // Nullable - чтобы можно было удалить врача, но сохранить записи
   patientId          String
   appointmentDate    DateTime
   duration           Int       @default(30)
@@ -145,7 +145,7 @@ model Appointment {
 
   // Relations
   clinic             Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
-  doctor             User      @relation(fields: [doctorId], references: [id])
+  doctor             User?     @relation(fields: [doctorId], references: [id], onDelete: SetNull)
   patient            Patient   @relation(fields: [patientId], references: [id])
 
   @@index([clinicId])

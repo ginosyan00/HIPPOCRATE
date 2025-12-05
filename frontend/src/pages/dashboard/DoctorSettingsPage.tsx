@@ -3,11 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
 import { DoctorProfileSection } from '../../components/dashboard/DoctorProfileSection';
 import { PasswordSection } from '../../components/dashboard/PasswordSection';
-import { useUser, useUpdateUser } from '../../hooks/useUsers';
+import { useUser, useUpdateUser, useDeleteMyAccount } from '../../hooks/useUsers';
 import { useDoctorProfile, useUpdateDoctorProfile, useUploadDoctorAvatar } from '../../hooks/useDoctor';
 import { useUpdatePassword } from '../../hooks/useAuth';
 import { useAuthStore } from '../../store/useAuthStore';
-import { Spinner, BackButton } from '../../components/common';
+import { Spinner, BackButton, DeleteAccountSection } from '../../components/common';
 import { toast } from 'react-hot-toast';
 
 /**
@@ -38,6 +38,7 @@ export const DoctorSettingsPage: React.FC = () => {
   const updateDoctorProfileMutation = useUpdateDoctorProfile();
   const uploadDoctorAvatarMutation = useUploadDoctorAvatar();
   const updatePasswordMutation = useUpdatePassword();
+  const deleteAccountMutation = useDeleteMyAccount();
   
   const handleUpdateProfile = async (data: any) => {
     try {
@@ -83,6 +84,17 @@ export const DoctorSettingsPage: React.FC = () => {
       toast.success('Пароль успешно изменен');
     } catch (error: any) {
       toast.error(error.message || 'Ошибка при изменении пароля');
+      throw error;
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      await deleteAccountMutation.mutateAsync();
+      // Редирект произойдет автоматически через logout в useDeleteMyAccount
+      navigate('/auth/login');
+    } catch (error: any) {
+      // Ошибка уже обработана в компоненте
       throw error;
     }
   };
@@ -145,6 +157,15 @@ export const DoctorSettingsPage: React.FC = () => {
           <PasswordSection
             onUpdate={handleUpdatePassword}
             isLoading={updatePasswordMutation.isPending}
+          />
+        )}
+
+        {/* Удаление аккаунта (только если врач редактирует себя) */}
+        {isEditingSelf && (
+          <DeleteAccountSection
+            onDelete={handleDeleteAccount}
+            isLoading={deleteAccountMutation.isPending}
+            userRole={doctor?.role as 'PATIENT' | 'DOCTOR' | 'PARTNER' | 'ADMIN'}
           />
         )}
       </div>

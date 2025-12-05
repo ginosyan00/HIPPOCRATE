@@ -1,20 +1,23 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
 import { ProfilePictureUpload } from '../../components/patient/ProfilePictureUpload';
 import { ProfileInfoSection } from '../../components/patient/ProfileInfoSection';
 import { PasswordChangeSection } from '../../components/patient/PasswordChangeSection';
-import { useMyProfile, useUpdateMyProfile, useUpdateMyPassword } from '../../hooks/useUsers';
+import { useMyProfile, useUpdateMyProfile, useUpdateMyPassword, useDeleteMyAccount } from '../../hooks/useUsers';
 import { toast } from 'react-hot-toast';
-import { Spinner } from '../../components/common';
+import { Spinner, DeleteAccountSection } from '../../components/common';
 
 /**
  * PatientSettings Page
  * Страница настроек для пациента - управление личной информацией
  */
 export const PatientSettingsPage: React.FC = () => {
+  const navigate = useNavigate();
   const { data: user, isLoading: isLoadingProfile } = useMyProfile();
   const updateProfileMutation = useUpdateMyProfile();
   const updatePasswordMutation = useUpdateMyPassword();
+  const deleteAccountMutation = useDeleteMyAccount();
 
   const handleUpdateProfile = async (data: any) => {
     try {
@@ -42,6 +45,17 @@ export const PatientSettingsPage: React.FC = () => {
       toast.success('Пароль успешно изменен');
     } catch (error: any) {
       toast.error(error.message || 'Ошибка при изменении пароля');
+      throw error;
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      await deleteAccountMutation.mutateAsync();
+      // Редирект произойдет автоматически через logout в useDeleteMyAccount
+      navigate('/auth/login');
+    } catch (error: any) {
+      // Ошибка уже обработана в компоненте
       throw error;
     }
   };
@@ -94,6 +108,13 @@ export const PatientSettingsPage: React.FC = () => {
         <PasswordChangeSection
           onUpdate={handleUpdatePassword}
           isLoading={updatePasswordMutation.isPending}
+        />
+
+        {/* Удаление аккаунта */}
+        <DeleteAccountSection
+          onDelete={handleDeleteAccount}
+          isLoading={deleteAccountMutation.isPending}
+          userRole={user?.role as 'PATIENT' | 'DOCTOR' | 'PARTNER' | 'ADMIN'}
         />
       </div>
     </NewDashboardLayout>

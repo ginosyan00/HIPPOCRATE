@@ -144,6 +144,16 @@ export const userService = {
     });
     console.log('✅ [USER SERVICE] Пароль изменен');
   },
+
+  /**
+   * Удалить собственный аккаунт
+   * Примечание: Данные (appointments) остаются в клинике, удаляется только аккаунт
+   */
+  async deleteMyAccount(): Promise<void> {
+    console.log('🔵 [USER SERVICE] Удаление собственного аккаунта');
+    await api.delete<ApiResponse<{ message: string }>>('/users/me');
+    console.log('✅ [USER SERVICE] Аккаунт удален');
+  },
 };
 
 

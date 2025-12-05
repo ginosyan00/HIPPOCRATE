@@ -126,4 +126,22 @@ export function useUpdateMyPassword() {
   });
 }
 
+/**
+ * Удалить собственный аккаунт
+ */
+export function useDeleteMyAccount() {
+  const queryClient = useQueryClient();
+  const { logout } = useAuthStore();
+
+  return useMutation({
+    mutationFn: () => userService.deleteMyAccount(),
+    onSuccess: () => {
+      // Очищаем весь кэш
+      queryClient.clear();
+      // Выходим из системы
+      logout();
+    },
+  });
+}
+
 

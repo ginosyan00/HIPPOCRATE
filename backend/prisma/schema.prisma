@@ -1,0 +1,300 @@
+// Hippocrates Dental - Database Schema
+// Provider: SQLite (для MVP)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// CLINIC (Клиника)
+// ============================================
+
+model Clinic {
+  id            String    @id @default(uuid())
+  name          String
+  slug          String    @unique
+  email         String
+  phone         String
+  address       String?
+  city          String
+  about         String?
+  logo          String?
+  heroImage     String?   // Главное изображение для страницы клиники
+  workingHours  String?   // JSON as String in SQLite
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  users         User[]
+  patients      Patient[]
+  appointments  Appointment[]
+  notifications Notification[]
+  settings      ClinicSettings?
+  certificates  Certificate[]
+  conversations Conversation[]
+
+  @@map("clinics")
+}
+
+// ============================================
+// USER (Multi-Role: Patient, Doctor, Partner, Admin)
+// ============================================
+
+// Note: SQLite doesn't support enums, so we use String with validation in code
+// Valid roles: "PATIENT" | "DOCTOR" | "PARTNER" | "ADMIN"
+// Valid statuses: "PENDING" | "ACTIVE" | "SUSPENDED" | "REJECTED"
+
+model User {
+  id             String      @id @default(uuid())
+  clinicId       String?     // Optional - только для Doctor/Admin
+  name           String
+  email          String      @unique
+  passwordHash   String
+  role           String      @default("PATIENT")    // PATIENT | DOCTOR | PARTNER | ADMIN
+  status         String      @default("ACTIVE")     // PENDING | ACTIVE | SUSPENDED | REJECTED
+  
+  // Common fields
+  phone          String?
+  avatar         String?
+  dateOfBirth    DateTime?
+  gender         String?     // male | female | other
+  
+  // Doctor-specific fields
+  specialization String?     // Только для DOCTOR
+  licenseNumber  String?     // Номер лицензии
+  experience     Int?        // Опыт работы (лет)
+  
+  // Partner-specific fields
+  organizationName String?   // Название организации
+  organizationType String?   // pharmacy | laboratory | insurance
+  inn              String?   // ИНН/ОГРН
+  address          String?   // Адрес организации
+  
+  // System fields
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  // Relations
+  clinic         Clinic?     @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  appointments   Appointment[]
+  notifications  Notification[]
+  conversations  Conversation[]
+
+  @@index([clinicId])
+  @@index([email])
+  @@index([role])
+  @@index([status])
+  @@map("users")
+}
+
+// ============================================
+// PATIENT (Пациент)
+// ============================================
+
+model Patient {
+  id           String    @id @default(uuid())
+  clinicId     String
+  name         String
+  phone        String
+  email        String?
+  avatar       String?   // Avatar/logo пациента
+  dateOfBirth  DateTime?
+  gender       String?  // male | female | other
+  notes        String?
+  status       String   @default("registered")  // registered | guest
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // Relations
+  clinic       Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+  notifications Notification[]
+  conversations Conversation[]
+
+  @@index([clinicId])
+  @@index([phone])
+  @@index([status])
+  @@map("patients")
+}
+
+// ============================================
+// APPOINTMENT (Приём)
+// ============================================
+
+model Appointment {
+  id                 String    @id @default(uuid())
+  clinicId           String
+  doctorId           String
+  patientId          String
+  appointmentDate    DateTime
+  duration           Int       @default(30)
+  status             String  @default("pending")  // pending | confirmed | completed | cancelled
+  notes              String?
+  reason             String?
+  amount             Float?    // Сумма оплаты (в драмах/рублях)
+  registeredAt       DateTime? // Время когда пациент был на сайте и отправил регистрацию (локальное время пользователя)
+  cancellationReason String?   // Причина отмены приёма (обязательно при статусе cancelled)
+  suggestedNewDate   DateTime? // Предложенное новое время приёма (опционально)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // Relations
+  clinic             Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  doctor             User      @relation(fields: [doctorId], references: [id])
+  patient            Patient   @relation(fields: [patientId], references: [id])
+
+  @@index([clinicId])
+  @@index([doctorId])
+  @@index([patientId])
+  @@index([appointmentDate])
+  @@index([status])
+  @@map("appointments")
+}
+
+// ============================================
+// NOTIFICATION (Уведомление)
+// ============================================
+
+model Notification {
+  id          String    @id @default(uuid())
+  clinicId    String
+  patientId   String?   // Опционально - для уведомлений врачей
+  userId      String?   // Опционально - для уведомлений врачей (DOCTOR)
+  type        String    // cancellation | reschedule | reminder | confirmation | new_appointment | other
+  title       String
+  message     String
+  isRead      Boolean   @default(false)
+  appointmentId String? // ID приёма, связанного с уведомлением (опционально)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  clinic      Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  patient     Patient?  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
+  @@index([patientId])
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ============================================
+// CLINIC SETTINGS (Настройки клиники)
+// ============================================
+
+model ClinicSettings {
+  id                    String    @id @default(uuid())
+  clinicId              String    @unique
+  timezone              String    @default("Asia/Yerevan")  // Часовой пояс
+  language              String    @default("ru")            // Язык интерфейса (ru | en | am)
+  currency              String    @default("AMD")            // Валюта (AMD | RUB | USD)
+  defaultAppointmentDuration Int   @default(30)             // Время приёма по умолчанию (минуты)
+  
+  // Настройки уведомлений
+  emailNotificationsEnabled Boolean @default(true)           // Email уведомления включены
+  smsNotificationsEnabled   Boolean @default(false)          // SMS уведомления включены
+  appointmentReminderHours  Int     @default(24)            // Напоминание о приёме (за сколько часов)
+  notifyNewAppointments      Boolean @default(true)           // Уведомления о новых заявках
+  notifyCancellations       Boolean @default(true)           // Уведомления об отменах
+  notifyConfirmations       Boolean @default(true)           // Уведомления о подтверждениях
+  
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // Relations
+  clinic                Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
+  @@map("clinic_settings")
+}
+
+// ============================================
+// CERTIFICATE (Сертификат клиники)
+// ============================================
+
+model Certificate {
+  id              String    @id @default(uuid())
+  clinicId        String
+  title           String    // Название сертификата
+  certificateNumber String? // Номер сертификата
+  issuedBy        String?   // Организация, выдавшая сертификат
+  issueDate       DateTime? // Дата выдачи
+  expiryDate      DateTime? // Дата окончания действия
+  fileUrl         String    // URL файла (base64 или путь к файлу)
+  fileType        String    // Тип файла: pdf, jpg, png
+  fileSize        Int?      // Размер файла в байтах
+  isVerified      Boolean   @default(false) // Верифицирован ли администратором (для будущего использования)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  clinic          Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+
+  @@index([clinicId])
+  @@index([isVerified])
+  @@map("certificates")
+}
+
+// ============================================
+// CONVERSATION (Беседа в чате)
+// ============================================
+
+model Conversation {
+  id              String    @id @default(uuid())
+  clinicId        String
+  patientId       String?   // ID пациента (если чат с пациентом)
+  userId          String?   // ID врача или сотрудника клиники
+  type            String    @default("patient_doctor") // patient_doctor | patient_clinic | system
+  lastMessageAt   DateTime? // Время последнего сообщения
+  lastMessageText String?   // Текст последнего сообщения (для preview)
+  isArchived      Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  clinic          Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  patient         Patient?  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  user            User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages        Message[]
+
+  @@index([clinicId])
+  @@index([patientId])
+  @@index([userId])
+  @@index([lastMessageAt])
+  @@map("conversations")
+}
+
+// ============================================
+// MESSAGE (Сообщение в чате)
+// ============================================
+
+model Message {
+  id              String    @id @default(uuid())
+  conversationId  String
+  senderId        String    // ID отправителя (userId или patientId)
+  senderType      String    // patient | doctor | clinic | system
+  content         String    // Текст сообщения
+  imageUrl        String?   // URL изображения (если сообщение содержит изображение)
+  isRead          Boolean   @default(false)
+  readAt          DateTime? // Время прочтения
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("messages")
+}
+

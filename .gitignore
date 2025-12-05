@@ -1,0 +1,180 @@
+# ================================
+# HIPPOCRATES PROJECT - .gitignore
+# ================================
+
+# ===========================
+# Dependencies & Node Modules
+# ===========================
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+package-lock.json.bak
+.pnp
+.pnp.js
+
+# ===========================
+# Environment Variables (CRITICAL)
+# ===========================
+.env
+.env.*
+!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ===========================
+# Database Files (CRITICAL)
+# ===========================
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+prisma/*.db
+backend/prisma/*.db
+backend/prisma/dev.db
+
+# ===========================
+# Build & Distribution
+# ===========================
+dist/
+dist-ssr/
+build/
+.cache/
+*.tsbuildinfo
+out/
+
+# ===========================
+# Logs
+# ===========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===========================
+# IDE & Editor Files
+# ===========================
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*.swn
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+.history/
+
+# ===========================
+# OS Specific
+# ===========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ===========================
+# Testing & Coverage
+# ===========================
+coverage/
+*.lcov
+.nyc_output/
+.jest/
+test-results/
+playwright-report/
+.coverage/
+
+# ===========================
+# Temporary Files
+# ===========================
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+
+# ===========================
+# Frontend Specific (Vite/React)
+# ===========================
+# Vite
+.vite/
+vite.config.*.timestamp-*
+
+# React
+.eslintcache
+
+# TypeScript
+*.tsbuildinfo
+.tsbuild/
+
+# ===========================
+# Backend Specific (Node.js/Express)
+# ===========================
+# Uploads (if any)
+uploads/
+public/uploads/
+
+# Sessions
+sessions/
+
+# ===========================
+# Prisma Specific
+# ===========================
+# Keep migrations but ignore generated client
+prisma/generated/
+
+# ===========================
+# Documentation (keep source, ignore generated)
+# ===========================
+# Keep all .md files but ignore generated HTML docs
+docs/generated/
+documentation/generated/
+
+# ===========================
+# Deployment & CI/CD
+# ===========================
+.vercel
+.netlify
+.serverless/
+.env.production
+
+# ===========================
+# Other
+# ===========================
+.lock
+*.lock
+!package-lock.json
+.yarn/
+.pnpm-store/
+
+# ===========================
+# Project Specific - Hippocrates
+# ===========================
+# Временные тестовые файлы (помечены как Test)
+**/Test-*
+**/TEST-*
+**/*-test-*
+**/*-TEST-*
+
+# Локальные заметки разработчика
+TODO-local.md
+NOTES-local.md
+scratch.md
+

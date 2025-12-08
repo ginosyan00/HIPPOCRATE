@@ -1,5 +1,5 @@
 import api from './api';
-import { ApiResponse, User } from '../types/api.types';
+import { ApiResponse, User, DoctorSchedule, UpdateDoctorScheduleRequest } from '../types/api.types';
 
 /**
  * Doctor Service
@@ -27,6 +27,22 @@ export const doctorService = {
    */
   async uploadAvatar(avatar: string): Promise<User> {
     const { data } = await api.put<ApiResponse<User>>('/doctor/me', { avatar });
+    return data.data;
+  },
+
+  /**
+   * Получить расписание текущего врача
+   */
+  async getSchedule(): Promise<DoctorSchedule[]> {
+    const { data } = await api.get<ApiResponse<DoctorSchedule[]>>('/doctor/schedule');
+    return data.data;
+  },
+
+  /**
+   * Обновить расписание текущего врача
+   */
+  async updateSchedule(schedule: UpdateDoctorScheduleRequest['schedule']): Promise<DoctorSchedule[]> {
+    const { data } = await api.put<ApiResponse<DoctorSchedule[]>>('/doctor/schedule', { schedule });
     return data.data;
   },
 };

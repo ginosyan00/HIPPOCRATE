@@ -10,6 +10,7 @@ import {
   updateMyProfileSchema,
   updateMyPasswordSchema
 } from '../validators/user.validator.js';
+import { updateScheduleSchema } from '../validators/doctorSchedule.validator.js';
 
 const router = express.Router();
 
@@ -120,6 +121,25 @@ router.put('/:id', authorize('ADMIN', 'CLINIC'), validate(updateUserSchema), use
  * Доступ: только admin
  */
 router.delete('/:id', authorize('ADMIN'), userController.remove);
+
+/**
+ * GET /api/v1/users/:id/schedule
+ * Получить расписание врача
+ * Доступ: ADMIN, CLINIC (клиника может получать расписание своих врачей)
+ */
+router.get('/:id/schedule', authorize('ADMIN', 'CLINIC'), userController.getDoctorSchedule);
+
+/**
+ * PUT /api/v1/users/:id/schedule
+ * Обновить расписание врача
+ * Доступ: ADMIN, CLINIC (клиника может обновлять расписание своих врачей)
+ */
+router.put(
+  '/:id/schedule',
+  authorize('ADMIN', 'CLINIC'),
+  validate(updateScheduleSchema),
+  userController.updateDoctorSchedule
+);
 
 export default router;
 

@@ -147,6 +147,33 @@ export interface User {
   };
 }
 
+/**
+ * Расписание врача
+ * Отдельная модель для хранения рабочего графика врача
+ */
+export interface DoctorSchedule {
+  id: string;
+  doctorId: string;
+  dayOfWeek: number; // 0=воскресенье, 1=понедельник, ..., 6=суббота
+  startTime: string; // Формат HH:mm (например, "09:00")
+  endTime: string; // Формат HH:mm (например, "18:00")
+  isWorking: boolean; // Работает ли врач в этот день
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+/**
+ * Запрос на обновление расписания врача
+ */
+export interface UpdateDoctorScheduleRequest {
+  schedule: Array<{
+    dayOfWeek: number;
+    startTime: string | null;
+    endTime: string | null;
+    isWorking: boolean;
+  }>;
+}
+
 export enum UserRole {
   PATIENT = 'PATIENT',
   DOCTOR = 'DOCTOR',

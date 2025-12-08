@@ -84,6 +84,7 @@ model User {
   appointments   Appointment[]
   notifications  Notification[]
   conversations  Conversation[]
+  schedule       DoctorSchedule[] // Расписание работы врача
 
   @@index([clinicId])
   @@index([email])
@@ -296,5 +297,28 @@ model Message {
   @@index([isRead])
   @@index([createdAt])
   @@map("messages")
+}
+
+// ============================================
+// DOCTOR SCHEDULE (Расписание врача)
+// ============================================
+
+model DoctorSchedule {
+  id          String    @id @default(uuid())
+  doctorId    String    // ID врача (User с role=DOCTOR)
+  dayOfWeek   Int       // День недели: 0=воскресенье, 1=понедельник, ..., 6=суббота
+  startTime   String    // Время начала работы (формат HH:mm, например "09:00")
+  endTime     String    // Время окончания работы (формат HH:mm, например "18:00")
+  isWorking   Boolean   @default(true) // Работает ли врач в этот день
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  doctor      User      @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, dayOfWeek]) // Один врач может иметь только одну запись на день недели
+  @@index([doctorId])
+  @@index([dayOfWeek])
+  @@map("doctor_schedules")
 }
 

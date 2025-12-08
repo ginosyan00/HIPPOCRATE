@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { userService } from '../services/user.service';
-import { User } from '../types/api.types';
+import { User, DoctorSchedule, UpdateDoctorScheduleRequest } from '../types/api.types';
 import { useAuthStore } from '../store/useAuthStore';
+import { toast } from 'react-hot-toast';
 
 /**
  * React Query Hooks для пользователей
@@ -140,6 +141,44 @@ export function useDeleteMyAccount() {
       queryClient.clear();
       // Выходим из системы
       logout();
+    },
+  });
+}
+
+/**
+ * Получить расписание врача (для клиники)
+ */
+export function useDoctorSchedule(doctorId: string) {
+  return useQuery({
+    queryKey: ['users', doctorId, 'schedule'],
+    queryFn: () => userService.getDoctorSchedule(doctorId),
+    enabled: !!doctorId,
+    staleTime: 5 * 60 * 1000, // 5 минут
+  });
+}
+
+/**
+ * Обновить расписание врача (для клиники)
+ */
+export function useUpdateDoctorSchedule(doctorId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (schedule: UpdateDoctorScheduleRequest['schedule']) => 
+      userService.updateDoctorSchedule(doctorId, schedule),
+    onSuccess: () => {
+      // Инвалидируем кэш расписания для клиники
+      queryClient.invalidateQueries({ queryKey: ['users', doctorId, 'schedule'] });
+      queryClient.invalidateQueries({ queryKey: ['users', 'schedule'] });
+      
+      // Инвалидируем кэш расписания для врача (чтобы врач видел изменения)
+      queryClient.invalidateQueries({ queryKey: ['doctor', 'schedule', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['doctor', 'schedule'] });
+      
+      toast.success('Расписание врача успешно обновлено');
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Ошибка при обновлении расписания врача');
     },
   });
 }

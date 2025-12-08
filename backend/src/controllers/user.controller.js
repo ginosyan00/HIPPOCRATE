@@ -1,4 +1,5 @@
 import * as userService from '../services/user.service.js';
+import * as doctorScheduleService from '../services/doctorSchedule.service.js';
 import { successResponse } from '../utils/response.util.js';
 
 /**
@@ -300,6 +301,153 @@ export async function deleteMyAccount(req, res, next) {
     successResponse(res, { message: 'Account deleted successfully' }, 200);
   } catch (error) {
     console.log('🔴 [USER CONTROLLER] Ошибка:', error.message);
+    next(error);
+  }
+}
+
+/**
+ * GET /api/v1/users/:id/schedule
+ * Получить расписание врача
+ * Доступ: ADMIN, CLINIC (клиника может получать расписание своих врачей)
+ */
+export async function getDoctorSchedule(req, res, next) {
+  try {
+    const { id } = req.params;
+    const clinicId = req.user.clinicId;
+    const userRole = req.user.role;
+
+    console.log('🔵 [USER CONTROLLER] Получение расписания врача:', { doctorId: id, clinicId, userRole });
+
+    // Для ADMIN clinicId может быть null, для CLINIC - обязателен
+    if (userRole !== 'ADMIN' && !clinicId) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Clinic ID is required',
+        },
+      });
+    }
+
+    // Проверяем что пользователь существует и является врачом
+    // Для ADMIN передаем null, чтобы не фильтровать по clinicId
+    const doctor = await userService.findById(userRole === 'ADMIN' ? null : clinicId, id);
+    
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Doctor not found',
+        },
+      });
+    }
+
+    if (doctor.role !== 'DOCTOR') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'BAD_REQUEST',
+          message: 'User is not a doctor',
+        },
+      });
+    }
+
+    // Для CLINIC проверяем, что врач принадлежит их клинике
+    if (userRole === 'CLINIC' && doctor.clinicId !== clinicId) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to access this doctor schedule',
+        },
+      });
+    }
+
+    // Получаем расписание
+    const schedule = await doctorScheduleService.getSchedule(id);
+
+    console.log('✅ [USER CONTROLLER] Расписание врача успешно получено');
+    successResponse(res, schedule, 200);
+  } catch (error) {
+    console.error('🔴 [USER CONTROLLER] Ошибка при получении расписания врача:', {
+      message: error.message,
+      stack: error.stack,
+    });
+    next(error);
+  }
+}
+
+/**
+ * PUT /api/v1/users/:id/schedule
+ * Обновить расписание врача
+ * Доступ: ADMIN, CLINIC (клиника может обновлять расписание своих врачей)
+ */
+export async function updateDoctorSchedule(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { schedule } = req.body;
+    const clinicId = req.user.clinicId;
+    const userRole = req.user.role;
+
+    console.log('🔵 [USER CONTROLLER] Обновление расписания врача:', { doctorId: id, clinicId, userRole });
+
+    // Для ADMIN clinicId может быть null, для CLINIC - обязателен
+    if (userRole !== 'ADMIN' && !clinicId) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Clinic ID is required',
+        },
+      });
+    }
+
+    // Проверяем что пользователь существует и является врачом
+    // Для ADMIN передаем null, чтобы не фильтровать по clinicId
+    const doctor = await userService.findById(userRole === 'ADMIN' ? null : clinicId, id);
+    
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Doctor not found',
+        },
+      });
+    }
+
+    if (doctor.role !== 'DOCTOR') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'BAD_REQUEST',
+          message: 'User is not a doctor',
+        },
+      });
+    }
+
+    // Для CLINIC проверяем, что врач принадлежит их клинике
+    if (userRole === 'CLINIC' && doctor.clinicId !== clinicId) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to update this doctor schedule',
+        },
+      });
+    }
+
+    // Обновляем расписание
+    const updatedSchedule = await doctorScheduleService.updateSchedule(id, schedule);
+
+    console.log('✅ [USER CONTROLLER] Расписание врача успешно обновлено');
+    successResponse(res, updatedSchedule, 200);
+  } catch (error) {
+    console.error('🔴 [USER CONTROLLER] Ошибка при обновлении расписания врача:', {
+      message: error.message,
+      stack: error.stack,
+    });
     next(error);
   }
 }

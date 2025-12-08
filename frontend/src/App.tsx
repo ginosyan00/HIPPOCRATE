@@ -22,6 +22,7 @@ import { PatientSettingsPage } from './pages/dashboard/PatientSettings';
 import { DoctorDashboard } from './pages/dashboard/DoctorDashboard';
 import { DoctorAppointmentsPage } from './pages/dashboard/DoctorAppointmentsPage';
 import { DoctorAnalyticsPage } from './pages/dashboard/DoctorAnalyticsPage';
+import { DoctorGraphicsPage } from './pages/dashboard/DoctorGraphicsPage';
 import { PartnerDashboard } from './pages/dashboard/PartnerDashboard';
 import { AdminDashboard } from './pages/dashboard/AdminDashboard';
 import { DoctorSettingsPage } from './pages/dashboard/DoctorSettingsPage';
@@ -131,6 +132,14 @@ function App() {
           element={
             <RoleProtectedRoute allowedRoles={[UserRole.DOCTOR]}>
               <PatientsPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/doctor/graphics"
+          element={
+            <RoleProtectedRoute allowedRoles={[UserRole.DOCTOR]}>
+              <DoctorGraphicsPage />
             </RoleProtectedRoute>
           }
         />

@@ -2,10 +2,13 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
 import { Button, Input, Card, Spinner } from '../../components/common';
-import { useDoctors } from '../../hooks/useUsers';
+import { useDoctors, useDoctorSchedule, useUser, useUpdateUser, useUpdateDoctorSchedule } from '../../hooks/useUsers';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useClinic } from '../../hooks/useClinic';
 import { User } from '../../types/api.types';
+import { DoctorScheduleEditor } from '../../components/dashboard/DoctorScheduleEditor';
+import { DoctorProfileSection } from '../../components/dashboard/DoctorProfileSection';
+import { toast } from 'react-hot-toast';
 
 // Import icons
 import searchIcon from '../../assets/icons/search.svg';
@@ -22,18 +25,87 @@ export const DoctorsPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [specializationFilter, setSpecializationFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
+  const [selectedDoctor, setSelectedDoctor] = useState<User | null>(null);
 
   // Загружаем врачей и клинику
   const { data: doctorsData, isLoading } = useDoctors();
   const { data: clinic } = useClinic();
   const doctors = doctorsData || [];
 
+  // Загружаем данные выбранного врача
+  const { data: selectedDoctorData, isLoading: isLoadingDoctor } = useUser(
+    selectedDoctor?.id || ''
+  );
+  
+  // Загружаем расписание выбранного врача
+  const { data: doctorSchedule, isLoading: isLoadingSchedule } = useDoctorSchedule(
+    selectedDoctor?.id || ''
+  );
+
+  // Мутации для обновления
+  const updateUserMutation = useUpdateUser();
+  const updateScheduleMutation = useUpdateDoctorSchedule(selectedDoctor?.id || '');
+
   // Проверка: только CLINIC может добавлять врачей
   const canAddDoctors = user?.role === 'CLINIC';
 
-  // Обработчик клика на врача - переход на страницу настроек
+  // Обработчик клика на врача - показываем настройки и расписание
   const handleDoctorClick = (doctor: User) => {
-    navigate(`/dashboard/clinic/doctors/${doctor.id}/settings`);
+    setSelectedDoctor(doctor);
+  };
+
+  // Обработчик закрытия
+  const handleCloseSchedule = () => {
+    setSelectedDoctor(null);
+  };
+
+  // Обработчик обновления профиля врача
+  const handleUpdateProfile = async (data: Partial<User>) => {
+    if (!selectedDoctor) return;
+    
+    try {
+      await updateUserMutation.mutateAsync({
+        id: selectedDoctor.id,
+        data,
+      });
+      toast.success('Профиль врача успешно обновлен');
+    } catch (error: any) {
+      toast.error(error.message || 'Ошибка при обновлении профиля');
+      throw error;
+    }
+  };
+
+  // Обработчик обновления аватара
+  const handleAvatarUpload = async (avatar: string) => {
+    if (!selectedDoctor) return;
+    
+    try {
+      await updateUserMutation.mutateAsync({
+        id: selectedDoctor.id,
+        data: { avatar },
+      });
+      toast.success('Фото врача успешно обновлено');
+    } catch (error: any) {
+      toast.error(error.message || 'Ошибка при обновлении фото');
+      throw error;
+    }
+  };
+
+  // Обработчик обновления расписания
+  const handleUpdateSchedule = async (scheduleData: Array<{
+    dayOfWeek: number;
+    startTime: string | null;
+    endTime: string | null;
+    isWorking: boolean;
+  }>) => {
+    if (!selectedDoctor) return;
+    
+    try {
+      await updateScheduleMutation.mutateAsync(scheduleData);
+    } catch (error: any) {
+      toast.error(error.message || 'Ошибка при обновлении расписания');
+      throw error;
+    }
   };
 
   // Фильтрация врачей
@@ -100,6 +172,65 @@ export const DoctorsPage: React.FC = () => {
       </span>
     );
   };
+
+  // Если выбран врач, показываем его настройки и расписание
+  if (selectedDoctor) {
+    const doctor = selectedDoctorData || selectedDoctor;
+    const isLoadingDoctorData = isLoadingDoctor || isLoadingSchedule;
+
+    return (
+      <NewDashboardLayout>
+        <div className="space-y-6">
+          {/* Header с кнопкой назад */}
+          <div className="flex items-center gap-4">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleCloseSchedule}
+            >
+              ← Назад к списку
+            </Button>
+            <div>
+              <h1 className="text-2xl font-semibold text-text-100">
+                Настройки врача
+              </h1>
+              <p className="text-text-10 text-sm mt-1">
+                {doctor.name} • {doctor.specialization || 'Специализация не указана'}
+              </p>
+            </div>
+          </div>
+
+          {/* Loading */}
+          {isLoadingDoctorData && (
+            <div className="flex items-center justify-center py-12">
+              <Spinner size="lg" />
+            </div>
+          )}
+
+          {/* Профиль врача */}
+          {!isLoadingDoctorData && (
+            <>
+              <DoctorProfileSection
+                doctor={doctor}
+                onUpdate={handleUpdateProfile}
+                onAvatarUpload={handleAvatarUpload}
+                isLoading={updateUserMutation.isPending}
+                isAvatarLoading={updateUserMutation.isPending}
+                isEditingSelf={false}
+              />
+
+              {/* Расписание врача с возможностью редактирования */}
+              <DoctorScheduleEditor
+                schedule={doctorSchedule}
+                onUpdate={handleUpdateSchedule}
+                isLoading={updateScheduleMutation.isPending || isLoadingSchedule}
+              />
+            </>
+          )}
+        </div>
+      </NewDashboardLayout>
+    );
+  }
 
   return (
     <NewDashboardLayout>

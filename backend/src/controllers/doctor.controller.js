@@ -1,5 +1,6 @@
 import { prisma } from '../config/database.js';
 import * as userService from '../services/user.service.js';
+import * as doctorScheduleService from '../services/doctorSchedule.service.js';
 import { successResponse } from '../utils/response.util.js';
 
 /**
@@ -80,6 +81,51 @@ export async function updateMyProfile(req, res, next) {
 
     console.log('✅ [DOCTOR CONTROLLER] Профиль врача успешно обновлен');
     successResponse(res, updatedDoctor, 200);
+  } catch (error) {
+    console.log('🔴 [DOCTOR CONTROLLER] Ошибка:', error.message);
+    next(error);
+  }
+}
+
+/**
+ * GET /api/v1/doctor/schedule
+ * Получить расписание текущего врача
+ */
+export async function getMySchedule(req, res, next) {
+  try {
+    const userId = req.user.userId;
+
+    console.log('🔵 [DOCTOR CONTROLLER] Получение расписания врача:', userId);
+
+    const schedule = await doctorScheduleService.getSchedule(userId);
+
+    console.log('✅ [DOCTOR CONTROLLER] Расписание успешно получено:', schedule?.length || 0, 'записей');
+    successResponse(res, schedule || [], 200);
+  } catch (error) {
+    console.error('🔴 [DOCTOR CONTROLLER] Ошибка при получении расписания:', {
+      message: error.message,
+      stack: error.stack,
+      userId: req.user?.userId,
+    });
+    next(error);
+  }
+}
+
+/**
+ * PUT /api/v1/doctor/schedule
+ * Обновить расписание текущего врача
+ */
+export async function updateMySchedule(req, res, next) {
+  try {
+    const userId = req.user.userId;
+    const { schedule } = req.body;
+
+    console.log('🔵 [DOCTOR CONTROLLER] Обновление расписания врача:', userId);
+
+    const updatedSchedule = await doctorScheduleService.updateSchedule(userId, schedule);
+
+    console.log('✅ [DOCTOR CONTROLLER] Расписание успешно обновлено');
+    successResponse(res, updatedSchedule, 200);
   } catch (error) {
     console.log('🔴 [DOCTOR CONTROLLER] Ошибка:', error.message);
     next(error);

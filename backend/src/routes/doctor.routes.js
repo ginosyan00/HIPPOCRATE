@@ -4,6 +4,7 @@ import { authenticate, authorize } from '../middlewares/auth.middleware.js';
 import { tenantMiddleware } from '../middlewares/tenant.middleware.js';
 import { validate } from '../middlewares/validation.middleware.js';
 import { updateDoctorProfileSchema } from '../validators/user.validator.js';
+import { updateScheduleSchema } from '../validators/doctorSchedule.validator.js';
 
 const router = express.Router();
 
@@ -28,6 +29,25 @@ router.put(
   authorize('DOCTOR'),
   validate(updateDoctorProfileSchema),
   doctorController.updateMyProfile
+);
+
+/**
+ * GET /api/v1/doctor/schedule
+ * Получить расписание текущего врача
+ * Доступ: только DOCTOR
+ */
+router.get('/schedule', authorize('DOCTOR'), doctorController.getMySchedule);
+
+/**
+ * PUT /api/v1/doctor/schedule
+ * Обновить расписание текущего врача
+ * Доступ: только DOCTOR
+ */
+router.put(
+  '/schedule',
+  authorize('DOCTOR'),
+  validate(updateScheduleSchema),
+  doctorController.updateMySchedule
 );
 
 export default router;

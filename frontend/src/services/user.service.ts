@@ -1,5 +1,5 @@
 import api from './api';
-import { ApiResponse, User, PaginatedResponse } from '../types/api.types';
+import { ApiResponse, User, PaginatedResponse, DoctorSchedule, UpdateDoctorScheduleRequest } from '../types/api.types';
 
 /**
  * User Service
@@ -153,6 +153,26 @@ export const userService = {
     console.log('🔵 [USER SERVICE] Удаление собственного аккаунта');
     await api.delete<ApiResponse<{ message: string }>>('/users/me');
     console.log('✅ [USER SERVICE] Аккаунт удален');
+  },
+
+  /**
+   * Получить расписание врача (для клиники)
+   */
+  async getDoctorSchedule(doctorId: string): Promise<DoctorSchedule[]> {
+    console.log('🔵 [USER SERVICE] Получение расписания врача:', doctorId);
+    const { data } = await api.get<ApiResponse<DoctorSchedule[]>>(`/users/${doctorId}/schedule`);
+    console.log('✅ [USER SERVICE] Расписание врача получено');
+    return data.data;
+  },
+
+  /**
+   * Обновить расписание врача (для клиники)
+   */
+  async updateDoctorSchedule(doctorId: string, schedule: UpdateDoctorScheduleRequest['schedule']): Promise<DoctorSchedule[]> {
+    console.log('🔵 [USER SERVICE] Обновление расписания врача:', doctorId);
+    const { data } = await api.put<ApiResponse<DoctorSchedule[]>>(`/users/${doctorId}/schedule`, { schedule });
+    console.log('✅ [USER SERVICE] Расписание врача обновлено');
+    return data.data;
   },
 };
 

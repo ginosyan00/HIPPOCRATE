@@ -98,7 +98,7 @@ function App() {
           path="/dashboard/patient/history"
           element={
             <RoleProtectedRoute allowedRoles={[UserRole.PATIENT]}>
-              <PatientHistoryPage />
+              <Navigate to="/dashboard/patient" replace />
             </RoleProtectedRoute>
           }
         />

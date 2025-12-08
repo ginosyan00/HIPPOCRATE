@@ -6,9 +6,8 @@ import { PatientAppointmentsStats } from '../../components/dashboard/PatientAppo
 import { PatientMiniChart } from '../../components/dashboard/PatientMiniChart';
 import { useAuthStore } from '../../store/useAuthStore';
 import { usePatientAppointments } from '../../hooks/usePatientAppointments';
-import { useNotifications, useUnreadNotificationsCount, useMarkNotificationAsRead, useMarkAllNotificationsAsRead } from '../../hooks/useNotifications';
+import { useUnreadNotificationsCount, useMarkAllNotificationsAsRead } from '../../hooks/useNotifications';
 import { formatAppointmentDate, formatAppointmentTime } from '../../utils/dateFormat';
-import { Notification, NotificationType } from '../../types/api.types';
 
 /**
  * PatientDashboard
@@ -24,16 +23,11 @@ export const PatientDashboard: React.FC = () => {
   });
 
   // Загружаем уведомления
-  const { data: notificationsData, isLoading: isLoadingNotifications } = useNotifications({
-    limit: 10,
-  });
   const { data: unreadCount = 0 } = useUnreadNotificationsCount();
-  const markAsReadMutation = useMarkNotificationAsRead();
   const markAllAsReadMutation = useMarkAllNotificationsAsRead();
 
-  const notifications = notificationsData?.notifications || [];
-
-  const appointments = appointmentsData?.appointments || [];
+  // Backend возвращает { appointments: [...], meta: {...} }, а не { data: [...] }
+  const appointments = (appointmentsData as any)?.appointments || [];
 
   // Debug: Проверяем appointments и amount
   React.useEffect(() => {
@@ -47,9 +41,6 @@ export const PatientDashboard: React.FC = () => {
   const now = new Date();
   const upcomingAppointments = appointments.filter(
     (apt: any) => new Date(apt.appointmentDate) >= now && apt.status !== 'cancelled'
-  );
-  const recentVisits = appointments.filter(
-    (apt: any) => new Date(apt.appointmentDate) < now || apt.status === 'completed'
   );
 
   // Форматирование даты и времени - используем утилиту для правильного форматирования
@@ -200,7 +191,7 @@ export const PatientDashboard: React.FC = () => {
               <Button 
                 variant="primary" 
                 size="sm" 
-                onClick={() => markAllAsReadMutation.mutate()}
+                onClick={() => markAllAsReadMutation.mutate(undefined, undefined)}
                 isLoading={markAllAsReadMutation.isPending}
               >
                 Прочитать все
@@ -239,12 +230,14 @@ export const PatientDashboard: React.FC = () => {
               ) : (
                 <div className="space-y-3">
                   {upcomingAppointments.map((appointment: any, index: number) => (
-                    <Card
+                    <div
                       key={appointment.id}
-                      className="border-2 border-stroke hover:border-main-100 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1"
-                      padding="md"
                       style={{ animationDelay: `${index * 100}ms` }}
                     >
+                      <Card
+                        className="border-2 border-stroke hover:border-main-100 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1"
+                        padding="md"
+                      >
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4 flex-1">
                           <div className="w-14 h-14 bg-gradient-to-br from-main-100 to-blue-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
@@ -292,91 +285,9 @@ export const PatientDashboard: React.FC = () => {
                           </span>
                         </div>
                       </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </Card>
-
-            {/* Recent Visits */}
-            <Card padding="lg" className="border border-stroke shadow-md hover:shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-xl font-bold text-text-50 mb-1">История визитов</h2>
-                  <p className="text-xs text-text-10">Полная история всех посещений</p>
-                </div>
-                <Button 
-                  variant="secondary" 
-                  size="sm" 
-                  onClick={() => navigate('/dashboard/patient/history')}
-                  className="shadow-md hover:shadow-lg transition-shadow"
-                >
-                  📋 Вся история
-                </Button>
-              </div>
-              {recentVisits.length === 0 ? (
-                <div className="text-center py-12 text-text-10">
-                  <div className="text-5xl mb-3 animate-pulse">✅</div>
-                  <p className="text-sm font-medium">Нет завершенных визитов</p>
-                  <p className="text-xs mt-1">Ваша история визитов появится здесь после завершения приема</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {recentVisits.slice(0, 5).map((visit: any, index: number) => (
-                    <div
-                      key={visit.id}
-                      className="flex items-center justify-between p-4 border-2 border-stroke rounded-xl hover:border-green-200 hover:bg-green-50 transition-all duration-300 transform hover:-translate-x-1 animate-in fade-in slide-in-from-left-4"
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
-                          <span className="text-xl">✅</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-text-50 text-sm mb-1">
-                            {visit.doctor?.name || 'Врач'}
-                          </h3>
-                          <p className="text-xs font-medium text-green-600 mb-1">
-                            {visit.doctor?.specialization || 'Специализация не указана'}
-                          </p>
-                          <p className="text-xs text-text-10 flex items-center gap-1 mb-1">
-                            <span>📍</span>
-                            {visit.clinic?.name || 'Клиника'}
-                            {visit.clinic?.city && <span className="text-text-10">• {visit.clinic.city}</span>}
-                          </p>
-                          {visit.reason && (
-                            <p className="text-xs text-text-10 line-clamp-1">
-                              <span className="font-medium">Причина:</span> {visit.reason}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-xs font-medium text-text-50 whitespace-nowrap">
-                          {formatDate(visit.appointmentDate)}
-                        </p>
-                        <p className="text-xs text-text-10 mb-2">{formatTime(visit.appointmentDate)}</p>
-                        {visit.amount && visit.status === 'completed' && (
-                          <div className="mt-2 px-3 py-1.5 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-lg">
-                            <p className="text-xs font-medium text-emerald-700 mb-0.5">Оплачено</p>
-                            <p className="text-sm font-bold text-emerald-600">
-                              {visit.amount.toLocaleString('ru-RU')} ֏
-                            </p>
-                          </div>
-                        )}
-                      </div>
+                      </Card>
                     </div>
                   ))}
-                  {recentVisits.length > 5 && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="w-full mt-4"
-                      onClick={() => navigate('/dashboard/patient/history')}
-                    >
-                      Показать всю историю ({recentVisits.length})
-                    </Button>
-                  )}
                 </div>
               )}
             </Card>
@@ -404,22 +315,6 @@ export const PatientDashboard: React.FC = () => {
                     <div>
                       <h3 className="font-bold text-main-100 text-sm mb-1">Выбрать клинику</h3>
                       <p className="text-xs text-text-10">Просмотреть все доступные клиники</p>
-                    </div>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => navigate('/dashboard/patient/history')}
-                  className="w-full p-4 border-2 border-stroke rounded-xl hover:border-green-400 hover:bg-green-50 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-md text-left animate-in fade-in slide-in-from-right-4"
-                  style={{ animationDelay: '100ms' }}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
-                      <span className="text-xl">📋</span>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-text-50 text-sm mb-1">История визитов</h3>
-                      <p className="text-xs text-text-10">Полная история посещений</p>
                     </div>
                   </div>
                 </button>

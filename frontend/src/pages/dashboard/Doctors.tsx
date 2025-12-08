@@ -1,13 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
-import { Button, Input, Card, Spinner } from '../../components/common';
+import { Button, Input, Card, Spinner, BackButton } from '../../components/common';
 import { useDoctors, useDoctorSchedule, useUser, useUpdateUser, useUpdateDoctorSchedule } from '../../hooks/useUsers';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useClinic } from '../../hooks/useClinic';
 import { User } from '../../types/api.types';
-import { DoctorScheduleEditor } from '../../components/dashboard/DoctorScheduleEditor';
-import { DoctorProfileSection } from '../../components/dashboard/DoctorProfileSection';
+import { DoctorScheduleEditor, DoctorScheduleEditorRef } from '../../components/dashboard/DoctorScheduleEditor';
+import { DoctorProfileSection, DoctorProfileSectionRef } from '../../components/dashboard/DoctorProfileSection';
 import { toast } from 'react-hot-toast';
 
 // Import icons
@@ -26,6 +26,11 @@ export const DoctorsPage: React.FC = () => {
   const [specializationFilter, setSpecializationFilter] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [selectedDoctor, setSelectedDoctor] = useState<User | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Refs для компонентов
+  const profileSectionRef = useRef<DoctorProfileSectionRef>(null);
+  const scheduleEditorRef = useRef<DoctorScheduleEditorRef>(null);
 
   // Загружаем врачей и клинику
   const { data: doctorsData, isLoading } = useDoctors();
@@ -108,6 +113,32 @@ export const DoctorsPage: React.FC = () => {
     }
   };
 
+  // Обработчик сохранения всех изменений
+  const handleSaveAll = async () => {
+    if (!selectedDoctor) return;
+
+    setIsSaving(true);
+    try {
+      // Сохраняем профиль
+      const profileSaved = await profileSectionRef.current?.save();
+      
+      if (profileSaved === false) {
+        // Валидация не прошла, не сохраняем расписание
+        setIsSaving(false);
+        return;
+      }
+      
+      // Сохраняем расписание
+      await scheduleEditorRef.current?.save();
+
+      toast.success('Все изменения успешно сохранены');
+    } catch (error: any) {
+      toast.error(error.message || 'Ошибка при сохранении изменений');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Фильтрация врачей
   const filteredDoctors = useMemo(() => {
     let filtered = [...doctors];
@@ -183,13 +214,26 @@ export const DoctorsPage: React.FC = () => {
         <div className="space-y-6">
           {/* Header с кнопкой назад */}
           <div className="flex items-center gap-4">
-            <Button
-              variant="secondary"
-              size="sm"
+            <button
               onClick={handleCloseSchedule}
+              className="inline-flex items-center gap-2 text-sm font-normal text-text-50 hover:text-main-100 transition-smooth focus:outline-none"
+              aria-label="Вернуться к списку"
             >
-              ← Назад к списку
-            </Button>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                />
+              </svg>
+              <span>Назад</span>
+            </button>
             <div>
               <h1 className="text-2xl font-semibold text-text-100">
                 Настройки врача
@@ -211,20 +255,37 @@ export const DoctorsPage: React.FC = () => {
           {!isLoadingDoctorData && (
             <>
               <DoctorProfileSection
+                ref={profileSectionRef}
                 doctor={doctor}
                 onUpdate={handleUpdateProfile}
                 onAvatarUpload={handleAvatarUpload}
                 isLoading={updateUserMutation.isPending}
                 isAvatarLoading={updateUserMutation.isPending}
                 isEditingSelf={false}
+                hideSubmitButton={true}
               />
 
               {/* Расписание врача с возможностью редактирования */}
               <DoctorScheduleEditor
+                ref={scheduleEditorRef}
                 schedule={doctorSchedule}
                 onUpdate={handleUpdateSchedule}
                 isLoading={updateScheduleMutation.isPending || isLoadingSchedule}
+                hideSubmitButton={true}
               />
+
+              {/* Общая кнопка сохранения */}
+              <div className="flex justify-end pt-4 border-t border-stroke">
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={handleSaveAll}
+                  isLoading={isSaving || updateUserMutation.isPending || updateScheduleMutation.isPending}
+                  disabled={isSaving || updateUserMutation.isPending || updateScheduleMutation.isPending}
+                >
+                  Сохранить все изменения
+                </Button>
+              </div>
             </>
           )}
         </div>

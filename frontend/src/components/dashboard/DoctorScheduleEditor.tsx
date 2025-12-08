@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { Button } from '../common/Button';
 import { Card } from '../common/Card';
 import { DoctorSchedule } from '../../types/api.types';
@@ -12,6 +12,11 @@ interface DoctorScheduleEditorProps {
     isWorking: boolean;
   }>) => Promise<void>;
   isLoading?: boolean;
+  hideSubmitButton?: boolean; // Скрыть кнопку "Сохранить расписание"
+}
+
+export interface DoctorScheduleEditorRef {
+  save: () => Promise<void>;
 }
 
 const DAYS = [
@@ -28,11 +33,12 @@ const DAYS = [
  * DoctorScheduleEditor Component
  * Компонент для редактирования расписания врача
  */
-export const DoctorScheduleEditor: React.FC<DoctorScheduleEditorProps> = ({
+export const DoctorScheduleEditor = forwardRef<DoctorScheduleEditorRef, DoctorScheduleEditorProps>(({
   schedule = [],
   onUpdate,
   isLoading = false,
-}) => {
+  hideSubmitButton = false,
+}, ref) => {
   // Преобразуем массив расписания в объект для удобства работы (мемоизируем)
   const scheduleMap = useMemo(() => {
     return schedule.reduce((acc, item) => {
@@ -171,9 +177,7 @@ export const DoctorScheduleEditor: React.FC<DoctorScheduleEditorProps> = ({
     setScheduleState(newState);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const saveSchedule = useCallback(async () => {
     // Преобразуем объект обратно в массив
     const scheduleArray = Object.values(scheduleState).map(day => ({
       dayOfWeek: day.dayOfWeek,
@@ -183,7 +187,17 @@ export const DoctorScheduleEditor: React.FC<DoctorScheduleEditorProps> = ({
     }));
 
     await onUpdate(scheduleArray);
+  }, [scheduleState, onUpdate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await saveSchedule();
   };
+
+  // Expose save function to parent via ref
+  useImperativeHandle(ref, () => ({
+    save: saveSchedule,
+  }), [saveSchedule]);
 
   return (
     <Card title="Мое рабочее расписание" padding="lg">
@@ -259,13 +273,15 @@ export const DoctorScheduleEditor: React.FC<DoctorScheduleEditorProps> = ({
           })}
         </div>
 
-        <div className="flex justify-end pt-4 border-t border-stroke">
-          <Button type="submit" variant="primary" size="md" isLoading={isLoading} disabled={isLoading}>
-            Сохранить расписание
-          </Button>
-        </div>
+        {!hideSubmitButton && (
+          <div className="flex justify-end pt-4 border-t border-stroke">
+            <Button type="submit" variant="primary" size="md" isLoading={isLoading} disabled={isLoading}>
+              Сохранить расписание
+            </Button>
+          </div>
+        )}
       </form>
     </Card>
   );
-};
+});
 

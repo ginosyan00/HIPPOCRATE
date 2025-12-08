@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { Input } from '../common/Input';
 import { Button } from '../common/Button';
 import { Card } from '../common/Card';
@@ -12,20 +12,26 @@ interface DoctorProfileSectionProps {
   isLoading?: boolean;
   isAvatarLoading?: boolean;
   isEditingSelf?: boolean; // Флаг: врач редактирует себя или клиника редактирует врача
+  hideSubmitButton?: boolean; // Скрыть кнопку "Сохранить изменения"
+}
+
+export interface DoctorProfileSectionRef {
+  save: () => Promise<boolean>;
 }
 
 /**
  * DoctorProfileSection Component
  * Секция для редактирования профиля врача
  */
-export const DoctorProfileSection: React.FC<DoctorProfileSectionProps> = ({ 
+export const DoctorProfileSection = forwardRef<DoctorProfileSectionRef, DoctorProfileSectionProps>(({ 
   doctor, 
   onUpdate,
   onAvatarUpload,
   isLoading = false,
   isAvatarLoading = false,
   isEditingSelf = true, // По умолчанию врач редактирует себя
-}) => {
+  hideSubmitButton = false,
+}, ref) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -87,11 +93,9 @@ export const DoctorProfileSection: React.FC<DoctorProfileSectionProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const saveProfile = useCallback(async () => {
     if (!validate()) {
-      return;
+      return false;
     }
 
     try {
@@ -138,11 +142,23 @@ export const DoctorProfileSection: React.FC<DoctorProfileSectionProps> = ({
       
       // Затем обновляем остальные данные
       await onUpdate(updateData);
+      return true;
     } catch (err: any) {
       // Ошибки обрабатываются в родительском компоненте
       console.error('Ошибка обновления профиля:', err);
+      throw err;
     }
+  }, [formData, avatarPreview, doctor, onUpdate, onAvatarUpload]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await saveProfile();
   };
+
+  // Expose save function to parent via ref
+  useImperativeHandle(ref, () => ({
+    save: saveProfile,
+  }), [saveProfile]);
 
   // Определяем заголовок карточки в зависимости от контекста
   const cardTitle = isEditingSelf ? 'Мой профиль' : `Профиль врача: ${doctor?.name || ''}`;
@@ -253,13 +269,15 @@ export const DoctorProfileSection: React.FC<DoctorProfileSectionProps> = ({
           </div>
         </div>
 
-        <div className="flex justify-end pt-4 border-t border-stroke">
-          <Button type="submit" variant="primary" size="md" isLoading={isLoading} disabled={isLoading}>
-            Сохранить изменения
-          </Button>
-        </div>
+        {!hideSubmitButton && (
+          <div className="flex justify-end pt-4 border-t border-stroke">
+            <Button type="submit" variant="primary" size="md" isLoading={isLoading} disabled={isLoading}>
+              Сохранить изменения
+            </Button>
+          </div>
+        )}
       </form>
     </Card>
   );
-};
+});
 

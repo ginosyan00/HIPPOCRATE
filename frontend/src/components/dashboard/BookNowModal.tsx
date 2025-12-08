@@ -9,6 +9,7 @@ interface BookNowModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  defaultDate?: string;
 }
 
 /**
@@ -19,6 +20,7 @@ export const BookNowModal: React.FC<BookNowModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  defaultDate,
 }) => {
   const user = useAuthStore((state) => state.user);
   const [selectedClinicId, setSelectedClinicId] = useState<string>('');
@@ -51,6 +53,13 @@ export const BookNowModal: React.FC<BookNowModalProps> = ({
       setError('');
     }
   }, [isOpen]);
+
+  // Установка даты по умолчанию при открытии модального окна
+  useEffect(() => {
+    if (isOpen && defaultDate) {
+      setSelectedDate(defaultDate);
+    }
+  }, [isOpen, defaultDate]);
 
   // Сброс врача при смене клиники
   useEffect(() => {

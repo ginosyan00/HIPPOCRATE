@@ -3,11 +3,14 @@ import { useSearchParams } from 'react-router-dom';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
 import { Button, Card, Spinner, Input } from '../../components/common';
 import { PatientAppointmentsTable } from '../../components/dashboard/PatientAppointmentsTable';
+import { AppointmentsMonthlyCalendar } from '../../components/dashboard/AppointmentsMonthlyCalendar';
+import { AppointmentsWeeklyView } from '../../components/dashboard/AppointmentsWeeklyView';
 import { BookNowModal } from '../../components/dashboard/BookNowModal';
 import { usePatientAppointments } from '../../hooks/usePatientAppointments';
 import { useUpdateAppointmentStatus } from '../../hooks/useAppointments';
 import { Appointment } from '../../types/api.types';
 import { Calendar, Clock, Filter, Search } from 'lucide-react';
+import { format } from 'date-fns';
 
 /**
  * PatientAppointmentsPage
@@ -25,6 +28,34 @@ export const PatientAppointmentsPage: React.FC = () => {
 
   // Модальное окно создания записи
   const [isBookNowModalOpen, setIsBookNowModalOpen] = useState(false);
+  const [createModalDefaultDate, setCreateModalDefaultDate] = useState<string | undefined>(undefined);
+
+  // Вид отображения (list/monthly/weekly)
+  const [viewType, setViewType] = useState<'list' | 'monthly' | 'weekly'>(() => {
+    try {
+      const saved = localStorage.getItem('patientAppointmentsViewType');
+      if (saved && ['list', 'monthly', 'weekly'].includes(saved)) {
+        return saved as 'list' | 'monthly' | 'weekly';
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки вида из localStorage:', error);
+    }
+    return 'list';
+  });
+
+  // Сохраняем выбранный вид в localStorage при изменении
+  useEffect(() => {
+    try {
+      localStorage.setItem('patientAppointmentsViewType', viewType);
+    } catch (error) {
+      console.error('Ошибка сохранения вида в localStorage:', error);
+    }
+  }, [viewType]);
+
+  // Функция для установки вида
+  const handleViewTypeChange = (newViewType: 'list' | 'monthly' | 'weekly') => {
+    setViewType(newViewType);
+  };
 
   // Управление статусами
   const [loadingAppointments, setLoadingAppointments] = useState<Record<string, string>>({});
@@ -321,7 +352,7 @@ export const PatientAppointmentsPage: React.FC = () => {
           )}
         </Card>
 
-        {/* Таблица записей */}
+        {/* Переключение видов и отображение записей */}
         {isLoading ? (
           <Card>
             <div className="flex justify-center items-center py-12">
@@ -344,22 +375,99 @@ export const PatientAppointmentsPage: React.FC = () => {
               </Button>
             </div>
           </Card>
+        ) : viewType === 'monthly' ? (
+          <AppointmentsMonthlyCalendar
+            appointments={filteredAppointments}
+            onAppointmentClick={(appointment) => {
+              // При клике на запись в календаре - можно показать детали или отменить
+              console.log('📅 [PATIENT APPOINTMENTS] Клик по записи:', appointment);
+            }}
+            onDateClick={(date) => {
+              // При клике на ячейку календаря - открываем модальное окно создания записи с предзаполненной датой
+              const dateStr = format(date, 'yyyy-MM-dd');
+              setCreateModalDefaultDate(dateStr);
+              setIsBookNowModalOpen(true);
+            }}
+            onViewChange={handleViewTypeChange}
+            currentView={viewType}
+          />
+        ) : viewType === 'weekly' ? (
+          <AppointmentsWeeklyView
+            appointments={filteredAppointments}
+            onAppointmentClick={(appointment) => {
+              // При клике на запись в недельном виде
+              console.log('📅 [PATIENT APPOINTMENTS] Клик по записи:', appointment);
+            }}
+            onTimeSlotClick={() => {
+              // При клике на временной слот - открываем модальное окно создания записи
+              setIsBookNowModalOpen(true);
+            }}
+            onViewChange={handleViewTypeChange}
+            currentView={viewType}
+          />
         ) : (
-          <Card padding="md" className="border border-stroke shadow-md">
-            <PatientAppointmentsTable
-              appointments={filteredAppointments}
-              onCancel={handleCancel}
-              loadingAppointments={loadingAppointments}
-              errorMessages={errorMessages}
-            />
-          </Card>
+          // List view (table)
+          <div className="space-y-4">
+            {/* Переключение видов */}
+            <Card padding="sm">
+              <div className="flex items-center justify-center">
+                <div className="flex border border-stroke rounded-sm overflow-hidden">
+                  <button
+                    onClick={() => handleViewTypeChange('list')}
+                    className={`px-5 py-2.5 text-base font-medium transition-smooth ${
+                      viewType === 'list'
+                        ? 'bg-main-100 text-white'
+                        : 'bg-bg-white text-text-50 hover:bg-bg-primary'
+                    }`}
+                    title="Таблица"
+                  >
+                    📊 Таблица
+                  </button>
+                  <button
+                    onClick={() => handleViewTypeChange('monthly')}
+                    className={`px-5 py-2.5 text-base font-medium transition-smooth ${
+                      viewType === 'monthly'
+                        ? 'bg-main-100 text-white'
+                        : 'bg-bg-white text-text-50 hover:bg-bg-primary'
+                    }`}
+                    title="Месячный календарь"
+                  >
+                    📅 Месяц
+                  </button>
+                  <button
+                    onClick={() => handleViewTypeChange('weekly')}
+                    className={`px-5 py-2.5 text-base font-medium transition-smooth ${
+                      viewType === 'weekly'
+                        ? 'bg-main-100 text-white'
+                        : 'bg-bg-white text-text-50 hover:bg-bg-primary'
+                    }`}
+                    title="Недельный вид"
+                  >
+                    📆 Неделя
+                  </button>
+                </div>
+              </div>
+            </Card>
+            <Card padding="md" className="border border-stroke shadow-md">
+              <PatientAppointmentsTable
+                appointments={filteredAppointments}
+                onCancel={handleCancel}
+                loadingAppointments={loadingAppointments}
+                errorMessages={errorMessages}
+              />
+            </Card>
+          </div>
         )}
 
         {/* Модальное окно создания записи */}
         <BookNowModal
           isOpen={isBookNowModalOpen}
-          onClose={() => setIsBookNowModalOpen(false)}
+          onClose={() => {
+            setIsBookNowModalOpen(false);
+            setCreateModalDefaultDate(undefined);
+          }}
           onSuccess={handleAppointmentCreated}
+          defaultDate={createModalDefaultDate}
         />
       </div>
     </NewDashboardLayout>

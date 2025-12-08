@@ -11,7 +11,8 @@ const router = express.Router();
 router.use(authenticate);
 
 // Специальный route для PATIENT (без tenantMiddleware, так как у PATIENT нет clinicId)
-router.get('/appointments', patientController.getMyAppointments);
+// ВАЖНО: Только пользователи с ролью PATIENT могут получить доступ к своим записям
+router.get('/appointments', authorize('PATIENT'), patientController.getMyAppointments);
 
 // Для остальных routes применяем tenantMiddleware
 router.use(tenantMiddleware);

@@ -4,6 +4,7 @@ import { ru } from 'date-fns/locale';
 import { Card } from '../common';
 import { Appointment } from '../../types/api.types';
 import { formatAppointmentTime } from '../../utils/dateFormat';
+import { useAuthStore } from '../../store/useAuthStore';
 
 interface AppointmentsWeeklyViewProps {
   appointments: Appointment[];
@@ -27,6 +28,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
   currentView = 'weekly',
   className = '',
 }) => {
+  const user = useAuthStore(state => state.user);
   const [currentWeek, setCurrentWeek] = useState(new Date());
 
   // Генерируем дни недели
@@ -265,7 +267,9 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                               {/* Заголовок карточки */}
                               <div className="flex-1 min-w-0">
                                 <h4 className="text-base font-semibold text-text-100 truncate mb-1">
-                                  {appointment.patient?.name || 'Пациент'}
+                                  {user?.role === 'PATIENT'
+                                    ? (user?.name || 'Я')
+                                    : (appointment.patient?.name || 'Пациент')}
                                 </h4>
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span className="text-xs text-text-50">⏰ {appointmentTime}</span>

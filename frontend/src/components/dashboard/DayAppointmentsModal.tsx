@@ -4,6 +4,7 @@ import { ru } from 'date-fns/locale';
 import { Modal, Card } from '../common';
 import { Appointment } from '../../types/api.types';
 import { formatAppointmentDateTime, formatAppointmentTime } from '../../utils/dateFormat';
+import { useAuthStore } from '../../store/useAuthStore';
 
 interface DayAppointmentsModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export const DayAppointmentsModal: React.FC<DayAppointmentsModalProps> = ({
   appointments,
   onAppointmentClick,
 }) => {
+  const user = useAuthStore(state => state.user);
   if (!date) return null;
 
   // Сортируем приёмы по времени
@@ -106,7 +108,11 @@ export const DayAppointmentsModal: React.FC<DayAppointmentsModalProps> = ({
               {sortedAppointments.map((appointment) => {
                 const appointmentDate = parseISO(appointment.appointmentDate.toString());
                 const appointmentTime = formatAppointmentTime(appointmentDate);
-                const patientName = appointment.patient?.name || 'Пациент';
+                // Для PATIENT роли показываем "Я" или имя пользователя, для других ролей - имя пациента
+                const isPatientView = user?.role === 'PATIENT';
+                const patientName = isPatientView
+                  ? (user?.name || 'Я')
+                  : (appointment.patient?.name || 'Пациент');
                 const patientInitial = patientName.charAt(0).toUpperCase();
 
                 return (

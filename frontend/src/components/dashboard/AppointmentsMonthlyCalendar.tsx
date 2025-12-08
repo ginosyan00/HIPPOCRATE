@@ -5,6 +5,7 @@ import { Card } from '../common';
 import { Appointment } from '../../types/api.types';
 import { formatAppointmentDateTime } from '../../utils/dateFormat';
 import { DayAppointmentsModal } from './DayAppointmentsModal';
+import { useAuthStore } from '../../store/useAuthStore';
 
 interface AppointmentsMonthlyCalendarProps {
   appointments: Appointment[];
@@ -28,6 +29,7 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
   currentView = 'monthly',
   className = '',
 }) => {
+  const user = useAuthStore(state => state.user);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showMonthPicker, setShowMonthPicker] = useState(false);
   const [showYearPicker, setShowYearPicker] = useState(false);
@@ -346,7 +348,11 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                     {isCurrentMonth && appointmentCount > 0 && (
                       <div className="mt-2 space-y-1.5">
                         {dayAppointments.slice(0, 3).map((appointment) => {
-                          const patientName = appointment.patient?.name || 'Пациент';
+                          // Для PATIENT роли показываем "Я" или имя пользователя, для других ролей - имя пациента
+                          const isPatientView = user?.role === 'PATIENT';
+                          const patientName = isPatientView
+                            ? (user?.name || 'Я')
+                            : (appointment.patient?.name || 'Пациент');
                           const patientInitial = patientName.charAt(0).toUpperCase();
                           const appointmentTime = format(parseISO(appointment.appointmentDate.toString()), 'HH:mm');
                           

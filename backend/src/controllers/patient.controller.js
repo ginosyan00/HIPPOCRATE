@@ -180,13 +180,25 @@ export async function getById(req, res, next) {
 /**
  * GET /api/v1/patient/appointments
  * Получить appointments для PATIENT пользователя (по email)
+ * ВАЖНО: Только пользователи с ролью PATIENT могут получить доступ к своим записям
  */
 export async function getMyAppointments(req, res, next) {
   try {
-    const { status, page, limit } = req.query;
-    const userEmail = req.user.email || req.user.userId; // Получаем email из токена или userId
+    // Дополнительная проверка роли для безопасности
+    if (req.user.role !== 'PATIENT') {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Only PATIENT users can access their appointments',
+        },
+      });
+    }
 
-    // Получаем email из User таблицы
+    const { status, page, limit } = req.query;
+
+    // Получаем email из User таблицы по userId из токена
+    // ВАЖНО: Используем только req.user.userId из JWT токена, не принимаем userId из query/body
     const { prisma } = await import('../config/database.js');
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },

@@ -9,6 +9,7 @@ import { CreateAppointmentModal } from '../../components/dashboard/CreateAppoint
 import { CompleteAppointmentModal } from '../../components/dashboard/CompleteAppointmentModal';
 import { CancelAppointmentModal } from '../../components/dashboard/CancelAppointmentModal';
 import { EditAmountModal } from '../../components/dashboard/EditAmountModal';
+import { AppointmentDetailModal } from '../../components/dashboard/AppointmentDetailModal';
 import { useAppointments, useUpdateAppointmentStatus, useUpdateAppointment } from '../../hooks/useAppointments';
 import { userService } from '../../services/user.service';
 import { useAuthStore } from '../../store/useAuthStore';
@@ -108,6 +109,10 @@ export const AppointmentsPage: React.FC = () => {
   // Модальное окно редактирования суммы
   const [isEditAmountModalOpen, setIsEditAmountModalOpen] = useState(false);
   const [selectedAppointmentForEdit, setSelectedAppointmentForEdit] = useState<Appointment | null>(null);
+  
+  // Модальное окно детальной информации о записи
+  const [isAppointmentDetailModalOpen, setIsAppointmentDetailModalOpen] = useState(false);
+  const [selectedAppointmentForDetail, setSelectedAppointmentForDetail] = useState<Appointment | null>(null);
   
   const [doctors, setDoctors] = useState<User[]>([]);
   const [isDoctorsLoading, setIsDoctorsLoading] = useState(true);
@@ -621,12 +626,9 @@ export const AppointmentsPage: React.FC = () => {
         <AppointmentsMonthlyCalendar
           appointments={appointments}
           onAppointmentClick={(appointment) => {
-            // При клике на приём в календаре - открываем модальное окно или выполняем действие
-            if (appointment.status === 'pending') {
-              handleStatusChange(appointment.id, 'confirmed');
-            } else if (appointment.status === 'confirmed') {
-              handleStatusChange(appointment.id, 'completed');
-            }
+            // При клике на приём в календаре - открываем модальное окно с детальной информацией
+            setSelectedAppointmentForDetail(appointment);
+            setIsAppointmentDetailModalOpen(true);
           }}
           onDateClick={(date) => {
             // При клике на ячейку календаря - открываем модальное окно создания приёма с предзаполненной датой
@@ -762,6 +764,16 @@ export const AppointmentsPage: React.FC = () => {
         appointment={selectedAppointmentForEdit}
         onUpdate={handleUpdateAmount}
         isLoading={selectedAppointmentForEdit ? loadingAppointments[selectedAppointmentForEdit.id] === 'updating' : false}
+      />
+
+      {/* Модальное окно детальной информации о записи */}
+      <AppointmentDetailModal
+        isOpen={isAppointmentDetailModalOpen}
+        onClose={() => {
+          setIsAppointmentDetailModalOpen(false);
+          setSelectedAppointmentForDetail(null);
+        }}
+        appointment={selectedAppointmentForDetail}
       />
       </div>
     </NewDashboardLayout>

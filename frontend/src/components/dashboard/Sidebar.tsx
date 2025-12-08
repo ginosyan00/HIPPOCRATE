@@ -28,6 +28,20 @@ export const Sidebar: React.FC = () => {
         : 'text-text-10 font-normal hover:text-text-50'
     }`;
 
+  // Ստիլ dashboard icon-ի համար - grayscale filter, որպեսզի կապույտ գույնը դառնա մոխրագույն
+  // Dashboard icon-ը միշտ թափանցիկ է, նույնիսկ երբ ակտիվ է
+  const dashboardIconClass = (isActive: boolean) =>
+    `w-6 h-6 transition-smooth ${
+      isActive
+        ? 'opacity-100'
+        : 'opacity-60 hover:opacity-80'
+    }`;
+  
+  // CSS filter dashboard icon-ի համար - grayscale միշտ, որպեսզի մնա թափանցիկ
+  const dashboardIconStyle = () => ({
+    filter: 'grayscale(100%)',
+  });
+
   if (!isSidebarOpen) {
     return null;
   }
@@ -53,9 +67,18 @@ export const Sidebar: React.FC = () => {
           {/* Для пациентов */}
           {user?.role === 'PATIENT' && (
             <>
-              <NavLink to="/dashboard/patient" className={navLinkClass}>
-                <img src={dashboardIcon} alt="Dashboard" className="w-6 h-6" />
-                <span className="text-sm">Dashboard</span>
+              <NavLink to="/dashboard/patient" end className={navLinkClass}>
+                {({ isActive }) => (
+                  <>
+                    <img 
+                      src={dashboardIcon} 
+                      alt="Dashboard" 
+                      className={dashboardIconClass(isActive)}
+                      style={dashboardIconStyle()}
+                    />
+                    <span className="text-sm">Dashboard</span>
+                  </>
+                )}
               </NavLink>
 
               <NavLink to="/dashboard/patient/appointments" className={navLinkClass}>
@@ -83,9 +106,18 @@ export const Sidebar: React.FC = () => {
           {/* Для врачей */}
           {user?.role === 'DOCTOR' && (
             <>
-              <NavLink to="/dashboard/doctor" className={navLinkClass}>
-                <img src={dashboardIcon} alt="Dashboard" className="w-6 h-6" />
-                <span className="text-sm">Dashboard</span>
+              <NavLink to="/dashboard/doctor" end className={navLinkClass}>
+                {({ isActive }) => (
+                  <>
+                    <img 
+                      src={dashboardIcon} 
+                      alt="Dashboard" 
+                      className={dashboardIconClass(isActive)}
+                      style={dashboardIconStyle()}
+                    />
+                    <span className="text-sm">Dashboard</span>
+                  </>
+                )}
               </NavLink>
 
               <NavLink to="/dashboard/doctor/appointments" className={navLinkClass}>
@@ -113,9 +145,18 @@ export const Sidebar: React.FC = () => {
           {/* Для клиник и администраторов */}
           {(user?.role === 'ADMIN' || user?.role === 'CLINIC') && (
             <>
-              <NavLink to="/dashboard" className={navLinkClass}>
-                <img src={dashboardIcon} alt="Dashboard" className="w-6 h-6" />
-                <span className="text-sm">Dashboard</span>
+              <NavLink to="/dashboard" end className={navLinkClass}>
+                {({ isActive }) => (
+                  <>
+                    <img 
+                      src={dashboardIcon} 
+                      alt="Dashboard" 
+                      className={dashboardIconClass(isActive)}
+                      style={dashboardIconStyle()}
+                    />
+                    <span className="text-sm">Dashboard</span>
+                  </>
+                )}
               </NavLink>
 
               <NavLink to="/dashboard/appointments" className={navLinkClass}>

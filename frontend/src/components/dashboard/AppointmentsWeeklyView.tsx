@@ -216,8 +216,8 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
       </Card>
 
       {/* Kanban Board - Колонки по дням недели */}
-      <div className="overflow-x-auto">
-        <div className="flex gap-4 min-w-max pb-4">
+      <div className="w-full">
+        <div className="flex gap-2 pb-4">
           {weekDays.map((day, dayIndex) => {
             const isToday = isSameDay(day, new Date());
             const dayAppointments = getAppointmentsForDay(day);
@@ -229,7 +229,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
             return (
               <div
                 key={day.toISOString()}
-                className={`flex-shrink-0 w-80 flex flex-col ${isToday ? 'ring-2 ring-main-100 ring-offset-2' : ''}`}
+                className={`flex-1 min-w-0 flex flex-col ${isToday ? 'ring-2 ring-main-100 ring-offset-2' : ''}`}
               >
                 {/* Заголовок колонки */}
                 <div className={`${getDayHeaderColor(dayIndex, isToday)} p-3 rounded-t-lg`}>

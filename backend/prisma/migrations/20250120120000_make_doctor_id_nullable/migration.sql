@@ -39,3 +39,5 @@ CREATE INDEX "appointments_patientId_idx" ON "appointments"("patientId");
 CREATE INDEX "appointments_appointmentDate_idx" ON "appointments"("appointmentDate");
 CREATE INDEX "appointments_status_idx" ON "appointments"("status");
 
+
+

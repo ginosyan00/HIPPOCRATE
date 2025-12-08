@@ -163,6 +163,61 @@ export async function findById(clinicId, patientId) {
 }
 
 /**
+ * Получить пациента по ID для врача
+ * Врач может видеть только тех пациентов, у которых есть записи к этому врачу
+ * В истории пациента показываются только записи к этому врачу
+ * @param {string} clinicId - ID клиники
+ * @param {string} patientId - ID пациента
+ * @param {string} doctorId - ID врача
+ * @returns {Promise<object>} Patient
+ */
+export async function findByIdForDoctor(clinicId, patientId, doctorId) {
+  // Сначала проверяем, есть ли у пациента записи к этому врачу
+  const hasAppointmentsWithDoctor = await prisma.appointment.findFirst({
+    where: {
+      clinicId,
+      patientId,
+      doctorId,
+    },
+  });
+
+  if (!hasAppointmentsWithDoctor) {
+    throw new Error('Patient not found or access denied');
+  }
+
+  // Получаем пациента с записями только к этому врачу
+  const patient = await prisma.patient.findFirst({
+    where: {
+      id: patientId,
+      clinicId,
+    },
+    include: {
+      appointments: {
+        where: {
+          doctorId, // Фильтруем записи только этого врача
+        },
+        include: {
+          doctor: {
+            select: {
+              id: true,
+              name: true,
+              specialization: true,
+            },
+          },
+        },
+        orderBy: { appointmentDate: 'desc' },
+      },
+    },
+  });
+
+  if (!patient) {
+    throw new Error('Patient not found');
+  }
+
+  return patient;
+}
+
+/**
  * Найти пациента по телефону в рамках клиники
  * @param {string} clinicId - ID клиники
  * @param {string} phone - Телефон

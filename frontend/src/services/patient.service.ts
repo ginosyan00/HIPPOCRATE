@@ -132,9 +132,19 @@ export const patientService = {
   ): Promise<PaginatedResponse<DoctorPatient>> {
     // Если doctorId не указан, используем пустой путь (backend сам определит по токену)
     const url = doctorId ? `/patients/doctor/${doctorId}` : '/patients/doctor';
-    const { data } = await api.get<ApiResponse<PaginatedResponse<DoctorPatient>>>(url, {
+    const { data } = await api.get<ApiResponse<any>>(url, {
       params,
     });
+    
+    // Backend возвращает { patients: [...], meta: {...} }, но наш тип ожидает { data: [...], meta: {...} }
+    // Преобразуем структуру для совместимости
+    if (data.data?.patients) {
+      return {
+        data: data.data.patients,
+        meta: data.data.meta,
+      };
+    }
+    
     return data.data;
   },
 };

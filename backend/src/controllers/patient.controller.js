@@ -153,11 +153,14 @@ export async function getDoctorPatients(req, res, next) {
 /**
  * GET /api/v1/patients/:id
  * Получить пациента по ID
+ * Врачи могут видеть только своих пациентов (тех, у кого есть записи к этому врачу)
  */
 export async function getById(req, res, next) {
   try {
     const { id } = req.params;
     const clinicId = req.user.clinicId;
+    const userRole = req.user.role;
+    const userId = req.user.userId;
 
     if (!clinicId) {
       return res.status(403).json({
@@ -169,9 +172,15 @@ export async function getById(req, res, next) {
       });
     }
 
-    const patient = await patientService.findById(clinicId, id);
-
-    successResponse(res, patient, 200);
+    // Для врачей: проверяем, что пациент был у этого врача
+    if (userRole === 'DOCTOR') {
+      const patient = await patientService.findByIdForDoctor(clinicId, id, userId);
+      successResponse(res, patient, 200);
+    } else {
+      // Для админов/ассистентов: обычная проверка
+      const patient = await patientService.findById(clinicId, id);
+      successResponse(res, patient, 200);
+    }
   } catch (error) {
     next(error);
   }

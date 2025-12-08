@@ -399,17 +399,6 @@ export const AppointmentsPage: React.FC = () => {
     }
   }, [appointments]);
 
-  // Статистика по статусам (считаем из всех данных, включая completed, для правильной статистики)
-  // Но отображаем только те, которые не отфильтрованы
-  const allAppointments = ((data as any)?.appointments || []) as Appointment[];
-  const stats = {
-    total: allAppointments.length,
-    pending: allAppointments.filter((a: Appointment) => a.status === 'pending').length,
-    confirmed: allAppointments.filter((a: Appointment) => a.status === 'confirmed').length,
-    completed: allAppointments.filter((a: Appointment) => a.status === 'completed').length,
-    cancelled: allAppointments.filter((a: Appointment) => a.status === 'cancelled').length,
-  };
-
   return (
     <NewDashboardLayout>
       <div className="space-y-6 relative">
@@ -468,40 +457,6 @@ export const AppointmentsPage: React.FC = () => {
               ➕ Создать приём
             </Button>
           </div>
-        </div>
-
-        {/* Statistics Cards */}
-        <div className={`grid grid-cols-2 md:grid-cols-5 gap-4 transition-opacity duration-500 ease-out ${isFetching ? 'opacity-95' : 'opacity-100'}`}>
-          <Card padding="md" className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-            <div className="text-center">
-              <p className="text-xs text-blue-700 mb-1 font-medium">Всего</p>
-              <p className="text-2xl font-bold text-blue-600 transition-all duration-300">{stats.total}</p>
-            </div>
-          </Card>
-          <Card padding="md" className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
-            <div className="text-center">
-              <p className="text-xs text-yellow-700 mb-1 font-medium">Ожидают</p>
-              <p className="text-2xl font-bold text-yellow-600 transition-all duration-300">{stats.pending}</p>
-            </div>
-          </Card>
-          <Card padding="md" className="bg-gradient-to-br from-main-10 to-main-100/10 border-main-100/20">
-            <div className="text-center">
-              <p className="text-xs text-main-100 mb-1 font-medium">Подтверждены</p>
-              <p className="text-2xl font-bold text-main-100 transition-all duration-300">{stats.confirmed}</p>
-            </div>
-          </Card>
-          <Card padding="md" className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-            <div className="text-center">
-              <p className="text-xs text-green-700 mb-1 font-medium">Завершены</p>
-              <p className="text-2xl font-bold text-green-600 transition-all duration-300">{stats.completed}</p>
-            </div>
-          </Card>
-          <Card padding="md" className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200">
-            <div className="text-center">
-              <p className="text-xs text-gray-700 mb-1 font-medium">Отменены</p>
-              <p className="text-2xl font-bold text-gray-600 transition-all duration-300">{stats.cancelled}</p>
-            </div>
-          </Card>
         </div>
 
       {/* Filters */}

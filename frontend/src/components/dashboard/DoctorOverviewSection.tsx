@@ -2,8 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Button, Spinner } from '../common';
 import { useAppointments } from '../../hooks/useAppointments';
-import { usePatients } from '../../hooks/usePatients';
-import { Appointment, Patient } from '../../types/api.types';
+import { useDoctorPatients } from '../../hooks/usePatients';
+import { Appointment, Patient, DoctorPatient } from '../../types/api.types';
 import { useAuthStore } from '../../store/useAuthStore';
 
 // Import icons
@@ -33,14 +33,16 @@ export const DoctorOverviewSection: React.FC = () => {
     limit: 50, // Больше данных для статистики
   });
 
-  const { data: patientsData, isLoading: isLoadingPatients } = usePatients({
-    limit: 100, // Больше данных, чтобы найти всех пациентов врача
-  });
+  // Для врачей: загружаем только своих пациентов через специальный endpoint
+  const { data: doctorPatientsData, isLoading: isLoadingDoctorPatients } = useDoctorPatients(
+    doctorId,
+    { limit: 100 } // Больше данных для статистики
+  );
 
   // Вычисляем статистику
   const stats = useMemo(() => {
     const appointments = appointmentsData?.appointments || [];
-    const allPatients = patientsData?.patients || [];
+    const doctorPatients: DoctorPatient[] = doctorPatientsData?.data || [];
 
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -79,26 +81,31 @@ export const DoctorOverviewSection: React.FC = () => {
       );
     });
 
-    // Уникальные пациенты врача (из appointments)
-    const doctorPatientIds = new Set(
-      appointments.map(apt => apt.patientId).filter(Boolean)
-    );
-    const doctorPatients = allPatients.filter(patient => 
-      doctorPatientIds.has(patient.id)
-    );
-
     // Пациенты, которые были сегодня
     const todayPatientIds = new Set(
       todayAppointments.map(apt => apt.patientId).filter(Boolean)
     );
     const patientsToday = doctorPatients.filter(patient => 
-      todayPatientIds.has(patient.id)
+      todayPatientIds.has(patient.patientId)
     );
 
     // Записи, требующие подтверждения
     const pendingAppointments = appointments.filter(
       apt => apt.status === 'pending'
     );
+
+    // Преобразуем DoctorPatient в Patient для совместимости с существующим кодом
+    const recentPatients: Patient[] = doctorPatients.slice(0, 5).map(dp => ({
+      id: dp.patientId,
+      name: dp.patientName,
+      phone: dp.patientPhone,
+      email: dp.patientEmail || undefined,
+      dateOfBirth: dp.patientDateOfBirth || undefined,
+      gender: dp.patientGender || undefined,
+      clinicId: '', // Не используется в этом компоненте
+      createdAt: dp.lastVisitDate || new Date(),
+      updatedAt: new Date(),
+    }));
 
     return {
       patientsToday: patientsToday.length,
@@ -107,9 +114,9 @@ export const DoctorOverviewSection: React.FC = () => {
       pendingAppointments: pendingAppointments.length,
       upcomingList: upcomingAppointments.slice(0, 5),
       todaySchedule: todayAppointments.slice(0, 10),
-      recentPatients: doctorPatients.slice(0, 5),
+      recentPatients: recentPatients,
     };
-  }, [appointmentsData, patientsData]);
+  }, [appointmentsData, doctorPatientsData]);
 
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
@@ -410,7 +417,7 @@ export const DoctorOverviewSection: React.FC = () => {
 
         {expandedSections.myPatients && (
           <div className="mt-4 space-y-3">
-            {isLoadingPatients || isLoadingAppointments ? (
+            {isLoadingDoctorPatients || isLoadingAppointments ? (
               <div className="text-center py-8">
                 <Spinner />
                 <p className="text-sm text-text-10 mt-2">Загрузка пациентов...</p>
@@ -424,7 +431,8 @@ export const DoctorOverviewSection: React.FC = () => {
                 {stats.recentPatients.map((patient: Patient) => (
                   <div
                     key={patient.id}
-                    className="flex items-center justify-between p-3 border border-stroke rounded-lg hover:border-main-100 hover:bg-main-10 transition-all"
+                    className="flex items-center justify-between p-3 border border-stroke rounded-lg hover:border-main-100 hover:bg-main-10 transition-all cursor-pointer"
+                    onClick={() => navigate(`/dashboard/patients/${patient.id}`)}
                   >
                     <div className="flex items-center gap-3 flex-1">
                       <div className="w-10 h-10 bg-secondary-10 rounded-lg flex items-center justify-center">

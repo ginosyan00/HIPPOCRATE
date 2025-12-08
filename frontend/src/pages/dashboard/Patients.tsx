@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
 import { Button, Input, Card, Modal, Spinner } from '../../components/common';
-import { PatientProfileModal } from '../../components/dashboard/PatientProfileModal';
 import { usePatients, useCreatePatient, useUpdatePatient, useDeletePatient, useDoctorPatients } from '../../hooks/usePatients';
 import { usePatientVisits } from '../../hooks/usePatientVisits';
 import { useDoctors } from '../../hooks/useUsers';
@@ -38,9 +38,9 @@ export const PatientsPage: React.FC = () => {
   // По умолчанию показываем только завершенные приёмы (completed) в режиме таблицы
   // Это гарантирует, что раздел Patients показывает только пациентов с завершенными визитами
   const [statusFilter, setStatusFilter] = useState<string>('completed');
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
-  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
 
   // Для врачей: загружаем агрегированные данные пациентов
   const { data: doctorPatientsData, isLoading: isLoadingDoctorPatients, error: doctorPatientsError } = useDoctorPatients(
@@ -357,7 +357,7 @@ export const PatientsPage: React.FC = () => {
                       <tr
                         key={patient.patientId}
                         className="hover:bg-bg-primary transition-smooth cursor-pointer"
-                        onClick={() => setSelectedPatientId(patient.patientId)}
+                        onClick={() => navigate(`/dashboard/patients/${patient.patientId}`)}
                       >
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="text-sm font-medium text-text-100">{patient.patientName}</div>
@@ -464,7 +464,7 @@ export const PatientsPage: React.FC = () => {
                       <tr 
                         key={visit.appointmentId} 
                         className="hover:bg-bg-primary transition-smooth cursor-pointer"
-                        onClick={() => setSelectedPatientId(visit.patientId)}
+                        onClick={() => navigate(`/dashboard/patients/${visit.patientId}`)}
                       >
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="text-sm font-medium text-text-100">{visit.patientName}</div>
@@ -524,7 +524,7 @@ export const PatientsPage: React.FC = () => {
                     key={patient.id} 
                     padding="md"
                     className="cursor-pointer hover:border-main-100/30 transition-smooth"
-                    onClick={() => setSelectedPatientId(patient.id)}
+                    onClick={() => navigate(`/dashboard/patients/${patient.id}`)}
                   >
                     <div className="space-y-3">
                       <div className="flex items-start gap-3">
@@ -647,14 +647,6 @@ export const PatientsPage: React.FC = () => {
           </form>
         </Modal>
 
-        {/* Patient Profile Modal */}
-        {selectedPatientId && (
-          <PatientProfileModal
-            isOpen={!!selectedPatientId}
-            onClose={() => setSelectedPatientId(null)}
-            patientId={selectedPatientId}
-          />
-        )}
       </div>
     </NewDashboardLayout>
   );

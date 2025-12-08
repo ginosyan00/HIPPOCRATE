@@ -5,6 +5,7 @@ import { RegisterUserPage } from './pages/auth/RegisterUser';
 import { PendingApprovalPage } from './pages/auth/PendingApproval';
 import { DashboardPage } from './pages/dashboard/Dashboard';
 import { PatientsPage } from './pages/dashboard/Patients';
+import { PatientProfilePage } from './pages/dashboard/PatientProfilePage';
 import { AppointmentsPage } from './pages/dashboard/Appointments';
 import { StaffPage } from './pages/dashboard/Staff';
 import { DoctorsPage } from './pages/dashboard/Doctors';
@@ -198,8 +199,16 @@ function App() {
         <Route
           path="/dashboard/patients"
           element={
-            <RoleProtectedRoute allowedRoles={[UserRole.ADMIN, 'CLINIC']}>
+            <RoleProtectedRoute allowedRoles={[UserRole.ADMIN, 'CLINIC', UserRole.DOCTOR]}>
               <PatientsPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/patients/:patientId"
+          element={
+            <RoleProtectedRoute allowedRoles={[UserRole.ADMIN, 'CLINIC', UserRole.DOCTOR]}>
+              <PatientProfilePage />
             </RoleProtectedRoute>
           }
         />

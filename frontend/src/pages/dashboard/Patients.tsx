@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
 import { Button, Input, Card, Modal, Spinner } from '../../components/common';
@@ -12,6 +12,23 @@ import { useAuthStore } from '../../store/useAuthStore';
 
 // Import search icon
 import searchIcon from '../../assets/icons/search.svg';
+
+/**
+ * Тип для уникального пациента с историей визитов
+ */
+interface UniquePatientWithVisits {
+  patientId: string;
+  patientName: string;
+  patientPhone: string;
+  patientEmail?: string;
+  visitCount: number;
+  lastVisitDate: Date;
+  lastVisitStatus: AppointmentStatus;
+  totalAmount: number;
+  visits: PatientVisit[]; // Все визиты пациента
+  doctors: Set<string>; // Уникальные врачи
+  procedures: string[]; // Процедуры
+}
 
 /**
  * Patients Page - Extended Version
@@ -193,6 +210,69 @@ export const PatientsPage: React.FC = () => {
     new Map(visits.map((visit: PatientVisit) => [visit.appointmentId, visit])).values()
   ) as PatientVisit[];
 
+  // Группируем визиты по пациентам для отображения уникальных пациентов
+  const uniquePatientsWithVisits = useMemo(() => {
+    if (!uniqueVisits || uniqueVisits.length === 0) return [];
+
+    const patientMap = new Map<string, UniquePatientWithVisits>();
+
+    uniqueVisits.forEach((visit: PatientVisit) => {
+      // Используем patientId как ключ, если он есть и не пустой
+      const key = visit.patientId && visit.patientId.trim() !== '' 
+        ? visit.patientId 
+        : `${visit.patientName}_${visit.patientPhone}`; // Fallback для случаев без ID
+      
+      const existing = patientMap.get(key);
+      
+      if (!existing) {
+        const doctorsSet = new Set<string>();
+        if (visit.doctorName) {
+          doctorsSet.add(visit.doctorName);
+        }
+        
+        patientMap.set(key, {
+          patientId: visit.patientId,
+          patientName: visit.patientName,
+          patientPhone: visit.patientPhone,
+          patientEmail: visit.patientEmail,
+          visitCount: 1,
+          lastVisitDate: new Date(visit.appointmentDate),
+          lastVisitStatus: visit.status,
+          totalAmount: visit.amount || 0,
+          visits: [visit],
+          doctors: doctorsSet,
+          procedures: visit.reason ? [visit.reason] : [],
+        });
+      } else {
+        existing.visitCount += 1;
+        existing.totalAmount += (visit.amount || 0);
+        existing.visits.push(visit);
+        
+        if (visit.doctorName) {
+          existing.doctors.add(visit.doctorName);
+        }
+        
+        if (visit.reason && !existing.procedures.includes(visit.reason)) {
+          existing.procedures.push(visit.reason);
+        }
+        
+        // Обновляем последний визит
+        const visitDate = new Date(visit.appointmentDate);
+        if (visitDate > existing.lastVisitDate) {
+          existing.lastVisitDate = visitDate;
+          existing.lastVisitStatus = visit.status;
+        }
+      }
+    });
+
+    let patients = Array.from(patientMap.values());
+
+    // Сортируем по дате последнего визита (новые первыми)
+    patients.sort((a, b) => b.lastVisitDate.getTime() - a.lastVisitDate.getTime());
+
+    return patients;
+  }, [uniqueVisits]);
+
   return (
     <NewDashboardLayout>
       <div className="space-y-6">
@@ -204,7 +284,7 @@ export const PatientsPage: React.FC = () => {
               {isDoctor
                 ? `Всего пациентов: ${doctorPatientsData?.meta.total || 0}`
                 : viewMode === 'table'
-                ? `Всего визитов: ${visitsData?.meta.total || 0}`
+                ? `Всего пациентов: ${uniquePatientsWithVisits.length} (${visitsData?.meta.total || 0} визитов)`
                 : `Всего пациентов: ${patientsData?.meta.total || 0}`
               }
             </p>
@@ -420,15 +500,15 @@ export const PatientsPage: React.FC = () => {
           </>
         )}
 
-        {/* Table View - Все визиты (для админов/ассистентов) */}
+        {/* Table View - Уникальные пациенты (для админов/ассистентов) */}
         {!isDoctor && viewMode === 'table' && !isLoading && (
           <>
-            {uniqueVisits.length === 0 ? (
+            {uniquePatientsWithVisits.length === 0 ? (
               <Card>
                 <div className="text-center py-12 text-text-10 text-sm">
                   {search || doctorFilter || statusFilter 
-                    ? 'Визиты не найдены' 
-                    : 'Нет визитов. Создайте первый приём!'}
+                    ? 'Пациенты не найдены' 
+                    : 'Нет пациентов с визитами. Создайте первый приём!'}
                 </div>
               </Card>
             ) : (
@@ -443,13 +523,13 @@ export const PatientsPage: React.FC = () => {
                         Телефон
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-                        Врач
+                        Врачи
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-                        Процедура
+                        Визитов
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-                        Дата и время
+                        Последний визит
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
                         Сумма
@@ -460,44 +540,61 @@ export const PatientsPage: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-bg-white divide-y divide-stroke">
-                    {uniqueVisits.map((visit: PatientVisit) => (
+                    {uniquePatientsWithVisits.map((patient) => (
                       <tr 
-                        key={visit.appointmentId} 
+                        key={patient.patientId || `${patient.patientName}_${patient.patientPhone}`} 
                         className="hover:bg-bg-primary transition-smooth cursor-pointer"
-                        onClick={() => navigate(`/dashboard/patients/${visit.patientId}`)}
+                        onClick={() => navigate(`/dashboard/patients/${patient.patientId}`)}
                       >
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-sm font-medium text-text-100">{visit.patientName}</div>
-                          {visit.patientEmail && (
-                            <div className="text-xs text-text-10">{visit.patientEmail}</div>
+                          <div className="text-sm font-medium text-text-100">{patient.patientName}</div>
+                          {patient.patientEmail && (
+                            <div className="text-xs text-text-10">{patient.patientEmail}</div>
                           )}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-sm text-text-50">{visit.patientPhone}</div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-sm text-text-100">{visit.doctorName}</div>
-                          {visit.doctorSpecialization && (
-                            <div className="text-xs text-text-10">{visit.doctorSpecialization}</div>
-                          )}
+                          <div className="text-sm text-text-50">{patient.patientPhone}</div>
                         </td>
                         <td className="px-4 py-3">
                           <div className="text-sm text-text-50">
-                            {visit.reason || '-'}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-sm text-text-50">
-                            {formatAppointmentDateTime(visit.appointmentDate)}
+                            {Array.from(patient.doctors).length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {Array.from(patient.doctors).slice(0, 2).map((doctor, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="px-2 py-0.5 bg-bg-primary rounded text-xs"
+                                  >
+                                    {doctor}
+                                  </span>
+                                ))}
+                                {Array.from(patient.doctors).length > 2 && (
+                                  <span className="text-xs text-text-10">
+                                    +{Array.from(patient.doctors).length - 2}
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              '-'
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="text-sm font-medium text-text-100">
-                            {formatAmount(visit.amount)}
+                            {patient.visitCount}
                           </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          {getStatusBadge(visit.status)}
+                          <div className="text-sm text-text-50">
+                            {formatAppointmentDateTime(patient.lastVisitDate)}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <div className="text-sm font-medium text-text-100">
+                            {formatAmount(patient.totalAmount)}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {getStatusBadge(patient.lastVisitStatus)}
                         </td>
                       </tr>
                     ))}

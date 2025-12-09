@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { Button } from '../../components/common';
 import { usePatientsForTestimonials } from '../../hooks/usePublic';
+import { PublicBookNowModal } from '../../components/public/PublicBookNowModal';
 import searchIcon from '../../assets/icons/search.svg';
 import calendarIcon from '../../assets/icons/calendar.svg';
 import hippocratesLogo from '../../assets/icons/hippocrates-logo.png';
@@ -9,6 +11,7 @@ import doctorIcon from '../../assets/icons/doctor.svg';
 
 export const HomePage: React.FC = () => {
   const { data: patients = [], isLoading: patientsLoading } = usePatientsForTestimonials(3);
+  const [isBookNowModalOpen, setIsBookNowModalOpen] = useState(false);
 
   const testimonials = [
     {
@@ -62,8 +65,16 @@ export const HomePage: React.FC = () => {
             </div>
           </Link>
           
-          <div className="flex gap-3">
-            <Link to="/clinics">
+          <div className="flex gap-2 md:gap-3 items-center">
+            <Button 
+              onClick={() => setIsBookNowModalOpen(true)}
+              className="text-xs md:text-sm font-medium bg-main-100 text-white hover:bg-main-200 hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg px-4 md:px-6 py-2 md:py-2.5 whitespace-nowrap"
+            >
+              <img src={calendarIcon} alt="Calendar" className="w-4 h-4 mr-1 md:mr-2 inline" />
+              <span className="hidden sm:inline">Записаться сейчас</span>
+              <span className="sm:hidden">Записаться</span>
+            </Button>
+            <Link to="/clinics" className="hidden md:block">
               <Button 
                 variant="secondary" 
                 className="text-sm font-normal"
@@ -73,7 +84,7 @@ export const HomePage: React.FC = () => {
             </Link>
             <Link to="/login">
               <Button 
-                className="text-sm font-normal hover:text-white"
+                className="text-xs md:text-sm font-normal hover:text-white px-3 md:px-4 py-2 md:py-2.5"
                 style={{ 
                   backgroundColor: '#E6F7F6', 
                   color: '#00a79d'
@@ -87,7 +98,8 @@ export const HomePage: React.FC = () => {
                   e.currentTarget.style.color = '#00a79d';
                 }}
               >
-                Вход для клиник
+                <span className="hidden sm:inline">Вход для клиник</span>
+                <span className="sm:hidden">Вход</span>
               </Button>
             </Link>
           </div>
@@ -394,6 +406,16 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Book Now Modal */}
+      <PublicBookNowModal
+        isOpen={isBookNowModalOpen}
+        onClose={() => setIsBookNowModalOpen(false)}
+        onSuccess={() => {
+          setIsBookNowModalOpen(false);
+          toast.success('✅ Ваша заявка принята! Клиника свяжется с вами в ближайшее время.');
+        }}
+      />
 
       {/* Footer - Enhanced */}
       <footer className="bg-bg-white border-t border-stroke py-12 relative z-10">

@@ -8,8 +8,7 @@ import { PatientAnalyticsBarChart } from '../../components/dashboard/PatientAnal
 import { PatientAnalyticsPieChart } from '../../components/dashboard/PatientAnalyticsPieChart';
 import { PatientAnalyticsTable } from '../../components/dashboard/PatientAnalyticsTable';
 import { usePatientAppointments } from '../../hooks/usePatientAppointments';
-import { Appointment } from '../../types/api.types';
-import { Calendar, Clock, Filter, Search, BarChart3, TrendingUp } from 'lucide-react';
+import { Calendar, Filter, Search, BarChart3, TrendingUp } from 'lucide-react';
 
 // Import icons
 import refreshIcon from '../../assets/icons/refresh.svg';
@@ -68,7 +67,8 @@ export const PatientAnalyticsPage: React.FC = () => {
     limit: 1000, // Загружаем больше данных для аналитики
   });
 
-  const allAppointments = data?.appointments || [];
+  // Backend возвращает { appointments: [...], meta: {...} }, а не { data: [...] }
+  const allAppointments = (data as any)?.appointments || [];
 
   // Фильтрация записей
   const filteredAppointments = useMemo(() => {
@@ -135,7 +135,7 @@ export const PatientAnalyticsPage: React.FC = () => {
   // Получаем уникальных врачей для фильтра
   const uniqueDoctors = useMemo(() => {
     const doctorsMap = new Map<string, { id: string; name: string }>();
-    allAppointments.forEach((apt) => {
+    allAppointments.forEach((apt: any) => {
       if (apt.doctor?.id && apt.doctor?.name) {
         if (!doctorsMap.has(apt.doctor.id)) {
           doctorsMap.set(apt.doctor.id, {

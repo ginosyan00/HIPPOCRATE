@@ -14,7 +14,7 @@ import {
 } from '../../hooks/useAnalytics';
 import { useDoctors } from '../../hooks/useUsers';
 import { AnalyticsFilters } from '../../services/analytics.service';
-import { format, startOfWeek, endOfWeek } from 'date-fns';
+import { format, startOfWeek } from 'date-fns';
 
 /**
  * Analytics Page
@@ -47,7 +47,7 @@ export const AnalyticsPage: React.FC = () => {
 
   // Загрузка врачей
   const { data: doctorsData } = useDoctors();
-  const doctors = doctorsData?.users || [];
+  const doctors = doctorsData || [];
 
   // Построение фильтров для API
   const filters: AnalyticsFilters = React.useMemo(() => {
@@ -126,7 +126,6 @@ export const AnalyticsPage: React.FC = () => {
     if (selectedWeek === 'current') {
       const today = new Date();
       const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-      const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
       setWeek(format(weekStart, 'yyyy-MM-dd'));
       setDateFrom('');
       setDateTo('');
@@ -158,7 +157,7 @@ export const AnalyticsPage: React.FC = () => {
             <h1 className="text-2xl font-semibold text-text-100">Аналитика</h1>
             <p className="text-sm text-text-10 mt-1">Общая статистика и аналитика клиники</p>
           </div>
-          <Button onClick={handleResetFilters} variant="outline">
+          <Button onClick={handleResetFilters} variant="secondary">
             Сбросить фильтры
           </Button>
         </div>

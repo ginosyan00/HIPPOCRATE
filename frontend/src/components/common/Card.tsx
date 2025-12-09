@@ -7,6 +7,7 @@ interface CardProps {
   footer?: React.ReactNode;
   padding?: 'none' | 'sm' | 'md' | 'lg';
   onClick?: () => void;
+  style?: React.CSSProperties;
 }
 
 /**
@@ -19,7 +20,8 @@ export const Card: React.FC<CardProps> = ({
   title, 
   footer,
   padding = 'md',
-  onClick
+  onClick,
+  style
 }) => {
   const paddingStyles = {
     none: '',
@@ -32,6 +34,7 @@ export const Card: React.FC<CardProps> = ({
     <div 
       className={`bg-bg-white border border-stroke rounded-lg overflow-hidden ${className}`}
       onClick={onClick}
+      style={style}
     >
       {title && (
         <div className="px-5 py-4 border-b border-stroke">

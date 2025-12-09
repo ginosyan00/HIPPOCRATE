@@ -165,13 +165,15 @@ export const PatientClinicsPage: React.FC = () => {
                 {/* Enhanced Clinics Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {clinics.map((clinic: Clinic, index: number) => (
-                    <Card 
-                      key={clinic.id} 
-                      padding="none" 
-                      className="overflow-hidden border-2 border-stroke hover:border-main-100 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-2 bg-bg-white group animate-in fade-in slide-in-from-bottom-4"
+                    <div
+                      key={clinic.id}
                       style={{ animationDelay: `${index * 100}ms` }}
-                      onClick={() => handleClinicClick(clinic)}
                     >
+                      <Card 
+                        padding="none" 
+                        className="overflow-hidden border-2 border-stroke hover:border-main-100 hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-2 bg-bg-white group animate-in fade-in slide-in-from-bottom-4"
+                        onClick={() => handleClinicClick(clinic)}
+                      >
                       {/* Hero Image or Gradient Background */}
                       {clinic.heroImage ? (
                         <div className="relative h-48 overflow-hidden">
@@ -277,6 +279,7 @@ export const PatientClinicsPage: React.FC = () => {
                         </Button>
                       </div>
                     </Card>
+                    </div>
                   ))}
                 </div>
               </>

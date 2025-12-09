@@ -138,6 +138,38 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
     }
   };
 
+  // Получаем иконку статуса
+  const getStatusIcon = (status: string): string => {
+    switch (status) {
+      case 'pending':
+        return clockIcon;
+      case 'confirmed':
+        return checkIcon;
+      case 'completed':
+        return checkIcon;
+      case 'cancelled':
+        return xIcon;
+      default:
+        return clockIcon;
+    }
+  };
+
+  // Получаем метку статуса
+  const getStatusLabel = (status: string): string => {
+    switch (status) {
+      case 'pending':
+        return 'Ожидает';
+      case 'confirmed':
+        return 'Подтвержден';
+      case 'completed':
+        return 'Завершен';
+      case 'cancelled':
+        return 'Отменен';
+      default:
+        return status;
+    }
+  };
+
   return (
     <div className={`space-y-4 ${className}`}>
       {/* Calendar Header - Навигация как в Bitrix */}

@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
 import { useDoctors } from '../../hooks/useUsers';
 import { useConversations, useMessages, useSendMessage } from '../../hooks/useChat';
-import { useAuthStore } from '../../store/useAuthStore';
 import { User } from '../../types/api.types';
-import { Conversation, Message } from '../../services/chat.service';
 import { ChatMessage } from '../../components/chat/ChatMessage';
 import { ChatInput } from '../../components/chat/ChatInput';
 import { Spinner } from '../../components/common/Spinner';
@@ -15,13 +13,13 @@ import { Card } from '../../components/common';
  * Страница чата для клиники - позволяет выбрать врача и просмотреть все его беседы
  */
 export const ClinicChatPage: React.FC = () => {
-  const user = useAuthStore((state) => state.user);
   const [selectedDoctor, setSelectedDoctor] = useState<User | null>(null);
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
   // Загружаем список врачей
-  const { data: doctors = [], isLoading: isLoadingDoctors } = useDoctors();
+  const { data: doctorsData, isLoading: isLoadingDoctors } = useDoctors();
+  const doctors = doctorsData || [];
 
   // Загружаем все беседы клиники
   const { conversations, isLoading: isLoadingConversations } = useConversations();
@@ -359,7 +357,7 @@ export const ClinicChatPage: React.FC = () => {
                         key={message.id}
                         message={message}
                         showAvatar={true}
-                        isGrouped={isGrouped}
+                        isGrouped={isGrouped || false}
                         conversation={conversations.find((c) => c.id === message.conversationId)}
                       />
                     );

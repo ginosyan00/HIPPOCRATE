@@ -49,7 +49,16 @@ export const PartnerDashboard: React.FC = () => {
       processing: 'В обработке',
       completed: 'Выполнен',
     };
-    return { style: styles[status as keyof typeof styles], label: labels[status as keyof typeof labels] };
+    const icons = {
+      pending: clockIcon,
+      processing: clockIcon,
+      completed: checkIcon,
+    };
+    return { 
+      style: styles[status as keyof typeof styles], 
+      label: labels[status as keyof typeof labels],
+      icon: icons[status as keyof typeof icons]
+    };
   };
 
   const getPartnerIcon = () => {

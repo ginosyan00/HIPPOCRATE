@@ -19,6 +19,7 @@ import settingsIcon from '../../assets/icons/settings.svg';
 import lightbulbIcon from '../../assets/icons/lightbulb.svg';
 import fileTextIcon from '../../assets/icons/file-text.svg';
 import mailIcon from '../../assets/icons/mail.svg';
+import phoneIcon from '../../assets/icons/phone.svg';
 
 /**
  * AdminDashboard

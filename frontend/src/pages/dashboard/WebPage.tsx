@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
-import { ProfileSection } from '../../components/dashboard/ProfileSection';
+import { ProfileSection, ProfileSectionRef } from '../../components/dashboard/ProfileSection';
 import { LogoUpload } from '../../components/dashboard/LogoUpload';
 import { HeroImageUpload } from '../../components/dashboard/HeroImageUpload';
-import { WorkingHoursEditor } from '../../components/dashboard/WorkingHoursEditor';
+import { WorkingHoursEditor, WorkingHoursEditorRef } from '../../components/dashboard/WorkingHoursEditor';
 import { CertificatesSection } from '../../components/dashboard/CertificatesSection';
 import { Card } from '../../components/common/Card';
+import { Button } from '../../components/common/Button';
 import { useClinic, useUpdateClinic, useUploadLogo, useUploadHeroImage } from '../../hooks/useClinic';
 import { WorkingHours } from '../../types/api.types';
 import { toast } from 'react-hot-toast';
@@ -20,6 +21,10 @@ export const WebPage: React.FC = () => {
   const updateClinicMutation = useUpdateClinic();
   const uploadLogoMutation = useUploadLogo();
   const uploadHeroImageMutation = useUploadHeroImage();
+  
+  // Refs для доступа к методам компонентов
+  const profileSectionRef = useRef<ProfileSectionRef>(null);
+  const workingHoursEditorRef = useRef<WorkingHoursEditorRef>(null);
 
   const handleUpdateClinic = async (data: any) => {
     try {
@@ -61,6 +66,27 @@ export const WebPage: React.FC = () => {
     }
   };
 
+  // Общий обработчик сохранения всех изменений
+  const handleSaveAll = async () => {
+    try {
+      // Сохраняем профиль и график работы последовательно
+      const profileSuccess = await profileSectionRef.current?.submit();
+      const scheduleSuccess = await workingHoursEditorRef.current?.submit();
+
+      if (profileSuccess && scheduleSuccess) {
+        toast.success('Все изменения успешно сохранены');
+      } else if (!profileSuccess && !scheduleSuccess) {
+        toast.error('Ошибка при сохранении изменений');
+      } else if (!profileSuccess) {
+        toast.error('Ошибка при сохранении профиля');
+      } else {
+        toast.error('Ошибка при сохранении графика работы');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Ошибка при сохранении изменений');
+    }
+  };
+
   if (clinicLoading) {
     return (
       <NewDashboardLayout>
@@ -99,6 +125,7 @@ export const WebPage: React.FC = () => {
 
         {/* Профиль */}
         <ProfileSection
+          ref={profileSectionRef}
           clinic={clinic}
           onUpdate={handleUpdateClinic}
           isLoading={updateClinicMutation.isPending}
@@ -106,10 +133,24 @@ export const WebPage: React.FC = () => {
 
         {/* График работы */}
         <WorkingHoursEditor
+          ref={workingHoursEditorRef}
           workingHours={clinic?.workingHours}
           onUpdate={handleUpdateWorkingHours}
           isLoading={updateClinicMutation.isPending}
         />
+
+        {/* Общая кнопка сохранения */}
+        <div className="flex justify-end pt-4">
+          <Button
+            variant="primary"
+            size="md"
+            onClick={handleSaveAll}
+            isLoading={updateClinicMutation.isPending}
+            disabled={updateClinicMutation.isPending}
+          >
+            Сохранить изменения
+          </Button>
+        </div>
 
         {/* Сертификаты */}
         <CertificatesSection />

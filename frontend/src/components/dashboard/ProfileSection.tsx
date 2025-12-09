@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { Input } from '../common/Input';
-import { Button } from '../common/Button';
 import { Card } from '../common/Card';
 import { Clinic } from '../../types/api.types';
 
@@ -10,11 +9,16 @@ interface ProfileSectionProps {
   isLoading?: boolean;
 }
 
+export interface ProfileSectionRef {
+  submit: () => Promise<boolean>;
+}
+
 /**
  * ProfileSection Component
  * Секция для редактирования профиля клиники
  */
-export const ProfileSection: React.FC<ProfileSectionProps> = ({ clinic, onUpdate, isLoading = false }) => {
+export const ProfileSection = forwardRef<ProfileSectionRef, ProfileSectionProps>(
+  ({ clinic, onUpdate, isLoading = false }, ref) => {
   const [formData, setFormData] = useState({
     name: '',
     slug: '',
@@ -80,24 +84,29 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({ clinic, onUpdate
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSubmit = async (): Promise<boolean> => {
     if (!validate()) {
-      return;
+      return false;
     }
 
     try {
       await onUpdate(formData);
+      return true;
     } catch (err: any) {
       // Ошибки обрабатываются в родительском компоненте
       console.error('Ошибка обновления профиля:', err);
+      return false;
     }
   };
 
+  // Экспортируем метод submit через ref
+  useImperativeHandle(ref, () => ({
+    submit: handleSubmit,
+  }));
+
   return (
     <Card title="Профиль клиники" padding="lg">
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <Input
             label="Название клиники"
@@ -170,13 +179,10 @@ export const ProfileSection: React.FC<ProfileSectionProps> = ({ clinic, onUpdate
           />
         </div>
 
-        <div className="flex justify-end pt-4 border-t border-stroke">
-          <Button type="submit" variant="primary" size="md" isLoading={isLoading} disabled={isLoading}>
-            Сохранить изменения
-          </Button>
-        </div>
-      </form>
+      </div>
     </Card>
   );
-};
+});
+
+ProfileSection.displayName = 'ProfileSection';
 

@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '../common/Button';
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { Card } from '../common/Card';
 import { WorkingHours, DaySchedule } from '../../types/api.types';
 
@@ -7,6 +6,10 @@ interface WorkingHoursEditorProps {
   workingHours?: WorkingHours;
   onUpdate: (workingHours: WorkingHours) => Promise<void>;
   isLoading?: boolean;
+}
+
+export interface WorkingHoursEditorRef {
+  submit: () => Promise<boolean>;
 }
 
 const DAYS = [
@@ -23,11 +26,8 @@ const DAYS = [
  * WorkingHoursEditor Component
  * Компонент для редактирования графика работы клиники
  */
-export const WorkingHoursEditor: React.FC<WorkingHoursEditorProps> = ({
-  workingHours,
-  onUpdate,
-  isLoading = false,
-}) => {
+export const WorkingHoursEditor = forwardRef<WorkingHoursEditorRef, WorkingHoursEditorProps>(
+  ({ workingHours, onUpdate, isLoading = false }, ref) => {
   const [schedule, setSchedule] = useState<WorkingHours>(() => {
     if (workingHours) {
       return workingHours;
@@ -90,14 +90,24 @@ export const WorkingHoursEditor: React.FC<WorkingHoursEditorProps> = ({
     setSchedule(newSchedule);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await onUpdate(schedule);
+  const handleSubmit = async (): Promise<boolean> => {
+    try {
+      await onUpdate(schedule);
+      return true;
+    } catch (err: any) {
+      console.error('Ошибка обновления графика работы:', err);
+      return false;
+    }
   };
+
+  // Экспортируем метод submit через ref
+  useImperativeHandle(ref, () => ({
+    submit: handleSubmit,
+  }));
 
   return (
     <Card title="График работы" padding="lg">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-4">
         <div className="space-y-3">
           {DAYS.map(({ key, label }) => {
             const daySchedule = schedule[key];
@@ -169,13 +179,10 @@ export const WorkingHoursEditor: React.FC<WorkingHoursEditorProps> = ({
           })}
         </div>
 
-        <div className="flex justify-end pt-4 border-t border-stroke">
-          <Button type="submit" variant="primary" size="md" isLoading={isLoading} disabled={isLoading}>
-            Сохранить график
-          </Button>
-        </div>
-      </form>
+      </div>
     </Card>
   );
-};
+});
+
+WorkingHoursEditor.displayName = 'WorkingHoursEditor';
 

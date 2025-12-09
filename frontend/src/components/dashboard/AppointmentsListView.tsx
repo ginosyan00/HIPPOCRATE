@@ -4,6 +4,7 @@ import { AppointmentsTable } from './AppointmentsTable';
 import { Appointment } from '../../types/api.types';
 import { formatAppointmentDateTime } from '../../utils/dateFormat';
 import { Pencil, Check, X } from 'lucide-react';
+import { StatusDropdown } from './StatusDropdown';
 
 interface AppointmentsListViewProps {
   appointments: Appointment[];
@@ -36,6 +37,9 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
   const [editingAmountId, setEditingAmountId] = useState<string | null>(null);
   const [editingAmountValue, setEditingAmountValue] = useState<string>('');
   const [amountError, setAmountError] = useState<string>('');
+  
+  // Состояние для управления открытым dropdown
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   /**
    * Начинает редактирование суммы
@@ -111,26 +115,6 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const styles = {
-      pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-      confirmed: 'bg-main-10 text-main-100 border-main-100/20',
-      completed: 'bg-secondary-10 text-secondary-100 border-secondary-100/20',
-      cancelled: 'bg-bg-primary text-text-10 border-stroke',
-    };
-    const labels = {
-      pending: 'Ожидает',
-      confirmed: 'Подтвержден',
-      completed: 'Завершен',
-      cancelled: 'Отменен',
-    };
-    return (
-      <span className={`px-3 py-1 border rounded-sm text-xs font-normal ${styles[status as keyof typeof styles]}`}>
-        {labels[status as keyof typeof labels]}
-      </span>
-    );
-  };
-
   if (appointments.length === 0) {
     return (
       <Card>
@@ -191,7 +175,6 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
                       )}
                     </div>
                   </div>
-                  {getStatusBadge(appointment.status)}
                 </div>
 
                 {/* Doctor and Appointment Details */}
@@ -347,48 +330,26 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
               </div>
 
               {/* Actions */}
-              <div className="flex flex-col gap-2 ml-4 min-w-[120px]">
-                {appointment.status === 'pending' && (
-                  <Button
-                    size="sm"
-                    variant="success"
-                    onClick={() => onStatusChange(appointment.id, 'confirmed')}
-                    isLoading={loadingAppointments[appointment.id] === 'confirmed'}
-                    disabled={!!loadingAppointments[appointment.id]}
-                  >
-                    Подтвердить
-                  </Button>
-                )}
-
-                {appointment.status === 'confirmed' && (
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    onClick={() => onStatusChange(appointment.id, 'completed')}
-                    isLoading={loadingAppointments[appointment.id] === 'completed'}
-                    disabled={!!loadingAppointments[appointment.id]}
-                  >
-                    Завершить
-                  </Button>
-                )}
-
-                {['pending', 'confirmed'].includes(appointment.status) && (
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    onClick={() => onStatusChange(appointment.id, 'cancelled')}
-                    isLoading={loadingAppointments[appointment.id] === 'cancelled'}
-                    disabled={!!loadingAppointments[appointment.id]}
-                  >
-                    Отменить
-                  </Button>
-                )}
-
-                {appointment.status === 'cancelled' && (
-                  <div className="text-xs text-text-10 text-center py-2">
-                    ❌ Приём отменён
-                  </div>
-                )}
+              <div className="flex flex-col gap-2 ml-4 min-w-[140px]">
+                {/* Dropdown для выбора статуса */}
+                <StatusDropdown
+                  currentStatus={appointment.status}
+                  onStatusChange={(status) => {
+                    onStatusChange(appointment.id, status);
+                    setOpenDropdownId(null); // Закрываем dropdown после выбора
+                  }}
+                  isLoading={!!loadingAppointments[appointment.id]}
+                  disabled={!!loadingAppointments[appointment.id]}
+                  isOpen={openDropdownId === appointment.id}
+                  onToggle={(isOpen) => {
+                    if (isOpen) {
+                      setOpenDropdownId(appointment.id); // Открываем только этот dropdown
+                    } else {
+                      setOpenDropdownId(null); // Закрываем все
+                    }
+                  }}
+                  dropdownId={appointment.id}
+                />
               </div>
             </div>
           </Card>

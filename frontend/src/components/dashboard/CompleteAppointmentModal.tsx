@@ -25,12 +25,17 @@ export const CompleteAppointmentModal: React.FC<CompleteAppointmentModalProps> =
   const [error, setError] = useState<string>('');
 
   // Сброс формы при открытии/закрытии
+  // Если приём уже завершен, предзаполняем сумму
   React.useEffect(() => {
     if (isOpen) {
-      setAmount('');
+      if (appointment?.status === 'completed' && appointment?.amount) {
+        setAmount(String(appointment.amount));
+      } else {
+        setAmount('');
+      }
       setError('');
     }
-  }, [isOpen]);
+  }, [isOpen, appointment]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +76,7 @@ export const CompleteAppointmentModal: React.FC<CompleteAppointmentModalProps> =
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Завершить приём"
+      title={appointment?.status === 'completed' ? 'Изменить завершенный приём' : 'Завершить приём'}
       size="md"
       footer={
         <div className="flex gap-2 justify-end">
@@ -79,7 +84,7 @@ export const CompleteAppointmentModal: React.FC<CompleteAppointmentModalProps> =
             Отмена
           </Button>
           <Button variant="primary" onClick={handleSubmit} isLoading={isLoading}>
-            Завершить
+            {appointment?.status === 'completed' ? 'Сохранить изменения' : 'Завершить'}
           </Button>
         </div>
       }

@@ -76,6 +76,38 @@ body {
     animation: fade-out 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
   
+  /* Dropdown animation - плавное появление с масштабированием */
+  @keyframes dropdown-in {
+    from {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  .animate-dropdown-in {
+    animation: dropdown-in 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  
+  /* Анимация для элементов внутри dropdown - плавное появление */
+  @keyframes dropdown-item-in {
+    from {
+      opacity: 0;
+      transform: translateX(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .animate-dropdown-item-in {
+    animation: dropdown-item-in 0.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  
   /* Плавные переходы для карточек приёмов */
   .appointment-card {
     transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),

@@ -3,6 +3,7 @@ import { Appointment } from '../../types/api.types';
 import { Button } from '../common';
 import { formatAppointmentDateTime } from '../../utils/dateFormat';
 import { Pencil, Check, X } from 'lucide-react';
+import { StatusDropdown } from './StatusDropdown';
 
 interface AppointmentsTableProps {
   appointments: Appointment[];
@@ -29,6 +30,9 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
   const [editingAmountId, setEditingAmountId] = useState<string | null>(null);
   const [editingAmountValue, setEditingAmountValue] = useState<string>('');
   const [amountError, setAmountError] = useState<string>('');
+  
+  // Состояние для управления открытым dropdown
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
 
   /**
    * Начинает редактирование суммы
@@ -102,25 +106,6 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
       e.preventDefault();
       handleCancelEditAmount();
     }
-  };
-  const getStatusBadge = (status: string) => {
-    const styles = {
-      pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-      confirmed: 'bg-main-10 text-main-100 border-main-100/20',
-      completed: 'bg-secondary-10 text-secondary-100 border-secondary-100/20',
-      cancelled: 'bg-bg-primary text-text-10 border-stroke',
-    };
-    const labels = {
-      pending: 'Ожидает',
-      confirmed: 'Подтвержден',
-      completed: 'Завершен',
-      cancelled: 'Отменен',
-    };
-    return (
-      <span className={`px-3 py-1 border rounded-sm text-xs font-normal ${styles[status as keyof typeof styles]}`}>
-        {labels[status as keyof typeof labels]}
-      </span>
-    );
   };
 
   /**
@@ -196,9 +181,6 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
             </th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
               Сумма
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-              Статус
             </th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
               Действия
@@ -314,55 +296,26 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
                 )}
               </td>
               <td className="px-4 py-3 text-sm">
-                {getStatusBadge(appointment.status)}
-              </td>
-              <td className="px-4 py-3 text-sm">
-                <div className="flex flex-col gap-2 min-w-[120px]">
-                  {/* Кнопка "Подтвердить" - только для pending */}
-                  {appointment.status === 'pending' && (
-                    <Button
-                      size="sm"
-                      variant="success"
-                      onClick={() => onStatusChange(appointment.id, 'confirmed')}
-                      isLoading={loadingAppointments[appointment.id] === 'confirmed'}
-                      disabled={!!loadingAppointments[appointment.id]}
-                    >
-                      Подтвердить
-                    </Button>
-                  )}
-
-                  {/* Кнопка "Завершить" - только для confirmed */}
-                  {appointment.status === 'confirmed' && (
-                    <Button
-                      size="sm"
-                      variant="primary"
-                      onClick={() => onStatusChange(appointment.id, 'completed')}
-                      isLoading={loadingAppointments[appointment.id] === 'completed'}
-                      disabled={!!loadingAppointments[appointment.id]}
-                    >
-                      Завершить
-                    </Button>
-                  )}
-
-                  {/* Кнопка "Отменить" - для pending и confirmed */}
-                  {['pending', 'confirmed'].includes(appointment.status) && (
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      onClick={() => onStatusChange(appointment.id, 'cancelled')}
-                      isLoading={loadingAppointments[appointment.id] === 'cancelled'}
-                      disabled={!!loadingAppointments[appointment.id]}
-                    >
-                      Отменить
-                    </Button>
-                  )}
-
-                  {/* Информация для отмененных приёмов */}
-                  {appointment.status === 'cancelled' && (
-                    <div className="text-xs text-text-10 text-center py-2">
-                      ❌ Отменён
-                    </div>
-                  )}
+                <div className="flex flex-col gap-2 min-w-[140px]">
+                  {/* Dropdown для выбора статуса */}
+                  <StatusDropdown
+                    currentStatus={appointment.status}
+                    onStatusChange={(status) => {
+                      onStatusChange(appointment.id, status);
+                      setOpenDropdownId(null); // Закрываем dropdown после выбора
+                    }}
+                    isLoading={!!loadingAppointments[appointment.id]}
+                    disabled={!!loadingAppointments[appointment.id]}
+                    isOpen={openDropdownId === appointment.id}
+                    onToggle={(isOpen) => {
+                      if (isOpen) {
+                        setOpenDropdownId(appointment.id); // Открываем только этот dropdown
+                      } else {
+                        setOpenDropdownId(null); // Закрываем все
+                      }
+                    }}
+                    dropdownId={appointment.id}
+                  />
 
                   {/* Inline Error Message */}
                   {errorMessages[appointment.id] && (

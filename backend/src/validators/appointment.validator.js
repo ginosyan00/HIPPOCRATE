@@ -51,6 +51,7 @@ export const updateAppointmentSchema = Joi.object({
 /**
  * Изменение статуса
  * При статусе 'completed' можно передать amount (сумму оплаты)
+ * При статусе 'cancelled' обязательно передать cancellationReason и опционально suggestedNewDate
  */
 export const updateStatusSchema = Joi.object({
   status: Joi.string()
@@ -64,10 +65,20 @@ export const updateStatusSchema = Joi.object({
     'number.min': 'Amount must be a positive number',
     'number.base': 'Amount must be a number',
   }),
-}).when(Joi.object({ status: Joi.string().valid('completed') }), {
-  then: Joi.object({
-    status: Joi.string().valid('completed').required(),
-    amount: Joi.number().min(0).optional(), // Опционально, но рекомендуется при завершении
+  cancellationReason: Joi.string().allow('').optional(),
+  suggestedNewDate: Joi.date().iso().optional().messages({
+    'date.base': 'SuggestedNewDate must be a valid ISO date',
+    'date.format': 'SuggestedNewDate must be in ISO format (e.g., 2025-01-15T10:30:00.000Z)',
   }),
-});
+}).custom((value, helpers) => {
+  // Кастомная валидация: если статус 'cancelled', cancellationReason обязателен
+  if (value.status === 'cancelled') {
+    if (!value.cancellationReason || value.cancellationReason.trim() === '') {
+      return helpers.error('any.custom', {
+        message: 'Cancellation reason is required when status is cancelled',
+      });
+    }
+  }
+  return value;
+}, 'custom validation');
 

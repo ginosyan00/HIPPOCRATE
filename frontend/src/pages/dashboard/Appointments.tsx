@@ -311,7 +311,29 @@ export const AppointmentsPage: React.FC = () => {
       });
     } catch (err: any) {
       console.error('❌ [APPOINTMENTS] Ошибка отмены приёма:', err);
-      throw err;
+      
+      // Формируем понятное сообщение об ошибке
+      let errorMessage = 'Ошибка при отмене приёма. Попробуйте позже.';
+      
+      if (err.details && Array.isArray(err.details)) {
+        // Если есть детали валидации, показываем первое сообщение
+        const firstError = err.details[0];
+        errorMessage = firstError.message || errorMessage;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      // Очищаем состояние загрузки
+      setLoadingAppointments(prev => {
+        const updated = { ...prev };
+        delete updated[appointmentId];
+        return updated;
+      });
+      
+      // Пробрасываем ошибку с понятным сообщением
+      const errorWithMessage = new Error(errorMessage);
+      (errorWithMessage as any).details = err.details;
+      throw errorWithMessage;
     }
   };
 
@@ -601,7 +623,8 @@ export const AppointmentsPage: React.FC = () => {
             // При клике на приём в недельном виде
             if (appointment.status === 'pending') {
               handleStatusChange(appointment.id, 'confirmed');
-            } else if (appointment.status === 'confirmed') {
+            } else if (appointment.status === 'confirmed' || appointment.status === 'completed') {
+              // Для confirmed и completed - открываем модальное окно завершения/изменения
               handleStatusChange(appointment.id, 'completed');
             }
           }}

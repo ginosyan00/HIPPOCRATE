@@ -447,7 +447,8 @@ export const DoctorAppointmentsSection: React.FC = () => {
             // При клике на приём в календаре - открываем модальное окно или выполняем действие
             if (appointment.status === 'pending') {
               handleStatusChange(appointment.id, 'confirmed');
-            } else if (appointment.status === 'confirmed') {
+            } else if (appointment.status === 'confirmed' || appointment.status === 'completed') {
+              // Для confirmed и completed - открываем модальное окно завершения/изменения
               handleStatusChange(appointment.id, 'completed');
             }
           }}
@@ -467,7 +468,8 @@ export const DoctorAppointmentsSection: React.FC = () => {
             // При клике на приём в недельном виде
             if (appointment.status === 'pending') {
               handleStatusChange(appointment.id, 'confirmed');
-            } else if (appointment.status === 'confirmed') {
+            } else if (appointment.status === 'confirmed' || appointment.status === 'completed') {
+              // Для confirmed и completed - открываем модальное окно завершения/изменения
               handleStatusChange(appointment.id, 'completed');
             }
           }}

@@ -572,17 +572,24 @@ export async function updateStatus(
 
   const currentStatus = appointment.status;
 
-  // Проверка разрешенных переходов
-  if (!STATUS_TRANSITIONS[currentStatus].includes(newStatus)) {
-    throw new Error(
-      `Cannot change status from '${currentStatus}' to '${newStatus}'. Allowed transitions: ${STATUS_TRANSITIONS[currentStatus].join(', ')}`
-    );
-  }
-
   // Проверка прав: только ADMIN, CLINIC или DOCTOR могут переводить в completed
   // Также ADMIN, CLINIC и DOCTOR могут подтверждать и отменять приёмы
   // CLINIC - администратор клиники, имеет те же права что и DOCTOR
   const normalizedRole = userRole?.toUpperCase();
+  
+  // Для CLINIC и DOCTOR разрешаем любые переходы статусов
+  // Для других ролей применяем стандартные правила переходов
+  const isClinicOrDoctor = ['CLINIC', 'DOCTOR'].includes(normalizedRole);
+  
+  if (!isClinicOrDoctor) {
+    // Проверка разрешенных переходов для других ролей
+    if (!STATUS_TRANSITIONS[currentStatus].includes(newStatus)) {
+      throw new Error(
+        `Cannot change status from '${currentStatus}' to '${newStatus}'. Allowed transitions: ${STATUS_TRANSITIONS[currentStatus].join(', ')}`
+      );
+    }
+  }
+  
   if (newStatus === 'completed' && !['ADMIN', 'CLINIC', 'DOCTOR'].includes(normalizedRole)) {
     throw new Error('Only admin, clinic or doctor can mark appointment as completed');
   }
@@ -610,6 +617,13 @@ export async function updateStatus(
   // Если переходим в completed и передана сумма, сохраняем её
   if (newStatus === 'completed' && amount !== null && amount !== undefined) {
     updateData.amount = amount;
+  }
+  
+  // Если переходим с completed на другой статус, amount остается для истории
+  // Если переходим с cancelled на другой статус, очищаем причину отмены
+  if (currentStatus === 'cancelled' && newStatus !== 'cancelled') {
+    updateData.cancellationReason = null;
+    updateData.suggestedNewDate = null;
   }
 
   // Если отменяем, сохраняем причину и предложенное новое время

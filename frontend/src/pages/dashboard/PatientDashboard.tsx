@@ -9,20 +9,14 @@ import { usePatientAppointments } from '../../hooks/usePatientAppointments';
 import { useUnreadNotificationsCount, useMarkAllNotificationsAsRead } from '../../hooks/useNotifications';
 import { formatAppointmentDate, formatAppointmentTime } from '../../utils/dateFormat';
 
-/**
- * PatientDashboard
- * Գեղեցիկ dashboard պացիենտների համար
- */
 export const PatientDashboard: React.FC = () => {
   const navigate = useNavigate();
   const user = useAuthStore(state => state.user);
 
-  // Загружаем appointments пациента (больше данных для статистики и графиков)
   const { data: appointmentsData, isLoading: isLoadingAppointments } = usePatientAppointments({
     limit: 100, // Больше данных для графиков и статистики
   });
 
-  // Загружаем уведомления
   const { data: unreadCount = 0 } = useUnreadNotificationsCount();
   const markAllAsReadMutation = useMarkAllNotificationsAsRead();
 

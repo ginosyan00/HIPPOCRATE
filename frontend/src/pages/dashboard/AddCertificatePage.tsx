@@ -243,14 +243,28 @@ export const AddCertificatePage: React.FC = () => {
               <label className="block text-sm font-medium text-text-50 mb-2">
                 Файл сертификата <span className="text-red-500">*</span>
               </label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={handleFileSelect}
-                className="block w-full px-4 py-3 border border-stroke rounded-lg bg-bg-white text-sm text-text-100 focus:outline-none focus:ring-2 focus:ring-main-100 transition-smooth"
-                required
-              />
+              <div className="relative">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full px-4 py-3 border border-stroke rounded-lg bg-bg-white text-sm text-text-100 hover:bg-bg-secondary focus:outline-none focus:ring-2 focus:ring-main-100 transition-smooth text-left"
+                >
+                  {formData.file ? formData.file.name : 'Выбрать файл'}
+                </button>
+                {!formData.file && (
+                  <p className="text-xs text-text-10 mt-1">
+                    Файл не выбран
+                  </p>
+                )}
+              </div>
               <p className="text-xs text-text-10 mt-1">
                 Разрешены форматы: PDF, JPG, PNG. Максимальный размер: 10 MB
               </p>
@@ -270,7 +284,7 @@ export const AddCertificatePage: React.FC = () => {
                 </label>
                 <img
                   src={formData.fileUrl}
-                  alt="Preview"
+                  alt="Предпросмотр"
                   className="w-full max-h-64 object-contain border border-stroke rounded-lg"
                 />
               </div>

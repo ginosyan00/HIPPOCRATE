@@ -12,6 +12,7 @@ import { DoctorsPage } from './pages/dashboard/Doctors';
 import { AddDoctorPage } from './pages/dashboard/AddDoctorPage';
 import { AnalyticsPage } from './pages/dashboard/Analytics';
 import { WebPage } from './pages/dashboard/WebPage';
+import { AddCertificatePage } from './pages/dashboard/AddCertificatePage';
 import { SettingsPage } from './pages/dashboard/Settings';
 import { ClinicChatPage } from './pages/dashboard/ClinicChatPage';
 import { PatientDashboard } from './pages/dashboard/PatientDashboard';
@@ -257,6 +258,14 @@ function App() {
           element={
             <RoleProtectedRoute allowedRoles={[UserRole.ADMIN, 'CLINIC']}>
               <WebPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/web/certificates/add"
+          element={
+            <RoleProtectedRoute allowedRoles={[UserRole.ADMIN, 'CLINIC']}>
+              <AddCertificatePage />
             </RoleProtectedRoute>
           }
         />

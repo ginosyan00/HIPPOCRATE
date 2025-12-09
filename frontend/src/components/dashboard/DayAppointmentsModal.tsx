@@ -6,6 +6,12 @@ import { Appointment } from '../../types/api.types';
 import { formatAppointmentDateTime, formatAppointmentTime } from '../../utils/dateFormat';
 import { useAuthStore } from '../../store/useAuthStore';
 
+// Import icons
+import doctorIcon from '../../assets/icons/doctor.svg';
+import walletIcon from '../../assets/icons/wallet.svg';
+import phoneIcon from '../../assets/icons/phone.svg';
+import mailIcon from '../../assets/icons/mail.svg';
+
 interface DayAppointmentsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -155,10 +161,16 @@ export const DayAppointmentsModal: React.FC<DayAppointmentsModalProps> = ({
                               {patientName}
                             </h4>
                             {appointment.patient?.phone && (
-                              <p className="text-xs text-text-50">📱 {appointment.patient.phone}</p>
+                              <p className="text-xs text-text-50 flex items-center gap-1">
+                                <img src={phoneIcon} alt="Телефон" className="w-3 h-3" />
+                                {appointment.patient.phone}
+                              </p>
                             )}
                             {appointment.patient?.email && (
-                              <p className="text-xs text-text-50">📧 {appointment.patient.email}</p>
+                              <p className="text-xs text-text-50 flex items-center gap-1">
+                                <img src={mailIcon} alt="Email" className="w-3 h-3" />
+                                {appointment.patient.email}
+                              </p>
                             )}
                           </div>
                         </div>
@@ -166,7 +178,10 @@ export const DayAppointmentsModal: React.FC<DayAppointmentsModalProps> = ({
                         {/* Информация о враче */}
                         {appointment.doctor?.name && (
                           <div className="mb-3 text-sm">
-                            <span className="text-text-10">👨‍⚕️ Врач: </span>
+                            <span className="text-text-10 flex items-center gap-1">
+                              <img src={doctorIcon} alt="Врач" className="w-3 h-3" />
+                              Врач: 
+                            </span>
                             <span className="text-text-100 font-medium">{appointment.doctor.name}</span>
                             {appointment.doctor.specialization && (
                               <span className="text-text-50 ml-1">({appointment.doctor.specialization})</span>
@@ -193,7 +208,10 @@ export const DayAppointmentsModal: React.FC<DayAppointmentsModalProps> = ({
                         {/* Сумма */}
                         {appointment.amount && (
                           <div className="mt-3 pt-3 border-t border-stroke text-sm">
-                            <span className="text-text-10">💰 Сумма: </span>
+                            <span className="text-text-10 flex items-center gap-1">
+                              <img src={walletIcon} alt="Сумма" className="w-3 h-3" />
+                              Сумма: 
+                            </span>
                             <span className="text-text-100 font-semibold">
                               {appointment.amount.toLocaleString('ru-RU')} ֏
                             </span>

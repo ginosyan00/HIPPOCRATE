@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+
+// Import icons
+import plusIcon from '../../assets/icons/plus.svg';
+import infoIcon from '../../assets/icons/info.svg';
 import { useNavigate } from 'react-router-dom';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
 import { Button, Input, Card, BackButton } from '../../components/common';
@@ -78,7 +82,10 @@ export const AddDoctorPage: React.FC = () => {
         {/* Header */}
         <div>
           <h1 className="text-2xl font-semibold text-text-100 mb-2">
-            ➕ Добавить врача
+            <span className="flex items-center gap-2">
+              <img src={plusIcon} alt="Добавить" className="w-6 h-6" />
+              Добавить врача
+            </span>
           </h1>
           <p className="text-text-10 text-sm">
             Заполните форму для добавления нового врача в клинику
@@ -196,7 +203,10 @@ export const AddDoctorPage: React.FC = () => {
             {/* Info Card */}
             <Card className="bg-blue-50 border-blue-200" padding="md">
               <p className="text-blue-800 text-sm">
-                <strong>ℹ️ Информация:</strong> Врач получит доступ к системе с указанными email и паролем.
+                <span className="flex items-center gap-2">
+                  <img src={infoIcon} alt="Информация" className="w-4 h-4" />
+                  <strong>Информация:</strong> Врач получит доступ к системе с указанными email и паролем.
+                </span>
                 Рекомендуется сообщить врачу эти данные отдельно.
               </p>
             </Card>

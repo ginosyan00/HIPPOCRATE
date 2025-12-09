@@ -13,6 +13,10 @@ import { toast } from 'react-hot-toast';
 // Import icons
 import searchIcon from '../../assets/icons/search.svg';
 import doctorIcon from '../../assets/icons/doctor.svg';
+import analyticsIcon from '../../assets/icons/analytics.svg';
+import plusIcon from '../../assets/icons/plus.svg';
+import phoneIcon from '../../assets/icons/phone.svg';
+import mailIcon from '../../assets/icons/mail.svg';
 
 /**
  * Doctors Page
@@ -315,7 +319,10 @@ export const DoctorsPage: React.FC = () => {
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                 }`}
               >
-                📊 Таблица
+                <span className="flex items-center gap-2">
+                  <img src={analyticsIcon} alt="Таблица" className="w-4 h-4" />
+                  Таблица
+                </span>
               </button>
               <button
                 onClick={() => setViewMode('cards')}
@@ -325,12 +332,15 @@ export const DoctorsPage: React.FC = () => {
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                 }`}
               >
-                🃏 Карточки
+                Карточки
               </button>
             </div>
             {canAddDoctors && (
               <Button onClick={() => navigate('/dashboard/doctors/add')} variant="primary">
-                ➕ Добавить врача
+                <span className="flex items-center gap-2">
+                  <img src={plusIcon} alt="Добавить" className="w-4 h-4" />
+                  Добавить врача
+                </span>
               </Button>
             )}
           </div>
@@ -553,12 +563,12 @@ export const DoctorsPage: React.FC = () => {
                       <div className="space-y-2 text-xs">
                         {doctor.phone && (
                           <div className="flex items-center gap-2">
-                            <span className="text-text-10">📱</span>
+                            <img src={phoneIcon} alt="Телефон" className="w-4 h-4" />
                             <span className="text-text-50">{doctor.phone}</span>
                           </div>
                         )}
                         <div className="flex items-center gap-2">
-                          <span className="text-text-10">📧</span>
+                          <img src={mailIcon} alt="Email" className="w-4 h-4" />
                           <span className="text-text-50 truncate">
                             {doctor.email}
                           </span>

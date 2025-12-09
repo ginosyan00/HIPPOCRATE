@@ -10,6 +10,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import calendarIcon from '../../assets/icons/calendar.svg';
 import patientIcon from '../../assets/icons/patient.svg';
 import notificationIcon from '../../assets/icons/notification.svg';
+import checkIcon from '../../assets/icons/check.svg';
 
 /**
  * DoctorOverviewSection Component
@@ -211,7 +212,7 @@ export const DoctorOverviewSection: React.FC = () => {
               <p className="text-xs text-text-10 mt-1">за сегодня</p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <div className="text-2xl">✅</div>
+              <img src={checkIcon} alt="Подтверждено" className="w-6 h-6" />
             </div>
           </div>
         </Card>
@@ -265,7 +266,9 @@ export const DoctorOverviewSection: React.FC = () => {
               </div>
             ) : stats.todaySchedule.length === 0 ? (
               <div className="text-center py-8 text-text-10">
-                <div className="text-4xl mb-2">📅</div>
+                <div className="flex justify-center mb-2">
+                  <img src={calendarIcon} alt="Календарь" className="w-12 h-12 opacity-50" />
+                </div>
                 <p className="text-sm">Нет запланированных приемов на сегодня</p>
               </div>
             ) : (

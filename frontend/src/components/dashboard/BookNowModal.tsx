@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Input, Spinner, TimeSlotPicker } from '../common';
+
+// Import icons
+import warningIcon from '../../assets/icons/warning.svg';
 import { useClinics, useClinicDoctors, useCreatePublicAppointment } from '../../hooks/usePublic';
 import { useAuthStore } from '../../store/useAuthStore';
 import { publicService } from '../../services/public.service';
@@ -293,7 +296,10 @@ export const BookNowModal: React.FC<BookNowModalProps> = ({
         {selectedDate && (!selectedDoctorId || !selectedClinicSlug) && (
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800">
-              ⚠️ Выберите клинику и врача, чтобы увидеть доступные временные слоты
+              <span className="flex items-center gap-1">
+                <img src={warningIcon} alt="Предупреждение" className="w-4 h-4" />
+                Выберите клинику и врача, чтобы увидеть доступные временные слоты
+              </span>
             </p>
           </div>
         )}

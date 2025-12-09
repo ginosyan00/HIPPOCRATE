@@ -4,6 +4,10 @@ import { Modal, Button, Input, Card } from '../common';
 import { userService } from '../../services/user.service';
 import { clinicService } from '../../services/clinic.service';
 
+// Import icons
+import plusIcon from '../../assets/icons/plus.svg';
+import infoIcon from '../../assets/icons/info.svg';
+
 /**
  * AddDoctorModal Component
  * Модальное окно для добавления врача в клинику
@@ -92,7 +96,7 @@ export const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ isOpen, onClose,
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="➕ Добавить врача">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Добавить врача">
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Основная информация */}
         <div>
@@ -196,7 +200,10 @@ export const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ isOpen, onClose,
         {/* Info Card */}
         <Card className="bg-blue-50 border-blue-200" padding="sm">
           <p className="text-blue-800 text-xs">
-            <strong>ℹ️ Информация:</strong> Врач получит доступ к системе с указанными email и паролем.
+            <span className="flex items-center gap-2">
+              <img src={infoIcon} alt="Информация" className="w-4 h-4" />
+              <strong>Информация:</strong> Врач получит доступ к системе с указанными email и паролем.
+            </span>
             Рекомендуется сообщить врачу эти данные отдельно.
           </p>
         </Card>

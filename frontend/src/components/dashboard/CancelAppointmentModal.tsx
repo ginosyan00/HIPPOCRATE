@@ -3,6 +3,9 @@ import { Modal } from '../common/Modal';
 import { Button, Input } from '../common';
 import { Appointment } from '../../types/api.types';
 
+// Import icons
+import warningIcon from '../../assets/icons/warning.svg';
+
 interface CancelAppointmentModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -187,7 +190,7 @@ export const CancelAppointmentModal: React.FC<CancelAppointmentModalProps> = ({
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3">
             <p className="text-sm text-red-600 flex items-center gap-2">
-              <span>⚠️</span>
+              <img src={warningIcon} alt="Предупреждение" className="w-4 h-4" />
               {error}
             </p>
           </div>
@@ -196,7 +199,10 @@ export const CancelAppointmentModal: React.FC<CancelAppointmentModalProps> = ({
         {/* Предупреждение */}
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
           <p className="text-sm text-yellow-800">
-            ⚠️ После подтверждения приём будет отменён, и пациент получит уведомление.
+            <span className="flex items-center gap-2">
+              <img src={warningIcon} alt="Предупреждение" className="w-4 h-4" />
+              После подтверждения приём будет отменён, и пациент получит уведомление.
+            </span>
           </p>
         </div>
       </form>

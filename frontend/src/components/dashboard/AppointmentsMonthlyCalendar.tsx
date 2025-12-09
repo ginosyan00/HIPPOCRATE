@@ -7,6 +7,13 @@ import { formatAppointmentDateTime } from '../../utils/dateFormat';
 import { DayAppointmentsModal } from './DayAppointmentsModal';
 import { useAuthStore } from '../../store/useAuthStore';
 
+// Import icons
+import analyticsIcon from '../../assets/icons/analytics.svg';
+import calendarIcon from '../../assets/icons/calendar.svg';
+import checkIcon from '../../assets/icons/check.svg';
+import clockIcon from '../../assets/icons/clock.svg';
+import xIcon from '../../assets/icons/x.svg';
+
 interface AppointmentsMonthlyCalendarProps {
   appointments: Appointment[];
   onAppointmentClick?: (appointment: Appointment) => void;
@@ -179,7 +186,10 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                 }`}
                 title="Таблица"
               >
-                📊 Таблица
+                <span className="flex items-center gap-2">
+                  <img src={analyticsIcon} alt="Таблица" className="w-4 h-4" />
+                  Таблица
+                </span>
               </button>
               <button
                 onClick={() => onViewChange('monthly')}
@@ -190,7 +200,10 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                 }`}
                 title="Месячный календарь"
               >
-                📅 Месяц
+                <span className="flex items-center gap-2">
+                  <img src={calendarIcon} alt="Месяц" className="w-4 h-4" />
+                  Месяц
+                </span>
               </button>
               <button
                 onClick={() => onViewChange('weekly')}
@@ -201,7 +214,10 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                 }`}
                 title="Недельный вид"
               >
-                📆 Неделя
+                <span className="flex items-center gap-2">
+                  <img src={calendarIcon} alt="Неделя" className="w-4 h-4" />
+                  Неделя
+                </span>
               </button>
             </div>
           )}
@@ -384,6 +400,13 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                                   </div>
                                   <div className="text-[10px] text-white/80 font-medium mt-0.5">
                                     {appointmentTime}
+                                  </div>
+                                  {/* Статус */}
+                                  <div className="mt-1 flex items-center gap-1">
+                                    <img src={getStatusIcon(appointment.status)} alt={getStatusLabel(appointment.status)} className="w-2.5 h-2.5 opacity-90" />
+                                    <span className="text-[9px] text-white/90 font-medium">
+                                      {getStatusLabel(appointment.status)}
+                                    </span>
                                   </div>
                                 </div>
                               </div>

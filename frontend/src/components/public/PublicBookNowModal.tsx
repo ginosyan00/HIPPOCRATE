@@ -6,6 +6,10 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { Clinic, User } from '../../types/api.types';
 import { Calendar, Clock } from 'lucide-react';
 
+// Import icons
+import warningIcon from '../../assets/icons/warning.svg';
+import lightbulbIcon from '../../assets/icons/lightbulb.svg';
+
 interface PublicBookNowModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -224,7 +228,10 @@ export const PublicBookNowModal: React.FC<PublicBookNowModalProps> = ({
             {user.phone && <p className="text-xs text-text-50">{user.phone}</p>}
             {!user.phone && (
               <p className="text-xs text-text-10 mt-2">
-                ⚠️ Пожалуйста, укажите ваш телефон для записи
+                <span className="flex items-center gap-1">
+                  <img src={warningIcon} alt="Предупреждение" className="w-4 h-4" />
+                  Пожалуйста, укажите ваш телефон для записи
+                </span>
               </p>
             )}
           </div>
@@ -325,9 +332,12 @@ export const PublicBookNowModal: React.FC<PublicBookNowModalProps> = ({
             {/* Ссылка на регистрацию */}
             <div className="bg-main-10 border border-stroke px-4 py-2 rounded-sm">
               <p className="text-xs text-text-50">
-                💡 <Link to="/register-user" className="text-main-100 hover:underline font-medium">
-                  Зарегистрируйтесь
-                </Link> или <Link to="/login" className="text-main-100 hover:underline font-medium">
+                <span className="flex items-center gap-1">
+                  <img src={lightbulbIcon} alt="Совет" className="w-4 h-4" />
+                  <Link to="/register-user" className="text-main-100 hover:underline font-medium">
+                    Зарегистрируйтесь
+                  </Link>
+                  </span> или <Link to="/login" className="text-main-100 hover:underline font-medium">
                   войдите
                 </Link>, чтобы не вводить данные каждый раз
               </p>

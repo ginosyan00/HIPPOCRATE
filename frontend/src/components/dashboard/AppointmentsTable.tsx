@@ -5,6 +5,12 @@ import { formatAppointmentDateTime } from '../../utils/dateFormat';
 import { Pencil, Check, X } from 'lucide-react';
 import { StatusDropdown } from './StatusDropdown';
 
+// Import icons
+import fileTextIcon from '../../assets/icons/file-text.svg';
+import warningIcon from '../../assets/icons/warning.svg';
+import phoneIcon from '../../assets/icons/phone.svg';
+import mailIcon from '../../assets/icons/mail.svg';
+
 interface AppointmentsTableProps {
   appointments: Appointment[];
   onStatusChange: (id: string, status: string) => void;
@@ -207,10 +213,16 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
                   <p className="font-semibold text-text-100">{appointment.patient?.name}</p>
                   <div className="flex flex-col gap-1 mt-1">
                     {appointment.patient?.phone && (
-                      <p className="text-xs text-text-10">📱 {appointment.patient.phone}</p>
+                      <p className="text-xs text-text-10 flex items-center gap-1">
+                        <img src={phoneIcon} alt="Телефон" className="w-3 h-3" />
+                        {appointment.patient.phone}
+                      </p>
                     )}
                     {appointment.patient?.email && (
-                      <p className="text-xs text-text-10">📧 {appointment.patient.email}</p>
+                      <p className="text-xs text-text-10 flex items-center gap-1">
+                        <img src={mailIcon} alt="Email" className="w-3 h-3" />
+                        {appointment.patient.email}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -222,7 +234,10 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
                     const registeredAtFormatted = formatRegisteredAt(appointment);
                     return registeredAtFormatted ? (
                       <p className="text-xs text-text-10 mt-1">
-                        📝 Зарегистрировано: {registeredAtFormatted}
+                        <span className="flex items-center gap-1">
+                          <img src={fileTextIcon} alt="Зарегистрировано" className="w-3 h-3" />
+                          Зарегистрировано: {registeredAtFormatted}
+                        </span>
                       </p>
                     ) : null;
                   })()}
@@ -321,7 +336,7 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
                   {errorMessages[appointment.id] && (
                     <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-sm">
                       <p className="text-xs text-red-600 flex items-center gap-1">
-                        <span>⚠️</span>
+                        <img src={warningIcon} alt="Предупреждение" className="w-4 h-4" />
                         {errorMessages[appointment.id]}
                       </p>
                     </div>

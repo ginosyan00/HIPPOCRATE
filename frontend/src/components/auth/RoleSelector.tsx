@@ -1,5 +1,10 @@
 import React from 'react';
 
+// Import icons
+import userIcon from '../../assets/icons/user.svg';
+import hospitalIcon from '../../assets/icons/hospital.svg';
+import buildingIcon from '../../assets/icons/building.svg';
+
 /**
  * RoleSelector Component
  * Красивый выбор роли при регистрации
@@ -26,21 +31,21 @@ const roles: RoleCardData[] = [
     role: 'PATIENT',
     title: 'Пациент',
     description: 'Запись на прием, консультации, история лечения',
-    icon: '👤',
+    icon: userIcon,
     color: 'bg-blue-500',
   },
   {
     role: 'CLINIC',
     title: 'Клиника',
     description: 'Управление клиникой, врачами и пациентами',
-    icon: '🏥',
+    icon: hospitalIcon,
     color: 'bg-green-500',
   },
   {
     role: 'PARTNER',
     title: 'Партнер',
     description: 'Аптеки, лаборатории, страховые компании',
-    icon: '🏢',
+    icon: buildingIcon,
     color: 'bg-purple-500',
   },
 ];
@@ -79,7 +84,9 @@ export const RoleSelector: React.FC<RoleSelectorProps> = ({ selectedRole, onSele
             )}
 
             {/* Icon */}
-            <div className="text-5xl mb-4 text-center">{roleCard.icon}</div>
+            <div className="mb-4 text-center flex justify-center">
+              <img src={roleCard.icon} alt={roleCard.title} className="w-16 h-16" />
+            </div>
 
             {/* Title */}
             <h4

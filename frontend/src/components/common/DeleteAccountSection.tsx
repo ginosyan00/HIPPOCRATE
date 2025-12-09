@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+
+// Import icons
+import warningIcon from '../../assets/icons/warning.svg';
 import { Card } from './Card';
 import { Button, Modal } from './';
 import { toast } from 'react-hot-toast';
@@ -55,7 +58,10 @@ export const DeleteAccountSection: React.FC<DeleteAccountSectionProps> = ({
       <Card title="Удаление аккаунта" padding="lg">
         <div className="space-y-4">
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-red-800 mb-2">⚠️ Внимание!</h4>
+            <h4 className="text-sm font-medium text-red-800 mb-2 flex items-center gap-1">
+              <img src={warningIcon} alt="Внимание" className="w-4 h-4" />
+              Внимание!
+            </h4>
             <p className="text-sm text-red-700 mb-2">
               Удаление аккаунта — это необратимое действие. После удаления вы больше не сможете войти в систему.
             </p>

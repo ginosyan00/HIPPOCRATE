@@ -3,6 +3,13 @@ import { Appointment } from '../../types/api.types';
 import { formatAppointmentDate, formatAppointmentTime } from '../../utils/dateFormat';
 import { Calendar, Clock, User, Building2, FileText, DollarSign } from 'lucide-react';
 
+// Import icons
+import clockIcon from '../../assets/icons/clock.svg';
+import checkIcon from '../../assets/icons/check.svg';
+import xIcon from '../../assets/icons/x.svg';
+import analyticsIcon from '../../assets/icons/analytics.svg';
+import mapPinIcon from '../../assets/icons/map-pin.svg';
+
 interface PatientAnalyticsTableProps {
   appointments: Appointment[];
 }
@@ -90,16 +97,25 @@ export const PatientAnalyticsTable: React.FC<PatientAnalyticsTableProps> = ({ ap
       cancelled: 'bg-gray-100 text-gray-700 border-gray-200',
     };
     const labels = {
-      pending: '⏳ Ожидает',
-      confirmed: '✅ Подтверждено',
-      completed: '✅ Завершено',
-      cancelled: '❌ Отменено',
+      pending: 'Ожидает',
+      confirmed: 'Подтверждено',
+      completed: 'Завершено',
+      cancelled: 'Отменено',
     };
+    const icons = {
+      pending: clockIcon,
+      confirmed: checkIcon,
+      completed: checkIcon,
+      cancelled: xIcon,
+    };
+    const label = labels[status as keyof typeof labels];
+    const icon = icons[status as keyof typeof icons];
     return (
       <span
-        className={`px-3 py-1 border rounded-full text-xs font-medium ${styles[status as keyof typeof styles]}`}
+        className={`px-3 py-1 border rounded-full text-xs font-medium flex items-center gap-1 ${styles[status as keyof typeof styles]}`}
       >
-        {labels[status as keyof typeof labels]}
+        <img src={icon} alt={label} className="w-3 h-3" />
+        {label}
       </span>
     );
   };
@@ -114,7 +130,9 @@ export const PatientAnalyticsTable: React.FC<PatientAnalyticsTableProps> = ({ ap
   if (appointments.length === 0) {
     return (
       <div className="text-center py-12 text-text-10">
-        <div className="text-4xl mb-3">📊</div>
+        <div className="flex justify-center mb-3">
+          <img src={analyticsIcon} alt="Аналитика" className="w-16 h-16 opacity-50" />
+        </div>
         <p className="text-sm font-medium">Нет данных для отображения</p>
         <p className="text-xs mt-1">Запишитесь на прием, чтобы увидеть статистику здесь</p>
       </div>
@@ -233,7 +251,10 @@ export const PatientAnalyticsTable: React.FC<PatientAnalyticsTableProps> = ({ ap
                   {appointment.clinic?.name || 'Не указана'}
                 </div>
                 {appointment.clinic?.city && (
-                  <div className="text-xs text-text-10">📍 {appointment.clinic.city}</div>
+                  <div className="text-xs text-text-10 flex items-center gap-1">
+                    <img src={mapPinIcon} alt="Местоположение" className="w-3 h-3" />
+                    {appointment.clinic.city}
+                  </div>
                 )}
               </td>
               <td className="px-4 py-3">
@@ -241,7 +262,12 @@ export const PatientAnalyticsTable: React.FC<PatientAnalyticsTableProps> = ({ ap
                   {appointment.reason || <span className="text-text-10 italic">Не указана</span>}
                 </div>
               </td>
-              <td className="px-4 py-3">{getStatusBadge(appointment.status)}</td>
+              <td className="px-4 py-3">
+                <span className={`px-2 py-1 text-xs font-medium rounded-full flex items-center gap-1 ${getStatusBadge(appointment.status).style}`}>
+                  <img src={getStatusBadge(appointment.status).icon} alt={getStatusBadge(appointment.status).label} className="w-3 h-3" />
+                  {getStatusBadge(appointment.status).label}
+                </span>
+              </td>
               <td className="px-4 py-3">
                 <div className="text-sm font-medium text-text-50">
                   {appointment.status === 'completed' ? (

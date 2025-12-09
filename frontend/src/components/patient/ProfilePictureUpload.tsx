@@ -2,6 +2,9 @@ import React, { useState, useRef } from 'react';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 
+// Import icons
+import userIcon from '../../assets/icons/user.svg';
+
 interface ProfilePictureUploadProps {
   currentAvatar?: string | null;
   onUpload: (file: File) => Promise<void>;
@@ -94,7 +97,7 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
                 />
               ) : (
                 <div className="w-full h-full bg-main-10 flex items-center justify-center text-2xl font-semibold text-main-100">
-                  {currentAvatar ? '?' : '👤'}
+                  {currentAvatar ? '?' : <img src={userIcon} alt="Пользователь" className="w-8 h-8" />}
                 </div>
               )}
             </div>

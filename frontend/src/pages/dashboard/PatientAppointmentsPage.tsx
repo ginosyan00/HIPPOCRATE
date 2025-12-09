@@ -12,6 +12,11 @@ import { Appointment } from '../../types/api.types';
 import { Calendar, Clock, Filter, Search } from 'lucide-react';
 import { format } from 'date-fns';
 
+// Import icons
+import calendarIcon from '../../assets/icons/calendar.svg';
+import analyticsIcon from '../../assets/icons/analytics.svg';
+import refreshIcon from '../../assets/icons/refresh.svg';
+
 /**
  * PatientAppointmentsPage
  * Страница записей для пациента с табличным представлением и фильтрами
@@ -242,7 +247,10 @@ export const PatientAppointmentsPage: React.FC = () => {
             onClick={() => setIsBookNowModalOpen(true)}
             className="shadow-md hover:shadow-lg transition-shadow"
           >
-            📅 Записаться на прием
+            <span className="flex items-center gap-2">
+              <img src={calendarIcon} alt="Записаться" className="w-4 h-4" />
+              Записаться на прием
+            </span>
           </Button>
         </div>
 
@@ -345,8 +353,9 @@ export const PatientAppointmentsPage: React.FC = () => {
 
           {(statusFilter || dateFilter || timeFilter || categoryFilter) && (
             <div className="mt-4 pt-4 border-t border-stroke">
-              <Button variant="secondary" size="sm" onClick={handleResetFilters}>
-                🔄 Сбросить фильтры
+              <Button variant="secondary" size="sm" onClick={handleResetFilters} className="flex items-center gap-2">
+                <img src={refreshIcon} alt="Сбросить" className="w-4 h-4" />
+                Сбросить фильтры
               </Button>
             </div>
           )}
@@ -362,7 +371,9 @@ export const PatientAppointmentsPage: React.FC = () => {
         ) : filteredAppointments.length === 0 ? (
           <Card>
             <div className="text-center py-12 text-text-10">
-              <div className="text-5xl mb-3">📅</div>
+              <div className="flex justify-center mb-3">
+                <img src={calendarIcon} alt="Календарь" className="w-16 h-16 opacity-50" />
+              </div>
               <p className="text-sm font-medium mb-2">Записей не найдено</p>
               <p className="text-xs mb-4">
                 {statusFilter || dateFilter || timeFilter || categoryFilter
@@ -371,7 +382,10 @@ export const PatientAppointmentsPage: React.FC = () => {
                 Запишитесь на прием, чтобы увидеть свои записи здесь
               </p>
               <Button variant="primary" onClick={() => setIsBookNowModalOpen(true)}>
-                📅 Записаться на прием
+                <span className="flex items-center gap-2">
+                  <img src={calendarIcon} alt="Записаться" className="w-4 h-4" />
+                  Записаться на прием
+                </span>
               </Button>
             </div>
           </Card>
@@ -421,7 +435,10 @@ export const PatientAppointmentsPage: React.FC = () => {
                     }`}
                     title="Таблица"
                   >
-                    📊 Таблица
+                    <span className="flex items-center gap-2">
+                      <img src={analyticsIcon} alt="Таблица" className="w-4 h-4" />
+                      Таблица
+                    </span>
                   </button>
                   <button
                     onClick={() => handleViewTypeChange('monthly')}
@@ -432,7 +449,10 @@ export const PatientAppointmentsPage: React.FC = () => {
                     }`}
                     title="Месячный календарь"
                   >
-                    📅 Месяц
+                    <span className="flex items-center gap-2">
+                      <img src={calendarIcon} alt="Месяц" className="w-4 h-4" />
+                      Месяц
+                    </span>
                   </button>
                   <button
                     onClick={() => handleViewTypeChange('weekly')}
@@ -443,7 +463,10 @@ export const PatientAppointmentsPage: React.FC = () => {
                     }`}
                     title="Недельный вид"
                   >
-                    📆 Неделя
+                    <span className="flex items-center gap-2">
+                      <img src={calendarIcon} alt="Неделя" className="w-4 h-4" />
+                      Неделя
+                    </span>
                   </button>
                 </div>
               </div>

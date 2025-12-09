@@ -9,6 +9,21 @@ import { usePatientAppointments } from '../../hooks/usePatientAppointments';
 import { useUnreadNotificationsCount, useMarkAllNotificationsAsRead } from '../../hooks/useNotifications';
 import { formatAppointmentDate, formatAppointmentTime } from '../../utils/dateFormat';
 
+// Import icons
+import userIcon from '../../assets/icons/user.svg';
+import lightbulbIcon from '../../assets/icons/lightbulb.svg';
+import notificationIcon from '../../assets/icons/notification.svg';
+import plusIcon from '../../assets/icons/plus.svg';
+import calendarIcon from '../../assets/icons/calendar.svg';
+import doctorIcon from '../../assets/icons/doctor.svg';
+import mapPinIcon from '../../assets/icons/map-pin.svg';
+import checkIcon from '../../assets/icons/check.svg';
+import clockIcon from '../../assets/icons/clock.svg';
+import hospitalIcon from '../../assets/icons/hospital.svg';
+import pharmacyIcon from '../../assets/icons/pharmacy.svg';
+import messageIcon from '../../assets/icons/message.svg';
+import phoneIcon from '../../assets/icons/phone.svg';
+
 export const PatientDashboard: React.FC = () => {
   const navigate = useNavigate();
   const user = useAuthStore(state => state.user);
@@ -104,7 +119,7 @@ export const PatientDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                Здравствуйте, {user?.name}! 👋
+                Здравствуйте, {user?.name}!
               </h1>
               <p className="text-white/90 text-sm md:text-base">
                 Рады видеть вас снова. У вас <strong>{upcomingAppointments.length}</strong> предстоящих {upcomingAppointments.length === 1 ? 'запись' : 'записей'}.
@@ -125,8 +140,12 @@ export const PatientDashboard: React.FC = () => {
                   />
                 </div>
               ) : (
-                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white/30 shadow-2xl bg-white/20 flex items-center justify-center text-4xl md:text-6xl text-white/80 font-bold">
-                  {user?.name?.charAt(0).toUpperCase() || '👤'}
+                <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-white/30 shadow-2xl bg-white/20 flex items-center justify-center">
+                  {user?.name?.charAt(0) ? (
+                    <span className="text-4xl md:text-6xl text-white/80 font-bold">{user.name.charAt(0).toUpperCase()}</span>
+                  ) : (
+                    <img src={userIcon} alt="User" className="w-12 h-12 md:w-16 md:h-16 opacity-80" />
+                  )}
                 </div>
               )}
             </div>
@@ -137,7 +156,7 @@ export const PatientDashboard: React.FC = () => {
         <Card className="bg-gradient-to-br from-blue-50 via-green-50 to-blue-50 border-2 border-blue-200 shadow-lg hover:shadow-xl transition-all duration-300 animate-in fade-in slide-in-from-top-4" padding="lg">
           <div className="flex items-start gap-4">
             <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-green-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 animate-pulse">
-              <span className="text-3xl">💡</span>
+              <img src={lightbulbIcon} alt="Совет" className="w-8 h-8" />
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-3">
@@ -173,7 +192,7 @@ export const PatientDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-xl flex items-center justify-center shadow-lg animate-pulse">
-                  <span className="text-3xl">🔔</span>
+                  <img src={notificationIcon} alt="Уведомления" className="w-7 h-7" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-orange-900">
@@ -204,8 +223,9 @@ export const PatientDashboard: React.FC = () => {
                   <h2 className="text-xl font-bold text-text-50 mb-1">Предстоящие записи</h2>
                   <p className="text-xs text-text-10">Ваши ближайшие приемы</p>
                 </div>
-                <Button variant="primary" size="sm" onClick={() => navigate('/dashboard/patient/clinics')} className="shadow-md hover:shadow-lg transition-shadow">
-                  ➕ Записаться
+                <Button variant="primary" size="sm" onClick={() => navigate('/dashboard/patient/clinics')} className="shadow-md hover:shadow-lg transition-shadow flex items-center gap-2">
+                  <img src={plusIcon} alt="Добавить" className="w-4 h-4" />
+                  Записаться
                 </Button>
               </div>
 
@@ -215,7 +235,9 @@ export const PatientDashboard: React.FC = () => {
                 </div>
               ) : upcomingAppointments.length === 0 ? (
                 <div className="text-center py-8 text-text-10">
-                  <div className="text-4xl mb-2">📅</div>
+                  <div className="flex justify-center mb-2">
+                    <img src={calendarIcon} alt="Календарь" className="w-12 h-12 opacity-50" />
+                  </div>
                   <p className="text-sm mb-4">Нет предстоящих записей</p>
                   <Button variant="primary" size="sm" onClick={() => navigate('/dashboard/patient/clinics')}>
                     Записаться на прием
@@ -235,7 +257,7 @@ export const PatientDashboard: React.FC = () => {
                       <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4 flex-1">
                           <div className="w-14 h-14 bg-gradient-to-br from-main-100 to-blue-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                            <span className="text-2xl">⚕️</span>
+                            <img src={doctorIcon} alt="Врач" className="w-7 h-7" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="font-bold text-text-50 text-base mb-1">
@@ -245,7 +267,7 @@ export const PatientDashboard: React.FC = () => {
                               {appointment.doctor?.specialization || 'Специализация не указана'}
                             </p>
                             <p className="text-xs text-text-10 flex items-center gap-1">
-                              <span>📍</span>
+                              <img src={mapPinIcon} alt="Местоположение" className="w-3 h-3" />
                               {appointment.clinic?.name || 'Клиника'}
                             </p>
                             {appointment.reason && (
@@ -271,11 +293,15 @@ export const PatientDashboard: React.FC = () => {
                                 : 'bg-gray-100 text-gray-700 border border-gray-200'
                             }`}
                           >
-                            {appointment.status === 'confirmed'
-                              ? '✅ Подтверждено'
-                              : appointment.status === 'pending'
-                              ? '⏳ Ожидает'
-                              : appointment.status}
+                            <span className="flex items-center gap-1">
+                              {appointment.status === 'confirmed' && <img src={checkIcon} alt="Подтверждено" className="w-3 h-3" />}
+                              {appointment.status === 'pending' && <img src={clockIcon} alt="Ожидает" className="w-3 h-3" />}
+                              {appointment.status === 'confirmed'
+                                ? 'Подтверждено'
+                                : appointment.status === 'pending'
+                                ? 'Ожидает'
+                                : appointment.status}
+                            </span>
                           </span>
                         </div>
                       </div>
@@ -304,7 +330,7 @@ export const PatientDashboard: React.FC = () => {
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-main-100 to-blue-500 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
-                      <span className="text-xl">🏥</span>
+                      <img src={hospitalIcon} alt="Клиника" className="w-6 h-6" />
                     </div>
                     <div>
                       <h3 className="font-bold text-main-100 text-sm mb-1">Выбрать клинику</h3>
@@ -319,7 +345,7 @@ export const PatientDashboard: React.FC = () => {
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
-                      <span className="text-xl">💊</span>
+                      <img src={pharmacyIcon} alt="Рецепты" className="w-6 h-6" />
                     </div>
                     <div>
                       <h3 className="font-bold text-text-50 text-sm mb-1">Рецепты</h3>
@@ -334,7 +360,7 @@ export const PatientDashboard: React.FC = () => {
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
-                      <span className="text-xl">💬</span>
+                      <img src={messageIcon} alt="Консультация" className="w-6 h-6" />
                     </div>
                     <div>
                       <h3 className="font-bold text-text-50 text-sm mb-1">Консультация</h3>
@@ -349,7 +375,7 @@ export const PatientDashboard: React.FC = () => {
             <Card className="bg-gradient-to-br from-main-100 bg-opacity-10 to-blue-500 bg-opacity-5 border-2 border-main-100 shadow-md hover:shadow-lg transition-all duration-300 animate-in fade-in slide-in-from-right-4" padding="lg">
               <div className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-br from-main-100 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg animate-pulse">
-                  <span className="text-3xl">📞</span>
+                  <img src={phoneIcon} alt="Телефон" className="w-8 h-8" />
                 </div>
                 <h3 className="font-bold text-text-50 text-base mb-2">Нужна помощь?</h3>
                 <p className="text-xs text-text-10 mb-4">

@@ -3,6 +3,20 @@ import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayou
 import { Card, Button } from '../../components/common';
 import { useAuthStore } from '../../store/useAuthStore';
 
+// Import icons
+import checkIcon from '../../assets/icons/check.svg';
+import pharmacyIcon from '../../assets/icons/pharmacy.svg';
+import shieldIcon from '../../assets/icons/shield.svg';
+import buildingIcon from '../../assets/icons/building.svg';
+import walletIcon from '../../assets/icons/wallet.svg';
+import hospitalIcon from '../../assets/icons/hospital.svg';
+import calendarIcon from '../../assets/icons/calendar.svg';
+import plusIcon from '../../assets/icons/plus.svg';
+import analyticsIcon from '../../assets/icons/analytics.svg';
+import trendingUpIcon from '../../assets/icons/trending-up.svg';
+import clockIcon from '../../assets/icons/clock.svg';
+import packageIcon from '../../assets/icons/package.svg';
+
 /**
  * PartnerDashboard
  * Գեղեցիկ dashboard պարտներների համար (Pharmacy, Laboratory, Insurance)
@@ -31,18 +45,18 @@ export const PartnerDashboard: React.FC = () => {
       completed: 'bg-green-100 text-green-700',
     };
     const labels = {
-      pending: '⏳ Ожидает',
-      processing: '🔄 В обработке',
-      completed: '✅ Выполнен',
+      pending: 'Ожидает',
+      processing: 'В обработке',
+      completed: 'Выполнен',
     };
     return { style: styles[status as keyof typeof styles], label: labels[status as keyof typeof labels] };
   };
 
   const getPartnerIcon = () => {
-    if (user?.organizationType === 'pharmacy') return '💊';
-    if (user?.organizationType === 'laboratory') return '🔬';
-    if (user?.organizationType === 'insurance') return '🛡️';
-    return '🏢';
+    if (user?.organizationType === 'pharmacy') return pharmacyIcon;
+    if (user?.organizationType === 'laboratory') return analyticsIcon;
+    if (user?.organizationType === 'insurance') return shieldIcon;
+    return buildingIcon;
   };
 
   const getPartnerTitle = () => {
@@ -59,15 +73,16 @@ export const PartnerDashboard: React.FC = () => {
         <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-semibold mb-2">
-                {user?.organizationName || 'Панель партнера'} {getPartnerIcon()}
+              <h1 className="text-2xl font-semibold mb-2 flex items-center gap-2">
+                {user?.organizationName || 'Панель партнера'}
+                <img src={getPartnerIcon()} alt="Партнер" className="w-6 h-6" />
               </h1>
               <p className="text-white/80 text-sm">
                 {getPartnerTitle()} • {stats.orders} новых заказов
               </p>
             </div>
-            <div className="hidden md:block text-6xl opacity-20">
-              {getPartnerIcon()}
+            <div className="hidden md:block opacity-20">
+              <img src={getPartnerIcon()} alt="Партнер" className="w-24 h-24" />
             </div>
           </div>
         </div>
@@ -82,7 +97,7 @@ export const PartnerDashboard: React.FC = () => {
                 <p className="text-xs text-blue-600 mt-2">активных</p>
               </div>
               <div className="w-14 h-14 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-3xl">📦</span>
+                <img src={packageIcon} alt="Заказы" className="w-8 h-8" />
               </div>
             </div>
           </Card>
@@ -95,7 +110,7 @@ export const PartnerDashboard: React.FC = () => {
                 <p className="text-xs text-green-600 mt-2">текущий месяц</p>
               </div>
               <div className="w-14 h-14 bg-green-500 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-3xl">💰</span>
+                <img src={walletIcon} alt="Доход" className="w-8 h-8" />
               </div>
             </div>
           </Card>
@@ -150,20 +165,33 @@ export const PartnerDashboard: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4 flex-1">
                           <div className="w-12 h-12 bg-main-100 bg-opacity-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <span className="text-xl">📦</span>
+                            <img src={packageIcon} alt="Заказ" className="w-6 h-6" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <h3 className="font-semibold text-text-50 text-sm">{order.orderNumber}</h3>
-                              <span className={`px-2 py-0.5 ${badge.style} text-[10px] font-medium rounded`}>
+                              <span className={`px-2 py-0.5 ${badge.style} text-[10px] font-medium rounded flex items-center gap-1`}>
+                                <img src={badge.icon} alt={badge.label} className="w-3 h-3" />
                                 {badge.label}
                               </span>
                             </div>
-                            <p className="text-xs text-text-10 truncate">🏥 {order.customer}</p>
+                            <p className="text-xs text-text-10 truncate flex items-center gap-1">
+                              <img src={hospitalIcon} alt="Клиника" className="w-3 h-3" />
+                              {order.customer}
+                            </p>
                             <div className="flex items-center gap-3 mt-2 text-xs text-text-10">
-                              <span>📦 {order.items} товаров</span>
-                              <span>💰 {order.total}</span>
-                              <span>📅 {order.date}</span>
+                              <span className="flex items-center gap-1">
+                                <img src={packageIcon} alt="Товары" className="w-3 h-3" />
+                                {order.items} товаров
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <img src={walletIcon} alt="Сумма" className="w-3 h-3" />
+                                {order.total}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <img src={calendarIcon} alt="Дата" className="w-3 h-3" />
+                                {order.date}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -189,7 +217,7 @@ export const PartnerDashboard: React.FC = () => {
                   <div key={idx} className="flex items-center justify-between p-3 border border-stroke rounded-lg hover:bg-bg-secondary transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <span className="text-lg">💊</span>
+                        <img src={pharmacyIcon} alt="Аптека" className="w-5 h-5" />
                       </div>
                       <div>
                         <h3 className="font-medium text-text-50 text-sm">{product.name}</h3>
@@ -214,7 +242,7 @@ export const PartnerDashboard: React.FC = () => {
               <div className="space-y-2">
                 <button className="w-full p-3 border-2 border-main-100 bg-main-100 bg-opacity-5 rounded-lg hover:bg-opacity-10 transition-all text-left">
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">➕</span>
+                    <img src={plusIcon} alt="Добавить" className="w-5 h-5" />
                     <div>
                       <h3 className="font-medium text-main-100 text-sm">Новый заказ</h3>
                       <p className="text-xs text-text-10">Создать заказ</p>
@@ -224,7 +252,7 @@ export const PartnerDashboard: React.FC = () => {
 
                 <button className="w-full p-3 border border-stroke rounded-lg hover:border-main-100 hover:bg-main-100 hover:bg-opacity-5 transition-all text-left">
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">📦</span>
+                    <img src={packageIcon} alt="Склад" className="w-5 h-5" />
                     <div>
                       <h3 className="font-medium text-text-50 text-sm">Склад</h3>
                       <p className="text-xs text-text-10">Управление товарами</p>
@@ -244,7 +272,7 @@ export const PartnerDashboard: React.FC = () => {
 
                 <button className="w-full p-3 border border-stroke rounded-lg hover:border-main-100 hover:bg-main-100 hover:bg-opacity-5 transition-all text-left">
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">📊</span>
+                    <img src={analyticsIcon} alt="Аналитика" className="w-5 h-5" />
                     <div>
                       <h3 className="font-medium text-text-50 text-sm">Отчеты</h3>
                       <p className="text-xs text-text-10">Статистика и аналитика</p>
@@ -280,7 +308,7 @@ export const PartnerDashboard: React.FC = () => {
             {/* Stats Card */}
             <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200" padding="md">
               <div className="text-center">
-                <span className="text-3xl">📈</span>
+                <img src={trendingUpIcon} alt="Рост" className="w-12 h-12" />
                 <h3 className="font-semibold text-text-50 text-sm mt-2 mb-1">Отличные результаты!</h3>
                 <p className="text-xs text-text-10">
                   +15% роста продаж за последний месяц

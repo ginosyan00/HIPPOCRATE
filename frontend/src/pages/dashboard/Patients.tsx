@@ -12,6 +12,8 @@ import { useAuthStore } from '../../store/useAuthStore';
 
 // Import search icon
 import searchIcon from '../../assets/icons/search.svg';
+import analyticsIcon from '../../assets/icons/analytics.svg';
+import plusIcon from '../../assets/icons/plus.svg';
 
 /**
  * Тип для уникального пациента с историей визитов
@@ -301,7 +303,10 @@ export const PatientsPage: React.FC = () => {
                       : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                   }`}
                 >
-                  📊 Таблица визитов
+                  <span className="flex items-center gap-2">
+                    <img src={analyticsIcon} alt="Таблица" className="w-4 h-4" />
+                    Таблица визитов
+                  </span>
                 </button>
                 <button
                   onClick={() => setViewMode('cards')}
@@ -311,13 +316,16 @@ export const PatientsPage: React.FC = () => {
                       : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                   }`}
                 >
-                  🃏 Карточки пациентов
+                  Карточки пациентов
                 </button>
               </div>
             )}
             {!isDoctor && (
               <Button onClick={() => handleOpenModal()} variant="primary">
-                ➕ Добавить пациента
+                <span className="flex items-center gap-2">
+                  <img src={plusIcon} alt="Добавить" className="w-4 h-4" />
+                  Добавить пациента
+                </span>
               </Button>
             )}
           </div>

@@ -6,6 +6,14 @@ import { Appointment } from '../../types/api.types';
 import { formatAppointmentTime } from '../../utils/dateFormat';
 import { useAuthStore } from '../../store/useAuthStore';
 
+// Import icons
+import analyticsIcon from '../../assets/icons/analytics.svg';
+import calendarIcon from '../../assets/icons/calendar.svg';
+import doctorIcon from '../../assets/icons/doctor.svg';
+import checkIcon from '../../assets/icons/check.svg';
+import clockIcon from '../../assets/icons/clock.svg';
+import xIcon from '../../assets/icons/x.svg';
+
 interface AppointmentsWeeklyViewProps {
   appointments: Appointment[];
   onAppointmentClick?: (appointment: Appointment) => void;
@@ -117,17 +125,33 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
     }
   };
 
+  // Получаем иконку статуса
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return clockIcon;
+      case 'confirmed':
+        return checkIcon;
+      case 'completed':
+        return checkIcon;
+      case 'cancelled':
+        return xIcon;
+      default:
+        return clockIcon;
+    }
+  };
+
   // Получаем текст статуса
   const getStatusLabel = (status: string): string => {
     switch (status) {
       case 'pending':
         return 'Ожидает';
       case 'confirmed':
-        return 'Подтвержден';
+        return 'Подтверждено';
       case 'completed':
-        return 'Завершен';
+        return 'Завершено';
       case 'cancelled':
-        return 'Отменен';
+        return 'Отменено';
       default:
         return status;
     }
@@ -181,7 +205,10 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                 }`}
                 title="Таблица"
               >
-                📊 Таблица
+                <span className="flex items-center gap-2">
+                  <img src={analyticsIcon} alt="Таблица" className="w-4 h-4" />
+                  Таблица
+                </span>
               </button>
               <button
                 onClick={() => onViewChange('monthly')}
@@ -192,7 +219,10 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                 }`}
                 title="Месячный календарь"
               >
-                📅 Месяц
+                <span className="flex items-center gap-2">
+                  <img src={calendarIcon} alt="Месяц" className="w-4 h-4" />
+                  Месяц
+                </span>
               </button>
               <button
                 onClick={() => onViewChange('weekly')}
@@ -203,7 +233,10 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                 }`}
                 title="Недельный вид"
               >
-                📆 Неделя
+                <span className="flex items-center gap-2">
+                  <img src={calendarIcon} alt="Неделя" className="w-4 h-4" />
+                  Неделя
+                </span>
               </button>
             </div>
           )}
@@ -272,7 +305,10 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                                     : (appointment.patient?.name || 'Пациент')}
                                 </h4>
                                 <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="text-[10px] text-text-50">⏰ {appointmentTime}</span>
+                                  <span className="text-[10px] text-text-50 flex items-center gap-1">
+                                    <img src={clockIcon} alt="Время" className="w-3 h-3" />
+                                    {appointmentTime}
+                                  </span>
                                   {appointment.duration && (
                                     <span className="text-[10px] text-text-50">• {appointment.duration} мин</span>
                                   )}
@@ -289,7 +325,8 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
 
                             {/* Статус бейдж */}
                             <div className="mb-2">
-                              <span className={`inline-block px-1.5 py-0.5 rounded-sm text-[10px] font-normal border ${getStatusBadgeColor(appointment.status)}`}>
+                              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-sm text-[10px] font-medium border ${getStatusBadgeColor(appointment.status)}`}>
+                                <img src={getStatusIcon(appointment.status)} alt={getStatusLabel(appointment.status)} className="w-3 h-3" />
                                 {getStatusLabel(appointment.status)}
                               </span>
                             </div>
@@ -297,7 +334,10 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                             {/* Информация о враче */}
                             {appointment.doctor?.name && (
                               <div className="mb-2 text-[10px] text-text-50">
-                                <span className="font-medium">👨‍⚕️ Врач:</span> {appointment.doctor.name}
+                                <span className="font-medium flex items-center gap-1">
+                                  <img src={doctorIcon} alt="Врач" className="w-3 h-3" />
+                                  Врач:
+                                </span> {appointment.doctor.name}
                                 {appointment.doctor.specialization && (
                                   <span className="text-text-10"> ({appointment.doctor.specialization})</span>
                                 )}

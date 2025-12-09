@@ -3,6 +3,9 @@ import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayou
 import { DoctorScheduleEditor } from '../../components/dashboard/DoctorScheduleEditor';
 import { useDoctorSchedule, useUpdateDoctorSchedule } from '../../hooks/useDoctor';
 
+// Import icons
+import calendarIcon from '../../assets/icons/calendar.svg';
+
 /**
  * DoctorGraphicsPage
  * Страница для управления расписанием врача
@@ -28,7 +31,10 @@ export const DoctorGraphicsPage: React.FC = () => {
         {/* Header */}
         <div>
           <h1 className="text-2xl font-semibold text-text-50 mb-2">
-            Рабочее расписание 📅
+            <span className="flex items-center gap-2">
+              Рабочее расписание
+              <img src={calendarIcon} alt="Календарь" className="w-6 h-6" />
+            </span>
           </h1>
           <p className="text-sm text-text-10">
             Установите свой еженедельный график работы. Пациенты смогут записаться только в указанное время.

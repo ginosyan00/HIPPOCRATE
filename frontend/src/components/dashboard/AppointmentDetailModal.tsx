@@ -6,6 +6,11 @@ import { Appointment } from '../../types/api.types';
 import { formatAppointmentDateTime, formatAppointmentTime } from '../../utils/dateFormat';
 import { useAuthStore } from '../../store/useAuthStore';
 
+// Import icons
+import doctorIcon from '../../assets/icons/doctor.svg';
+import phoneIcon from '../../assets/icons/phone.svg';
+import mailIcon from '../../assets/icons/mail.svg';
+
 interface AppointmentDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -123,13 +128,19 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
               {appointment.patient?.phone && (
                 <div className="mb-2">
                   <p className="text-xs text-text-10 mb-1">Телефон</p>
-                  <p className="text-sm text-text-100">📱 {appointment.patient.phone}</p>
+                  <p className="text-sm text-text-100 flex items-center gap-1">
+                    <img src={phoneIcon} alt="Телефон" className="w-4 h-4" />
+                    {appointment.patient.phone}
+                  </p>
                 </div>
               )}
               {appointment.patient?.email && (
                 <div>
                   <p className="text-xs text-text-10 mb-1">Email</p>
-                  <p className="text-sm text-text-100">📧 {appointment.patient.email}</p>
+                  <p className="text-sm text-text-100 flex items-center gap-1">
+                    <img src={mailIcon} alt="Email" className="w-4 h-4" />
+                    {appointment.patient.email}
+                  </p>
                 </div>
               )}
             </div>
@@ -142,7 +153,7 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
             <h4 className="text-sm font-semibold text-text-100 mb-3">Информация о враче</h4>
             <div className="flex items-center gap-3">
               <div className="flex-shrink-0 w-12 h-12 bg-bg-primary rounded-sm flex items-center justify-center">
-                <span className="text-lg text-text-50">👨‍⚕️</span>
+                <img src={doctorIcon} alt="Врач" className="w-5 h-5" />
               </div>
               <div>
                 <p className="text-base font-semibold text-text-100">{appointment.doctor.name}</p>

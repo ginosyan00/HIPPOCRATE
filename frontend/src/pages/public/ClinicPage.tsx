@@ -9,6 +9,7 @@ import { publicService } from '../../services/public.service';
 // Import icons
 import hippocratesLogo from '../../assets/icons/hippocrates-logo.png';
 import doctorIcon from '../../assets/icons/doctor.svg';
+import lightbulbIcon from '../../assets/icons/lightbulb.svg';
 
 /**
  * Clinic Page - Figma Design Style
@@ -504,9 +505,12 @@ export const ClinicPage: React.FC = () => {
             {!isAuthenticated && (
               <div className="bg-main-10 border border-stroke px-4 py-2 rounded-sm">
                 <p className="text-xs text-text-50">
-                  💡 <Link to="/register-user" className="text-main-100 hover:underline font-medium">
-                    Зарегистрируйтесь
-                  </Link> или <Link to="/login" className="text-main-100 hover:underline font-medium">
+                  <span className="flex items-center gap-1">
+                    <img src={lightbulbIcon} alt="Совет" className="w-4 h-4" />
+                    <Link to="/register-user" className="text-main-100 hover:underline font-medium">
+                      Зарегистрируйтесь
+                    </Link>
+                  </span> или <Link to="/login" className="text-main-100 hover:underline font-medium">
                     войдите
                   </Link>, чтобы не вводить данные каждый раз
                 </p>

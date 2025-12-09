@@ -7,6 +7,8 @@ import { Clinic } from '../../types/api.types';
 
 // Import icons
 import searchIcon from '../../assets/icons/search.svg';
+import hospitalIcon from '../../assets/icons/hospital.svg';
+import warningIcon from '../../assets/icons/warning.svg';
 
 /**
  * PatientClinicsPage
@@ -36,7 +38,10 @@ export const PatientClinicsPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <h1 className="text-2xl md:text-3xl font-bold mb-2">
-                Клиники 🏥
+                <span className="flex items-center gap-2">
+                  Клиники
+                  <img src={hospitalIcon} alt="Клиники" className="w-6 h-6" />
+                </span>
               </h1>
               <p className="text-white/90 text-sm md:text-base">
                 Выберите клинику для записи на приём
@@ -48,7 +53,7 @@ export const PatientClinicsPage: React.FC = () => {
               )}
             </div>
             <div className="hidden md:block text-6xl md:text-8xl opacity-20 animate-pulse">
-              🏥
+              <img src={hospitalIcon} alt="Клиники" className="w-24 h-24 md:w-32 md:h-32 opacity-20" />
             </div>
           </div>
         </div>
@@ -106,7 +111,7 @@ export const PatientClinicsPage: React.FC = () => {
           <Card className="bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-200 shadow-lg animate-in fade-in slide-in-from-top-4">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                <span className="text-2xl">⚠️</span>
+                <img src={warningIcon} alt="Предупреждение" className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="font-semibold text-red-900 mb-1">Ошибка загрузки</h3>
@@ -195,7 +200,7 @@ export const PatientClinicsPage: React.FC = () => {
                             </div>
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-8xl opacity-30">🏥</span>
+                              <img src={hospitalIcon} alt="Клиника" className="w-32 h-32 opacity-30" />
                             </div>
                           )}
                         </div>

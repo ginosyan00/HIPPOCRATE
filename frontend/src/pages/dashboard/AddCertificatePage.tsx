@@ -5,6 +5,9 @@ import { Button, Input, Card, BackButton } from '../../components/common';
 import { useCreateCertificate } from '../../hooks/useCertificates';
 import { toast } from 'react-hot-toast';
 
+// Import icons
+import plusIcon from '../../assets/icons/plus.svg';
+
 /**
  * AddCertificatePage
  * Отдельная страница для добавления сертификата клиники
@@ -151,7 +154,10 @@ export const AddCertificatePage: React.FC = () => {
         {/* Header */}
         <div>
           <h1 className="text-2xl font-semibold text-text-100 mb-2">
-            ➕ Добавить сертификат
+            <span className="flex items-center gap-2">
+              <img src={plusIcon} alt="Добавить" className="w-5 h-5" />
+              Добавить сертификат
+            </span>
           </h1>
           <p className="text-text-10 text-sm">
             Заполните форму для добавления нового сертификата клиники

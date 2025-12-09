@@ -11,6 +11,9 @@ import { usePatientAppointments } from '../../hooks/usePatientAppointments';
 import { Appointment } from '../../types/api.types';
 import { Calendar, Clock, Filter, Search, BarChart3, TrendingUp } from 'lucide-react';
 
+// Import icons
+import refreshIcon from '../../assets/icons/refresh.svg';
+
 /**
  * PatientAnalyticsPage
  * Страница аналитики для пациента с графиками, таблицей и фильтрами
@@ -293,7 +296,10 @@ export const PatientAnalyticsPage: React.FC = () => {
               {(dateFromFilter || dateToFilter || weekFilter || categoryFilter || doctorFilter) && (
                 <div className="mt-4 pt-4 border-t border-stroke">
                   <Button variant="secondary" size="sm" onClick={handleResetFilters}>
-                    🔄 Сбросить фильтры
+                    <span className="flex items-center gap-2">
+                      <img src={refreshIcon} alt="Сбросить" className="w-4 h-4" />
+                      Сбросить фильтры
+                    </span>
                   </Button>
                 </div>
               )}

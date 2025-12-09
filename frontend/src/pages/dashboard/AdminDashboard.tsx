@@ -5,6 +5,21 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { userService } from '../../services/user.service';
 import { User } from '../../types/api.types';
 
+// Import icons
+import hospitalIcon from '../../assets/icons/hospital.svg';
+import doctorIcon from '../../assets/icons/doctor.svg';
+import buildingIcon from '../../assets/icons/building.svg';
+import briefcaseIcon from '../../assets/icons/briefcase.svg';
+import clockIcon from '../../assets/icons/clock.svg';
+import checkIcon from '../../assets/icons/check.svg';
+import xIcon from '../../assets/icons/x.svg';
+import calendarIcon from '../../assets/icons/calendar.svg';
+import analyticsIcon from '../../assets/icons/analytics.svg';
+import settingsIcon from '../../assets/icons/settings.svg';
+import lightbulbIcon from '../../assets/icons/lightbulb.svg';
+import fileTextIcon from '../../assets/icons/file-text.svg';
+import mailIcon from '../../assets/icons/mail.svg';
+
 /**
  * AdminDashboard
  * Գեղեցիկ dashboard ադմինների համար
@@ -57,10 +72,17 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const getRoleTitle = (role: string) => {
-    if (role === 'CLINIC') return '🏥 Клиника';
-    if (role === 'DOCTOR') return '⚕️ Врач';
-    if (role === 'PARTNER') return '🏢 Партнер';
+    if (role === 'CLINIC') return 'Клиника';
+    if (role === 'DOCTOR') return 'Врач';
+    if (role === 'PARTNER') return 'Партнер';
     return role;
+  };
+  
+  const getRoleIcon = (role: string) => {
+    if (role === 'CLINIC') return hospitalIcon;
+    if (role === 'DOCTOR') return doctorIcon;
+    if (role === 'PARTNER') return buildingIcon;
+    return briefcaseIcon;
   };
 
   return (
@@ -71,14 +93,14 @@ export const AdminDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-semibold mb-2">
-                Панель администратора 🔑
+                Панель администратора
               </h1>
               <p className="text-white/80 text-sm">
                 {user?.name} • {pendingUsers.length} заявок на одобрении
               </p>
             </div>
             <div className="hidden md:block text-6xl opacity-20">
-              👨‍💼
+              <img src={briefcaseIcon} alt="Админ" className="w-24 h-24 opacity-20" />
             </div>
           </div>
         </div>
@@ -106,7 +128,7 @@ export const AdminDashboard: React.FC = () => {
                 <p className="text-xs text-yellow-600 mt-2">заявок</p>
               </div>
               <div className="w-14 h-14 bg-yellow-500 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-3xl">⏳</span>
+                <img src={clockIcon} alt="Ожидает" className="w-8 h-8" />
               </div>
             </div>
           </Card>
@@ -121,7 +143,7 @@ export const AdminDashboard: React.FC = () => {
                 <p className="text-xs text-green-600 mt-2">на модерации</p>
               </div>
               <div className="w-14 h-14 bg-green-500 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-3xl">🏥</span>
+                <img src={hospitalIcon} alt="Клиники" className="w-8 h-8" />
               </div>
             </div>
           </Card>
@@ -136,7 +158,7 @@ export const AdminDashboard: React.FC = () => {
                 <p className="text-xs text-purple-600 mt-2">на модерации</p>
               </div>
               <div className="w-14 h-14 bg-purple-500 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-3xl">🏢</span>
+                <img src={buildingIcon} alt="Партнеры" className="w-8 h-8" />
               </div>
             </div>
           </Card>
@@ -161,17 +183,23 @@ export const AdminDashboard: React.FC = () => {
 
               {isLoading ? (
                 <div className="text-center py-12 text-text-10">
-                  <div className="text-5xl mb-3 animate-pulse">⏳</div>
+                  <div className="flex justify-center mb-3 animate-pulse">
+                    <img src={clockIcon} alt="Загрузка" className="w-16 h-16 opacity-50" />
+                  </div>
                   <p className="text-sm">Загрузка заявок...</p>
                 </div>
               ) : error ? (
                 <div className="text-center py-12 text-red-500">
-                  <div className="text-5xl mb-3">❌</div>
+                  <div className="flex justify-center mb-3">
+                    <img src={xIcon} alt="Ошибка" className="w-16 h-16 opacity-50" />
+                  </div>
                   <p className="text-sm">{error}</p>
                 </div>
               ) : pendingUsers.length === 0 ? (
                 <div className="text-center py-12 text-text-10">
-                  <div className="text-5xl mb-3">✅</div>
+                  <div className="flex justify-center mb-3">
+                    <img src={checkIcon} alt="Готово" className="w-16 h-16 opacity-50" />
+                  </div>
                   <p className="text-sm font-medium mb-2">Нет заявок на одобрение</p>
                   <p className="text-xs">Все пользователи одобрены</p>
                 </div>
@@ -187,7 +215,7 @@ export const AdminDashboard: React.FC = () => {
                         {/* User Info */}
                         <div className="flex items-start gap-3 flex-1">
                           <div className="w-12 h-12 bg-gradient-to-br from-main-100 to-purple-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
-                            <span className="text-xl">{getRoleTitle(pendingUser.role).split(' ')[0]}</span>
+                            <img src={getRoleIcon(pendingUser.role)} alt={getRoleTitle(pendingUser.role)} className="w-6 h-6" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
@@ -198,12 +226,23 @@ export const AdminDashboard: React.FC = () => {
                             </div>
 
                             <div className="space-y-1 text-xs text-text-10">
-                              <p className="truncate">📧 {pendingUser.email}</p>
-                              {pendingUser.phone && <p className="truncate">📱 {pendingUser.phone}</p>}
+                              <p className="truncate flex items-center gap-1">
+                                <img src={mailIcon} alt="Email" className="w-3 h-3" />
+                                {pendingUser.email}
+                              </p>
+                              {pendingUser.phone && (
+                                <p className="truncate flex items-center gap-1">
+                                  <img src={phoneIcon} alt="Телефон" className="w-3 h-3" />
+                                  {pendingUser.phone}
+                                </p>
+                              )}
 
                               {/* Clinic Info */}
                               {pendingUser.role === 'CLINIC' && (
-                                <p className="text-main-100 font-medium">🏥 Владелец клиники</p>
+                                <p className="text-main-100 font-medium flex items-center gap-1">
+                                  <img src={hospitalIcon} alt="Клиника" className="w-4 h-4" />
+                                  Владелец клиники
+                                </p>
                               )}
 
                               {/* Doctor Info */}
@@ -217,13 +256,22 @@ export const AdminDashboard: React.FC = () => {
                               {/* Partner Info */}
                               {pendingUser.role === 'PARTNER' && (
                                 <>
-                                  <p className="truncate">🏢 {pendingUser.organizationName}</p>
-                                  <p className="truncate">📋 {pendingUser.inn}</p>
+                                  <p className="truncate flex items-center gap-1">
+                                    <img src={buildingIcon} alt="Организация" className="w-3 h-3" />
+                                    {pendingUser.organizationName}
+                                  </p>
+                                  <p className="truncate flex items-center gap-1">
+                                    <img src={fileTextIcon} alt="ИНН" className="w-3 h-3" />
+                                    {pendingUser.inn}
+                                  </p>
                                 </>
                               )}
 
                               <p className="text-[10px] text-text-05 pt-1">
-                                📅 {new Date(pendingUser.createdAt).toLocaleDateString('ru-RU')}
+                                <span className="flex items-center gap-1">
+                                  <img src={calendarIcon} alt="Дата" className="w-3 h-3" />
+                                  {new Date(pendingUser.createdAt).toLocaleDateString('ru-RU')}
+                                </span>
                               </p>
                             </div>
                           </div>
@@ -240,7 +288,10 @@ export const AdminDashboard: React.FC = () => {
                             onClick={() => handleApprove(pendingUser.id)}
                             className="text-xs whitespace-nowrap"
                           >
-                            ✅ Одобрить
+                            <span className="flex items-center gap-2">
+                              <img src={checkIcon} alt="Одобрить" className="w-4 h-4" />
+                              Одобрить
+                            </span>
                           </Button>
                           <Button
                             variant="secondary"
@@ -248,7 +299,10 @@ export const AdminDashboard: React.FC = () => {
                             onClick={() => handleReject(pendingUser.id)}
                             className="text-xs hover:bg-red-50 hover:text-red-600 whitespace-nowrap"
                           >
-                            ❌ Отклонить
+                            <span className="flex items-center gap-2">
+                              <img src={xIcon} alt="Отклонить" className="w-4 h-4" />
+                              Отклонить
+                            </span>
                           </Button>
                         </div>
                       </div>
@@ -277,7 +331,7 @@ export const AdminDashboard: React.FC = () => {
 
                 <button className="w-full p-3 border border-stroke rounded-lg hover:border-main-100 hover:bg-main-100 hover:bg-opacity-5 transition-all text-left">
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">🏥</span>
+                    <img src={hospitalIcon} alt="Клиники" className="w-5 h-5" />
                     <div>
                       <h3 className="font-medium text-text-50 text-sm">Клиники</h3>
                       <p className="text-xs text-text-10">Список клиник</p>
@@ -287,7 +341,7 @@ export const AdminDashboard: React.FC = () => {
 
                 <button className="w-full p-3 border border-stroke rounded-lg hover:border-main-100 hover:bg-main-100 hover:bg-opacity-5 transition-all text-left">
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">📊</span>
+                    <img src={analyticsIcon} alt="Аналитика" className="w-5 h-5" />
                     <div>
                       <h3 className="font-medium text-text-50 text-sm">Аналитика</h3>
                       <p className="text-xs text-text-10">Статистика системы</p>
@@ -297,7 +351,7 @@ export const AdminDashboard: React.FC = () => {
 
                 <button className="w-full p-3 border border-stroke rounded-lg hover:border-main-100 hover:bg-main-100 hover:bg-opacity-5 transition-all text-left">
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">⚙️</span>
+                    <img src={settingsIcon} alt="Настройки" className="w-5 h-5" />
                     <div>
                       <h3 className="font-medium text-text-50 text-sm">Настройки</h3>
                       <p className="text-xs text-text-10">Конфигурация</p>
@@ -323,7 +377,7 @@ export const AdminDashboard: React.FC = () => {
             {/* Info Card */}
             <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200" padding="md">
               <div className="flex items-start gap-3">
-                <span className="text-2xl">💡</span>
+                <img src={lightbulbIcon} alt="Совет" className="w-6 h-6" />
                 <div>
                   <h3 className="font-semibold text-text-50 text-sm mb-1">Совет</h3>
                   <p className="text-xs text-text-10 leading-relaxed">

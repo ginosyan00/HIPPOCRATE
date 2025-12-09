@@ -4,6 +4,13 @@ import { Button, Spinner } from '../common';
 import { formatAppointmentDate, formatAppointmentTime } from '../../utils/dateFormat';
 import { Calendar, Clock, User, Building2, FileText, XCircle } from 'lucide-react';
 
+// Import icons
+import clockIcon from '../../assets/icons/clock.svg';
+import checkIcon from '../../assets/icons/check.svg';
+import xIcon from '../../assets/icons/x.svg';
+import calendarIcon from '../../assets/icons/calendar.svg';
+import mapPinIcon from '../../assets/icons/map-pin.svg';
+
 interface PatientAppointmentsTableProps {
   appointments: Appointment[];
   onCancel?: (id: string) => void;
@@ -85,18 +92,22 @@ export const PatientAppointmentsTable: React.FC<PatientAppointmentsTableProps> =
       cancelled: 'bg-gray-100 text-gray-700 border-gray-200',
     };
     const labels = {
-      pending: '⏳ Ожидает',
-      confirmed: '✅ Подтверждено',
-      completed: '✅ Завершено',
-      cancelled: '❌ Отменено',
+      pending: 'Ожидает',
+      confirmed: 'Подтверждено',
+      completed: 'Завершено',
+      cancelled: 'Отменено',
     };
-    return (
-      <span
-        className={`px-3 py-1 border rounded-full text-xs font-medium ${styles[status as keyof typeof styles]}`}
-      >
-        {labels[status as keyof typeof labels]}
-      </span>
-    );
+    const icons = {
+      pending: clockIcon,
+      confirmed: checkIcon,
+      completed: checkIcon,
+      cancelled: xIcon,
+    };
+    const label = labels[status as keyof typeof labels] || status;
+    const icon = icons[status as keyof typeof icons] || clockIcon;
+    const style = styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-700 border-gray-200';
+    
+    return { label, icon, style };
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -109,7 +120,9 @@ export const PatientAppointmentsTable: React.FC<PatientAppointmentsTableProps> =
   if (appointments.length === 0) {
     return (
       <div className="text-center py-12 text-text-10">
-        <div className="text-4xl mb-3">📅</div>
+        <div className="flex justify-center mb-3">
+          <img src={calendarIcon} alt="Календарь" className="w-16 h-16 opacity-50" />
+        </div>
         <p className="text-sm font-medium">Записей не найдено</p>
         <p className="text-xs mt-1">Запишитесь на прием, чтобы увидеть свои записи здесь</p>
       </div>
@@ -213,7 +226,10 @@ export const PatientAppointmentsTable: React.FC<PatientAppointmentsTableProps> =
                   {appointment.clinic?.name || 'Не указана'}
                 </div>
                 {appointment.clinic?.city && (
-                  <div className="text-xs text-text-10">📍 {appointment.clinic.city}</div>
+                  <div className="text-xs text-text-10 flex items-center gap-1">
+                    <img src={mapPinIcon} alt="Местоположение" className="w-3 h-3" />
+                    {appointment.clinic.city}
+                  </div>
                 )}
               </td>
               <td className="px-4 py-3">
@@ -223,7 +239,17 @@ export const PatientAppointmentsTable: React.FC<PatientAppointmentsTableProps> =
                   )}
                 </div>
               </td>
-              <td className="px-4 py-3">{getStatusBadge(appointment.status)}</td>
+              <td className="px-4 py-3">
+                {(() => {
+                  const badge = getStatusBadge(appointment.status);
+                  return (
+                    <span className={`px-3 py-1 border rounded-full text-xs font-medium flex items-center gap-1 ${badge.style}`}>
+                      <img src={badge.icon} alt={badge.label} className="w-3 h-3" />
+                      {badge.label}
+                    </span>
+                  );
+                })()}
+              </td>
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2">
                   {appointment.status !== 'cancelled' &&

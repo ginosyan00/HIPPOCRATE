@@ -168,10 +168,16 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
                     </h3>
                     <div className="flex items-center gap-3 mt-1 flex-wrap">
                       {appointment.patient?.email && (
-                        <p className="text-xs text-text-10">📧 {appointment.patient.email}</p>
+                        <p className="text-xs text-text-10 flex items-center gap-1">
+                          <img src={mailIcon} alt="Email" className="w-3 h-3" />
+                          {appointment.patient.email}
+                        </p>
                       )}
                       {appointment.patient?.phone && (
-                        <p className="text-xs text-text-10">📱 {appointment.patient.phone}</p>
+                        <p className="text-xs text-text-10 flex items-center gap-1">
+                          <img src={phoneIcon} alt="Телефон" className="w-3 h-3" />
+                          {appointment.patient.phone}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -180,55 +186,70 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
                 {/* Doctor and Appointment Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   <div className="bg-bg-primary p-3 rounded-sm">
-                    <p className="font-normal text-text-10 mb-2">👨‍⚕️ Врач:</p>
+                    <p className="font-normal text-text-10 mb-2 flex items-center gap-1">
+                      <img src={doctorIcon} alt="Врач" className="w-3 h-3" />
+                      Врач:
+                    </p>
                     <p className="font-semibold text-text-50 text-sm">{appointment.doctor?.name}</p>
                     {appointment.doctor?.specialization && (
                       <p className="text-text-10 mt-1">{appointment.doctor.specialization}</p>
                     )}
                   </div>
                   <div className="bg-bg-primary p-3 rounded-sm">
-                    <p className="font-normal text-text-10 mb-2">📅 Дата и время приёма:</p>
+                    <p className="font-normal text-text-10 mb-2 flex items-center gap-1">
+                      <img src={calendarIcon} alt="Дата" className="w-3 h-3" />
+                      Дата и время приёма:
+                    </p>
                     <p className="font-semibold text-text-50 text-sm">
                       {formatAppointmentDateTime(appointment.appointmentDate, { dateFormat: 'long' })}
                     </p>
                     {(appointment.registeredAt || appointment.createdAt) && (
                       <p className="text-text-10 mt-1 text-xs">
-                        📝 Зарегистрировано: {(() => {
-                          let registeredAtOriginalStr = null;
-                          if (appointment.notes) {
-                            const match = appointment.notes.match(/REGISTERED_AT_ORIGINAL:\s*(.+)/);
-                            if (match) {
-                              registeredAtOriginalStr = match[1].trim();
+                        <span className="flex items-center gap-1">
+                          <img src={fileTextIcon} alt="Зарегистрировано" className="w-3 h-3" />
+                          Зарегистрировано: {(() => {
+                            let registeredAtOriginalStr = null;
+                            if (appointment.notes) {
+                              const match = appointment.notes.match(/REGISTERED_AT_ORIGINAL:\s*(.+)/);
+                              if (match) {
+                                registeredAtOriginalStr = match[1].trim();
+                              }
                             }
-                          }
-                          
-                          if (registeredAtOriginalStr) {
-                            const match = registeredAtOriginalStr.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/);
-                            if (match) {
-                              const [datePart, timePart] = [match[1], match[2]];
-                              const [year, month, day] = datePart.split('-');
-                              const [hours, minutes] = timePart.split(':');
-                              return `${day}.${month}.${year} ${hours}:${minutes}`;
+                            
+                            if (registeredAtOriginalStr) {
+                              const match = registeredAtOriginalStr.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/);
+                              if (match) {
+                                const [datePart, timePart] = [match[1], match[2]];
+                                const [year, month, day] = datePart.split('-');
+                                const [hours, minutes] = timePart.split(':');
+                                return `${day}.${month}.${year} ${hours}:${minutes}`;
+                              }
                             }
-                          }
-                          
-                          const registeredAtStr = appointment.registeredAt || appointment.createdAt;
-                          if (!registeredAtStr) return '';
-                          
-                          const date = new Date(registeredAtStr);
-                          return date.toLocaleString('ru-RU', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          });
-                        })()}
+                            
+                            const registeredAtStr = appointment.registeredAt || appointment.createdAt;
+                            if (!registeredAtStr) return '';
+                            
+                            const date = new Date(registeredAtStr);
+                            return date.toLocaleString('ru-RU', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            });
+                          })()}
+                        </span>
                       </p>
                     )}
-                    <p className="text-text-10 mt-1">⏱️ Длительность: {appointment.duration} мин</p>
+                    <p className="text-text-10 mt-1 flex items-center gap-1">
+                      <img src={clockIcon} alt="Длительность" className="w-3 h-3" />
+                      Длительность: {appointment.duration} мин
+                    </p>
                     <div className="text-text-10 mt-1">
-                      💰 Сумма:{' '}
+                      <span className="flex items-center gap-1">
+                        <img src={walletIcon} alt="Сумма" className="w-3 h-3" />
+                        Сумма:{' '}
+                      </span>
                       {editingAmountId === appointment.id ? (
                         <div className="flex flex-col gap-1 mt-1">
                           <div className="flex items-center gap-2">
@@ -322,7 +343,7 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
                 {errorMessages[appointment.id] && (
                   <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-sm">
                     <p className="text-xs text-red-600 flex items-center gap-1">
-                      <span>⚠️</span>
+                      <img src={warningIcon} alt="Предупреждение" className="w-4 h-4" />
                       {errorMessages[appointment.id]}
                     </p>
                   </div>

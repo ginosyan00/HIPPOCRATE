@@ -7,6 +7,15 @@ import { Appointment } from '../../types/api.types';
 import { formatAppointmentDate, formatAppointmentTime } from '../../utils/dateFormat';
 import { Calendar, Clock, User, Building2, FileText, Search, Filter, DollarSign, TrendingUp, X } from 'lucide-react';
 
+// Import icons
+import clockIcon from '../../assets/icons/clock.svg';
+import checkIcon from '../../assets/icons/check.svg';
+import xIcon from '../../assets/icons/x.svg';
+import folderIcon from '../../assets/icons/folder.svg';
+import warningIcon from '../../assets/icons/warning.svg';
+import doctorIcon from '../../assets/icons/doctor.svg';
+import mapPinIcon from '../../assets/icons/map-pin.svg';
+
 /**
  * PatientHistoryPage
  * Страница полной истории консультаций пациента
@@ -242,10 +251,16 @@ export const PatientHistoryPage: React.FC = () => {
       cancelled: 'bg-gray-100 text-gray-700 border-gray-200',
     };
     const labels = {
-      pending: '⏳ Ожидает',
-      confirmed: '✅ Подтверждено',
-      completed: '✅ Завершено',
-      cancelled: '❌ Отменено',
+      pending: 'Ожидает',
+      confirmed: 'Подтверждено',
+      completed: 'Завершено',
+      cancelled: 'Отменено',
+    };
+    const icons = {
+      pending: clockIcon,
+      confirmed: checkIcon,
+      completed: checkIcon,
+      cancelled: xIcon,
     };
     return (
       <span
@@ -303,7 +318,10 @@ export const PatientHistoryPage: React.FC = () => {
               size="sm"
               onClick={() => setViewMode('cards')}
             >
-              🗂️ Карточки
+              <span className="flex items-center gap-2">
+                <img src={folderIcon} alt="Карточки" className="w-4 h-4" />
+                Карточки
+              </span>
             </Button>
           </div>
         </div>
@@ -575,7 +593,10 @@ export const PatientHistoryPage: React.FC = () => {
                           {appointment.clinic?.name || 'Не указана'}
                         </div>
                         {appointment.clinic?.city && (
-                          <div className="text-xs text-text-10">📍 {appointment.clinic.city}</div>
+                          <div className="text-xs text-text-10 flex items-center gap-1">
+                            <img src={mapPinIcon} alt="Местоположение" className="w-3 h-3" />
+                            {appointment.clinic.city}
+                          </div>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -597,10 +618,13 @@ export const PatientHistoryPage: React.FC = () => {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          {getStatusBadge(appointment.status)}
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full flex items-center gap-1 ${getStatusBadge(appointment.status).style}`}>
+                            <img src={getStatusBadge(appointment.status).icon} alt={getStatusBadge(appointment.status).label} className="w-3 h-3" />
+                            {getStatusBadge(appointment.status).label}
+                          </span>
                           {isPendingPast && (
                             <span className="text-xs text-yellow-600" title="Запись была в прошлом, но еще не завершена">
-                              ⚠️
+                              <img src={warningIcon} alt="Предупреждение" className="w-4 h-4" />
                             </span>
                           )}
                         </div>
@@ -642,18 +666,21 @@ export const PatientHistoryPage: React.FC = () => {
                       </div>
                       {isPendingPast && (
                         <div className="text-xs text-yellow-600 mt-1 flex items-center gap-1">
-                          <span>⚠️</span>
+                          <img src={warningIcon} alt="Предупреждение" className="w-4 h-4" />
                           <span>Запись была в прошлом</span>
                         </div>
                       )}
                     </div>
-                    {getStatusBadge(appointment.status)}
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full flex items-center gap-1 ${getStatusBadge(appointment.status).style}`}>
+                      <img src={getStatusBadge(appointment.status).icon} alt={getStatusBadge(appointment.status).label} className="w-3 h-3" />
+                      {getStatusBadge(appointment.status).label}
+                    </span>
                   </div>
 
                   {/* Врач */}
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-gradient-to-br from-main-100 to-blue-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-                      <span className="text-xl">⚕️</span>
+                      <img src={doctorIcon} alt="Врач" className="w-6 h-6" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-bold text-text-50 text-base mb-1">

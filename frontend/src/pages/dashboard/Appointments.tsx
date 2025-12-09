@@ -16,6 +16,12 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { User, Appointment } from '../../types/api.types';
 import { format } from 'date-fns';
 
+// Import icons
+import analyticsIcon from '../../assets/icons/analytics.svg';
+import plusIcon from '../../assets/icons/plus.svg';
+import calendarIcon from '../../assets/icons/calendar.svg';
+import refreshIcon from '../../assets/icons/refresh.svg';
+
 /**
  * Appointments Page - Figma Design
  * Управление приёмами в новом стиле
@@ -470,13 +476,14 @@ export const AppointmentsPage: React.FC = () => {
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                 }`}
               >
-                🃏 Карточки
+                Карточки
               </button>
             </div>
             )}
             
-            <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-              ➕ Создать приём
+            <Button variant="primary" onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2">
+              <img src={plusIcon} alt="Добавить" className="w-4 h-4" />
+              Создать приём
             </Button>
           </div>
         </div>
@@ -580,7 +587,10 @@ export const AppointmentsPage: React.FC = () => {
                 setSearchParams({}, { replace: true });
               }}
             >
-              🔄 Сбросить фильтры
+              <span className="flex items-center gap-2">
+                <img src={refreshIcon} alt="Сбросить" className="w-4 h-4" />
+                Сбросить фильтры
+              </span>
             </Button>
           </div>
         )}
@@ -652,7 +662,10 @@ export const AppointmentsPage: React.FC = () => {
                     }`}
                     title="Таблица"
                   >
-                    📊 Таблица
+                    <span className="flex items-center gap-2">
+                      <img src={analyticsIcon} alt="Таблица" className="w-4 h-4" />
+                      Таблица
+                    </span>
                   </button>
                   <button
                     onClick={() => handleViewTypeChange('monthly')}
@@ -663,7 +676,10 @@ export const AppointmentsPage: React.FC = () => {
                     }`}
                     title="Месячный календарь"
                   >
-                    📅 Месяц
+                    <span className="flex items-center gap-2">
+                      <img src={calendarIcon} alt="Месяц" className="w-4 h-4" />
+                      Месяц
+                    </span>
                   </button>
                   <button
                     onClick={() => handleViewTypeChange('weekly')}
@@ -674,7 +690,10 @@ export const AppointmentsPage: React.FC = () => {
                     }`}
                     title="Недельный вид"
                   >
-                    📆 Неделя
+                    <span className="flex items-center gap-2">
+                      <img src={calendarIcon} alt="Неделя" className="w-4 h-4" />
+                      Неделя
+                    </span>
                   </button>
                 </div>
               </div>

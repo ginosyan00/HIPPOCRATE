@@ -4,6 +4,7 @@ import { useUsers, useCreateUser, useDeleteUser } from '../../hooks/useUsers';
 
 // Import doctor icon
 import doctorIcon from '../../assets/icons/doctor.svg';
+import plusIcon from '../../assets/icons/plus.svg';
 
 /**
  * Staff Page - Figma Design
@@ -100,7 +101,10 @@ export const StaffPage: React.FC = () => {
           <p className="text-text-10 text-sm mt-1">Всего: {data?.meta.total || 0}</p>
         </div>
         <Button onClick={() => setIsModalOpen(true)} variant="primary">
-          ➕ Добавить сотрудника
+          <span className="flex items-center gap-2">
+            <img src={plusIcon} alt="Добавить" className="w-4 h-4" />
+            Добавить сотрудника
+          </span>
         </Button>
       </div>
 

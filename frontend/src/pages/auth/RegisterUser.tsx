@@ -1,4 +1,11 @@
 import React, { useState } from 'react';
+
+// Import icons
+import userIcon from '../../assets/icons/user.svg';
+import hospitalIcon from '../../assets/icons/hospital.svg';
+import buildingIcon from '../../assets/icons/building.svg';
+import infoIcon from '../../assets/icons/info.svg';
+import clockIcon from '../../assets/icons/clock.svg';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button, Input, Card } from '../../components/common';
 import { RoleSelector, UserRole } from '../../components/auth/RoleSelector';
@@ -172,7 +179,7 @@ export const RegisterUserPage: React.FC = () => {
                   `}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-xl">👤</span>
+                    <img src={userIcon} alt="Пациент" className="w-5 h-5" />
                     <div>
                       <div className="font-medium text-text-50 text-sm">Пациент</div>
                       <div className="text-[10px] text-text-10">Обычный пользователь</div>
@@ -194,7 +201,7 @@ export const RegisterUserPage: React.FC = () => {
                   `}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-xl">🏥</span>
+                    <img src={hospitalIcon} alt="Клиника" className="w-5 h-5" />
                     <div>
                       <div className="font-medium text-text-50 text-sm">Клиника</div>
                       <div className="text-[10px] text-text-10">Медицинский центр</div>
@@ -216,7 +223,7 @@ export const RegisterUserPage: React.FC = () => {
                   `}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-xl">🏢</span>
+                    <img src={buildingIcon} alt="Партнер" className="w-5 h-5" />
                     <div>
                       <div className="font-medium text-text-50 text-sm">Партнер</div>
                       <div className="text-[10px] text-text-10">Аптеки, лаборатории</div>
@@ -357,7 +364,10 @@ export const RegisterUserPage: React.FC = () => {
 
                     <Card className="bg-blue-50 border-blue-200" padding="sm">
                       <p className="text-blue-800 text-xs">
-                        <strong>ℹ️ Информация:</strong> После регистрации вы сможете добавлять врачей в свою клинику.
+                        <span className="flex items-center gap-2">
+                          <img src={infoIcon} alt="Информация" className="w-4 h-4" />
+                          <strong>Информация:</strong> После регистрации вы сможете добавлять врачей в свою клинику.
+                        </span>
                       </p>
                     </Card>
                   </div>
@@ -404,7 +414,10 @@ export const RegisterUserPage: React.FC = () => {
 
                     <Card className="bg-yellow-50 border-yellow-200" padding="sm">
                       <p className="text-yellow-700 text-xs">
-                        ⏳ Ваш аккаунт будет активирован после проверки администратором
+                        <span className="flex items-center gap-2">
+                          <img src={clockIcon} alt="Ожидание" className="w-4 h-4" />
+                          Ваш аккаунт будет активирован после проверки администратором
+                        </span>
                       </p>
                     </Card>
                   </div>

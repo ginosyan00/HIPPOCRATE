@@ -12,6 +12,12 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { Appointment } from '../../types/api.types';
 import { format } from 'date-fns';
 
+// Import icons
+import plusIcon from '../../assets/icons/plus.svg';
+import refreshIcon from '../../assets/icons/refresh.svg';
+import analyticsIcon from '../../assets/icons/analytics.svg';
+import calendarIcon from '../../assets/icons/calendar.svg';
+
 /**
  * DoctorAppointmentsSection Component
  * Секция приёмов для страницы врача
@@ -313,7 +319,10 @@ export const DoctorAppointmentsSection: React.FC = () => {
         </div>
         <div className="flex gap-3 flex-wrap">
           <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-            ➕ Создать приём
+            <span className="flex items-center gap-2">
+              <img src={plusIcon} alt="Добавить" className="w-4 h-4" />
+              Создать приём
+            </span>
           </Button>
         </div>
       </div>
@@ -427,7 +436,10 @@ export const DoctorAppointmentsSection: React.FC = () => {
                 setCategoryInput('');
               }}
             >
-              🔄 Сбросить фильтры
+              <span className="flex items-center gap-2">
+                <img src={refreshIcon} alt="Сбросить" className="w-4 h-4" />
+                Сбросить фильтры
+              </span>
             </Button>
           </div>
         )}
@@ -496,7 +508,10 @@ export const DoctorAppointmentsSection: React.FC = () => {
                   }`}
                   title="Таблица"
                 >
-                  📊 Таблица
+                  <span className="flex items-center gap-2">
+                    <img src={analyticsIcon} alt="Таблица" className="w-4 h-4" />
+                    Таблица
+                  </span>
                 </button>
                 <button
                   onClick={() => handleViewTypeChange('monthly')}
@@ -507,7 +522,10 @@ export const DoctorAppointmentsSection: React.FC = () => {
                   }`}
                   title="Месячный календарь"
                 >
-                  📅 Месяц
+                  <span className="flex items-center gap-2">
+                    <img src={calendarIcon} alt="Месяц" className="w-4 h-4" />
+                    Месяц
+                  </span>
                 </button>
                 <button
                   onClick={() => handleViewTypeChange('weekly')}
@@ -518,7 +536,10 @@ export const DoctorAppointmentsSection: React.FC = () => {
                   }`}
                   title="Недельный вид"
                 >
-                  📆 Неделя
+                  <span className="flex items-center gap-2">
+                    <img src={calendarIcon} alt="Неделя" className="w-4 h-4" />
+                    Неделя
+                  </span>
                 </button>
               </div>
             </div>

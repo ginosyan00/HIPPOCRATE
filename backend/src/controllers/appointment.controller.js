@@ -183,6 +183,44 @@ export async function updateStatus(req, res, next) {
 }
 
 /**
+ * GET /api/v1/appointments/busy-slots
+ * Получить занятые временные слоты врача на указанную дату
+ * Query params: ?doctorId=xxx&date=2025-01-20
+ */
+export async function getBusySlots(req, res, next) {
+  try {
+    const { doctorId, date } = req.query;
+    const clinicId = req.user.clinicId;
+
+    if (!doctorId) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Doctor ID is required',
+        },
+      });
+    }
+
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Date is required (format: YYYY-MM-DD)',
+        },
+      });
+    }
+
+    const busySlots = await appointmentService.getBusyTimeSlots(clinicId, doctorId, date);
+
+    successResponse(res, { busySlots }, 200);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
  * DELETE /api/v1/appointments/:id
  * Удалить приём
  * Для врачей проверяет, что назначение принадлежит им (хотя удаление доступно только ADMIN)

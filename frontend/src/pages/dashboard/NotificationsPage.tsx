@@ -75,7 +75,7 @@ export const NotificationsPage: React.FC = () => {
   };
 
   const handleMarkAllAsRead = async () => {
-    await markAllAsReadMutation.mutateAsync(patientId, userId);
+    await markAllAsReadMutation.mutateAsync({ patientId, userId });
   };
 
   const handleDelete = async (notification: Notification, e: React.MouseEvent) => {

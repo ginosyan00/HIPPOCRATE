@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Input, Spinner } from '../common';
+import { Modal, Button, Input, Spinner, TimeSlotPicker } from '../common';
 import { useClinics, useClinicDoctors, useCreatePublicAppointment } from '../../hooks/usePublic';
 import { useAuthStore } from '../../store/useAuthStore';
+import { publicService } from '../../services/public.service';
 import { Clinic, User } from '../../types/api.types';
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 interface BookNowModalProps {
   isOpen: boolean;
@@ -31,6 +32,8 @@ export const BookNowModal: React.FC<BookNowModalProps> = ({
   const [reason, setReason] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [busySlots, setBusySlots] = useState<Array<{ start: string; end: string; appointmentId: string }>>([]);
+  const [isLoadingBusySlots, setIsLoadingBusySlots] = useState(false);
 
   // Загружаем клиники
   const { data: clinicsData, isLoading: isLoadingClinics } = useClinics();
@@ -64,7 +67,32 @@ export const BookNowModal: React.FC<BookNowModalProps> = ({
   // Сброс врача при смене клиники
   useEffect(() => {
     setSelectedDoctorId('');
+    setBusySlots([]);
   }, [selectedClinicId]);
+
+  // Загрузка занятых слотов при изменении врача, клиники или даты
+  useEffect(() => {
+    const loadBusySlots = async () => {
+      if (!selectedClinicSlug || !selectedDoctorId || !selectedDate) {
+        setBusySlots([]);
+        return;
+      }
+
+      try {
+        setIsLoadingBusySlots(true);
+        const slots = await publicService.getBusySlots(selectedClinicSlug, selectedDoctorId, selectedDate);
+        setBusySlots(slots);
+        console.log('✅ [BOOK NOW MODAL] Занятые слоты загружены:', slots);
+      } catch (err) {
+        console.error('🔴 [BOOK NOW MODAL] Ошибка загрузки занятых слотов:', err);
+        setBusySlots([]);
+      } finally {
+        setIsLoadingBusySlots(false);
+      }
+    };
+
+    loadBusySlots();
+  }, [selectedClinicSlug, selectedDoctorId, selectedDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,19 +167,6 @@ export const BookNowModal: React.FC<BookNowModalProps> = ({
     }
   };
 
-  // Генерируем доступные временные слоты (каждые 30 минут)
-  const generateTimeSlots = (): string[] => {
-    const slots: string[] = [];
-    for (let hour = 8; hour < 20; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-        slots.push(timeStr);
-      }
-    }
-    return slots;
-  };
-
-  const timeSlots = generateTimeSlots();
 
   // Минимальная дата - сегодня
   const minDate = new Date().toISOString().split('T')[0];
@@ -242,33 +257,44 @@ export const BookNowModal: React.FC<BookNowModalProps> = ({
           <input
             type="date"
             value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
+            onChange={(e) => {
+              setSelectedDate(e.target.value);
+              setSelectedTime(''); // Сбрасываем время при смене даты
+            }}
             min={minDate}
             className="w-full px-4 py-2.5 border border-stroke rounded-lg bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all"
             required
           />
         </div>
 
-        {/* Выбор времени */}
-        {selectedDate && (
+        {/* Визуальный выбор времени */}
+        {selectedDate && selectedDoctorId && selectedClinicSlug && (
           <div>
-            <label className="block text-sm font-medium text-text-50 mb-2">
-              <Clock className="w-4 h-4 inline mr-2" />
-              Время <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={selectedTime}
-              onChange={(e) => setSelectedTime(e.target.value)}
-              className="w-full px-4 py-2.5 border border-stroke rounded-lg bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all"
-              required
-            >
-              <option value="">Выберите время</option>
-              {timeSlots.map((time) => (
-                <option key={time} value={time}>
-                  {time}
-                </option>
-              ))}
-            </select>
+            {isLoadingBusySlots ? (
+              <div className="flex items-center justify-center py-8">
+                <Spinner size="sm" />
+                <span className="ml-2 text-sm text-text-10">Загрузка доступных слотов...</span>
+              </div>
+            ) : (
+              <TimeSlotPicker
+                selectedTime={selectedTime}
+                onTimeSelect={setSelectedTime}
+                busySlots={busySlots}
+                appointmentDuration={30}
+                selectedDate={selectedDate}
+                startHour={8}
+                endHour={20}
+                slotInterval={30}
+              />
+            )}
+          </div>
+        )}
+
+        {selectedDate && (!selectedDoctorId || !selectedClinicSlug) && (
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-sm text-yellow-800">
+              ⚠️ Выберите клинику и врача, чтобы увидеть доступные временные слоты
+            </p>
           </div>
         )}
 

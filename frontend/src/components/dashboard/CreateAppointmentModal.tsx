@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Input, Spinner } from '../common';
+import { Modal, Button, Input, Spinner, TimeSlotPicker } from '../common';
 import { useCreateAppointment } from '../../hooks/useAppointments';
 import { userService } from '../../services/user.service';
 import { patientService } from '../../services/patient.service';
+import { appointmentService } from '../../services/appointment.service';
 import { User } from '../../types/api.types';
 import { PatientSearchInput } from './PatientSearchInput';
 
@@ -43,6 +44,8 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
 
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [busySlots, setBusySlots] = useState<Array<{ start: string; end: string; appointmentId: string }>>([]);
+  const [isLoadingBusySlots, setIsLoadingBusySlots] = useState(false);
 
   // Загрузка списка врачей
   useEffect(() => {
@@ -81,6 +84,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
       setReason('');
       setNotes('');
       setError('');
+      setBusySlots([]);
     } else {
       // Если модальное окно открывается, устанавливаем значения по умолчанию
       if (defaultDoctorId) {
@@ -91,6 +95,30 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
       }
     }
   }, [isOpen, defaultDoctorId, defaultDate]);
+
+  // Загрузка занятых слотов при изменении врача, даты или длительности
+  useEffect(() => {
+    const loadBusySlots = async () => {
+      if (!doctorId || !appointmentDate) {
+        setBusySlots([]);
+        return;
+      }
+
+      try {
+        setIsLoadingBusySlots(true);
+        const slots = await appointmentService.getBusySlots(doctorId, appointmentDate);
+        setBusySlots(slots);
+        console.log('✅ [CREATE APPOINTMENT MODAL] Занятые слоты загружены:', slots);
+      } catch (err) {
+        console.error('🔴 [CREATE APPOINTMENT MODAL] Ошибка загрузки занятых слотов:', err);
+        setBusySlots([]);
+      } finally {
+        setIsLoadingBusySlots(false);
+      }
+    };
+
+    loadBusySlots();
+  }, [doctorId, appointmentDate, duration]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -188,17 +216,6 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
     return today.toISOString().split('T')[0];
   };
 
-  // Получаем минимальное время (если выбрана сегодняшняя дата)
-  const getMinTime = () => {
-    const today = new Date().toISOString().split('T')[0];
-    if (appointmentDate === today) {
-      const now = new Date();
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes() + 1).padStart(2, '0');
-      return `${hours}:${minutes}`;
-    }
-    return '00:00';
-  };
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Создать приём" size="lg">
@@ -338,35 +355,54 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
           </div>
         )}
 
-        {/* Дата и время */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-normal text-text-10 mb-2">
-              Дата <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              value={appointmentDate}
-              onChange={e => setAppointmentDate(e.target.value)}
-              min={getMinDate()}
-              className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-normal text-text-10 mb-2">
-              Время <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="time"
-              value={appointmentTime}
-              onChange={e => setAppointmentTime(e.target.value)}
-              min={appointmentDate && appointmentDate === new Date().toISOString().split('T')[0] ? getMinTime() : undefined}
-              className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
-              required
-            />
-          </div>
+        {/* Дата */}
+        <div>
+          <label className="block text-sm font-normal text-text-10 mb-2">
+            Дата <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="date"
+            value={appointmentDate}
+            onChange={e => {
+              setAppointmentDate(e.target.value);
+              setAppointmentTime(''); // Сбрасываем время при смене даты
+            }}
+            min={getMinDate()}
+            className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
+            required
+          />
         </div>
+
+        {/* Визуальный выбор времени */}
+        {appointmentDate && doctorId && (
+          <div>
+            {isLoadingBusySlots ? (
+              <div className="flex items-center justify-center py-8">
+                <Spinner size="sm" />
+                <span className="ml-2 text-sm text-text-10">Загрузка доступных слотов...</span>
+              </div>
+            ) : (
+              <TimeSlotPicker
+                selectedTime={appointmentTime}
+                onTimeSelect={setAppointmentTime}
+                busySlots={busySlots}
+                appointmentDuration={parseInt(duration)}
+                selectedDate={appointmentDate}
+                startHour={8}
+                endHour={20}
+                slotInterval={30}
+              />
+            )}
+          </div>
+        )}
+
+        {appointmentDate && !doctorId && (
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-sm text-yellow-800">
+              ⚠️ Выберите врача, чтобы увидеть доступные временные слоты
+            </p>
+          </div>
+        )}
 
         {/* Длительность */}
         <div>

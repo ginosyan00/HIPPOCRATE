@@ -24,6 +24,14 @@ router.use(tenantMiddleware);
 router.get('/', appointmentController.getAll);
 
 /**
+ * GET /api/v1/appointments/busy-slots
+ * Получить занятые временные слоты врача на указанную дату
+ * Доступ: все авторизованные
+ * Query params: ?doctorId=xxx&date=2025-01-20
+ */
+router.get('/busy-slots', appointmentController.getBusySlots);
+
+/**
  * GET /api/v1/appointments/:id
  * Получить приём по ID
  * Доступ: все авторизованные

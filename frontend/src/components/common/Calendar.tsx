@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, getDay, startOfWeek, endOfWeek } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { TimeSlotPicker } from './TimeSlotPicker';
 
 interface CalendarProps {
   selectedDate: Date | null;
@@ -10,6 +11,8 @@ interface CalendarProps {
   minDate?: Date;
   disabledDates?: Date[];
   className?: string;
+  busySlots?: Array<{ start: string; end: string; appointmentId: string }>; // Занятые временные слоты
+  appointmentDuration?: number; // Длительность приёма в минутах (по умолчанию 30)
 }
 
 /**
@@ -24,6 +27,8 @@ export const Calendar: React.FC<CalendarProps> = ({
   minDate = new Date(),
   disabledDates = [],
   className = '',
+  busySlots = [],
+  appointmentDuration = 30,
 }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
@@ -38,14 +43,6 @@ export const Calendar: React.FC<CalendarProps> = ({
   // Дни недели
   const weekDays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 
-  // Доступные временные слоты (каждые 30 минут с 9:00 до 18:00)
-  const timeSlots = [];
-  for (let hour = 9; hour < 18; hour++) {
-    for (let minute = 0; minute < 60; minute += 30) {
-      const timeString = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-      timeSlots.push(timeString);
-    }
-  }
 
   // Проверка, можно ли выбрать дату
   const isDateDisabled = (date: Date): boolean => {
@@ -156,32 +153,16 @@ export const Calendar: React.FC<CalendarProps> = ({
       {/* Time Slots - показываем только если выбрана дата */}
       {selectedDate && (
         <div className="mt-4">
-          <label className="block text-sm font-normal text-text-10 mb-3">
-            Выберите время
-          </label>
-          <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 border border-stroke rounded-sm bg-bg-white">
-            {timeSlots.map(time => {
-              const isSelected = selectedTime === time;
-              return (
-                <button
-                  key={time}
-                  type="button"
-                  onClick={() => onTimeSelect(time)}
-                  className={`
-                    px-3 py-2 text-sm font-normal rounded-sm
-                    transition-smooth
-                    ${
-                      isSelected
-                        ? 'bg-main-100 text-white'
-                        : 'bg-bg-white text-text-100 border border-stroke hover:bg-main-10 hover:border-main-100'
-                    }
-                  `}
-                >
-                  {time}
-                </button>
-              );
-            })}
-          </div>
+          <TimeSlotPicker
+            selectedTime={selectedTime || ''}
+            onTimeSelect={onTimeSelect}
+            busySlots={busySlots}
+            appointmentDuration={appointmentDuration}
+            selectedDate={selectedDate}
+            startHour={9}
+            endHour={18}
+            slotInterval={30}
+          />
         </div>
       )}
     </div>

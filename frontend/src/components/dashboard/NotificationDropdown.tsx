@@ -80,7 +80,7 @@ export const NotificationDropdown: React.FC = () => {
   };
 
   const handleMarkAllAsRead = async () => {
-    await markAllAsReadMutation.mutateAsync(patientId, userId);
+    await markAllAsReadMutation.mutateAsync({ patientId, userId });
   };
 
   const formatDate = (date: Date | string) => {

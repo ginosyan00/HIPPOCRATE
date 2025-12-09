@@ -714,6 +714,57 @@ export async function updateStatus(
 }
 
 /**
+ * Получить занятые временные слоты врача на указанную дату
+ * @param {string} clinicId - ID клиники
+ * @param {string} doctorId - ID врача
+ * @param {string} date - Дата в формате YYYY-MM-DD
+ * @returns {Promise<Array>} Массив занятых интервалов [{ start: Date, end: Date, appointmentId: string }]
+ */
+export async function getBusyTimeSlots(clinicId, doctorId, date) {
+  // Создаем начало и конец дня
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  // Получаем все приёмы врача на эту дату (исключая отмененные)
+  const appointments = await prisma.appointment.findMany({
+    where: {
+      clinicId,
+      doctorId,
+      status: { notIn: ['cancelled'] },
+      appointmentDate: {
+        gte: startOfDay,
+        lte: endOfDay,
+      },
+    },
+    select: {
+      id: true,
+      appointmentDate: true,
+      duration: true,
+    },
+    orderBy: {
+      appointmentDate: 'asc',
+    },
+  });
+
+  // Преобразуем в массив интервалов
+  const busySlots = appointments.map(apt => {
+    const start = new Date(apt.appointmentDate);
+    const end = new Date(start.getTime() + apt.duration * 60000);
+    
+    return {
+      start: start.toISOString(),
+      end: end.toISOString(),
+      appointmentId: apt.id,
+    };
+  });
+
+  return busySlots;
+}
+
+/**
  * Удалить приём
  * @param {string} clinicId - ID клиники
  * @param {string} appointmentId - ID приёма

@@ -103,6 +103,20 @@ export const appointmentService = {
   async delete(id: string): Promise<void> {
     await api.delete(`/appointments/${id}`);
   },
+
+  /**
+   * Получить занятые временные слоты врача на указанную дату
+   * @param doctorId - ID врача
+   * @param date - Дата в формате YYYY-MM-DD
+   * @returns Массив занятых интервалов [{ start: string, end: string, appointmentId: string }]
+   */
+  async getBusySlots(doctorId: string, date: string): Promise<Array<{ start: string; end: string; appointmentId: string }>> {
+    const { data } = await api.get<ApiResponse<{ busySlots: Array<{ start: string; end: string; appointmentId: string }> }>>(
+      '/appointments/busy-slots',
+      { params: { doctorId, date } }
+    );
+    return data.data.busySlots;
+  },
 };
 
 

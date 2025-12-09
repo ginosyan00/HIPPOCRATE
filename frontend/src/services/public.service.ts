@@ -89,6 +89,21 @@ export const publicService = {
     );
     return data.data;
   },
+
+  /**
+   * Получить занятые временные слоты врача на указанную дату (публичный endpoint)
+   * @param clinicSlug - Slug клиники
+   * @param doctorId - ID врача
+   * @param date - Дата в формате YYYY-MM-DD
+   * @returns Массив занятых интервалов [{ start: string, end: string, appointmentId: string }]
+   */
+  async getBusySlots(clinicSlug: string, doctorId: string, date: string): Promise<Array<{ start: string; end: string; appointmentId: string }>> {
+    const { data } = await api.get<ApiResponse<{ busySlots: Array<{ start: string; end: string; appointmentId: string }> }>>(
+      `/public/clinics/${clinicSlug}/doctors/${doctorId}/busy-slots`,
+      { params: { date } }
+    );
+    return data.data.busySlots;
+  },
 };
 
 

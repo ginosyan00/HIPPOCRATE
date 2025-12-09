@@ -10,6 +10,7 @@ export { Modal } from './Modal';
 export { Spinner } from './Spinner';
 export { BackButton } from './BackButton';
 export { Calendar } from './Calendar';
+export { TimeSlotPicker } from './TimeSlotPicker';
 export { DeleteAccountSection } from './DeleteAccountSection';
 
 

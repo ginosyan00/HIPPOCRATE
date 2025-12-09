@@ -1,6 +1,6 @@
 import { prisma } from '../config/database.js';
 import { findOrCreatePatient } from './patient.service.js';
-import { create as createAppointment } from './appointment.service.js';
+import { create as createAppointment, getBusyTimeSlots } from './appointment.service.js';
 import * as notificationService from './notification.service.js';
 
 /**
@@ -315,6 +315,42 @@ export async function getUniqueCities() {
   });
 
   return clinics.map(c => c.city);
+}
+
+/**
+ * Получить занятые временные слоты врача на указанную дату (публичный endpoint)
+ * @param {string} clinicSlug - Slug клиники
+ * @param {string} doctorId - ID врача
+ * @param {string} date - Дата в формате YYYY-MM-DD
+ * @returns {Promise<Array>} Массив занятых интервалов
+ */
+export async function getPublicBusyTimeSlots(clinicSlug, doctorId, date) {
+  // Находим клинику по slug
+  const clinic = await prisma.clinic.findUnique({
+    where: { slug: clinicSlug },
+    select: { id: true },
+  });
+
+  if (!clinic) {
+    throw new Error('Clinic not found');
+  }
+
+  // Проверяем что врач принадлежит этой клинике
+  const doctor = await prisma.user.findFirst({
+    where: {
+      id: doctorId,
+      clinicId: clinic.id,
+      role: 'DOCTOR',
+      status: 'ACTIVE',
+    },
+  });
+
+  if (!doctor) {
+    throw new Error('Doctor not found or inactive');
+  }
+
+  // Используем метод из appointment.service
+  return await getBusyTimeSlots(clinic.id, doctorId, date);
 }
 
 /**

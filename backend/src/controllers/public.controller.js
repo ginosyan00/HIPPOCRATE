@@ -142,6 +142,34 @@ export async function getCities(req, res, next) {
 }
 
 /**
+ * GET /api/v1/public/clinics/:slug/doctors/:doctorId/busy-slots
+ * Получить занятые временные слоты врача на указанную дату (публичный endpoint)
+ * Query params: ?date=2025-01-20
+ */
+export async function getPublicBusySlots(req, res, next) {
+  try {
+    const { slug, doctorId } = req.params;
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Date is required (format: YYYY-MM-DD)',
+        },
+      });
+    }
+
+    const busySlots = await publicService.getPublicBusyTimeSlots(slug, doctorId, date);
+
+    successResponse(res, { busySlots }, 200);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
  * GET /api/v1/public/testimonials/patients
  * Получить список пациентов для отзывов
  * Query params: ?limit=3

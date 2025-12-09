@@ -56,7 +56,8 @@ export function useMarkAllNotificationsAsRead() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (patientId?: string, userId?: string) => notificationService.markAllAsRead(patientId, userId),
+    mutationFn: ({ patientId, userId }: { patientId?: string; userId?: string }) => 
+      notificationService.markAllAsRead(patientId, userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },

@@ -4,6 +4,7 @@ import { Button, Card, Input, Modal, Spinner, BackButton, Calendar } from '../..
 import { CertificateGallery } from '../../components/public/CertificateGallery';
 import { useClinic, useClinicDoctors, useCreatePublicAppointment } from '../../hooks/usePublic';
 import { useAuthStore } from '../../store/useAuthStore';
+import { publicService } from '../../services/public.service';
 
 // Import icons
 import hippocratesLogo from '../../assets/icons/hippocrates-logo.png';
@@ -40,6 +41,8 @@ export const ClinicPage: React.FC = () => {
   // Calendar state
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string>('');
+  const [busySlots, setBusySlots] = useState<Array<{ start: string; end: string; appointmentId: string }>>([]);
+  const [isLoadingBusySlots, setIsLoadingBusySlots] = useState(false);
 
   // Автозаполнение формы для авторизованных пользователей
   useEffect(() => {
@@ -68,7 +71,33 @@ export const ClinicPage: React.FC = () => {
     // Сброс календаря при открытии модального окна
     setSelectedDate(null);
     setSelectedTime('');
+    setBusySlots([]);
   };
+
+  // Загрузка занятых слотов при изменении врача или даты
+  useEffect(() => {
+    const loadBusySlots = async () => {
+      if (!slug || !selectedDoctor || !selectedDate) {
+        setBusySlots([]);
+        return;
+      }
+
+      try {
+        setIsLoadingBusySlots(true);
+        const dateStr = selectedDate.toISOString().split('T')[0];
+        const slots = await publicService.getBusySlots(slug, selectedDoctor, dateStr);
+        setBusySlots(slots);
+        console.log('✅ [CLINIC PAGE] Занятые слоты загружены:', slots);
+      } catch (err) {
+        console.error('🔴 [CLINIC PAGE] Ошибка загрузки занятых слотов:', err);
+        setBusySlots([]);
+      } finally {
+        setIsLoadingBusySlots(false);
+      }
+    };
+
+    loadBusySlots();
+  }, [slug, selectedDoctor, selectedDate]);
   
   const handleLogoutAndReset = () => {
     logout();
@@ -495,10 +524,20 @@ export const ClinicPage: React.FC = () => {
                 selectedTime={selectedTime}
                 onTimeSelect={setSelectedTime}
                 minDate={new Date()}
+                busySlots={busySlots}
+                appointmentDuration={30}
               />
-              {(!selectedDate || !selectedTime) && (
+              {isLoadingBusySlots && (
+                <p className="mt-2 text-xs text-text-10">Загрузка доступных слотов...</p>
+              )}
+              {(!selectedDate || !selectedTime) && !isLoadingBusySlots && (
                 <p className="mt-2 text-xs text-text-10">
                   {!selectedDate ? 'Выберите дату' : 'Выберите время'}
+                </p>
+              )}
+              {busySlots.length > 0 && !isLoadingBusySlots && (
+                <p className="mt-2 text-xs text-text-10">
+                  Занятые слоты отмечены как недоступные
                 </p>
               )}
             </div>

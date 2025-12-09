@@ -185,7 +185,7 @@ export const PatientDashboard: React.FC = () => {
               <Button 
                 variant="primary" 
                 size="sm" 
-                onClick={() => markAllAsReadMutation.mutate(undefined, undefined)}
+                onClick={() => markAllAsReadMutation.mutate({})}
                 isLoading={markAllAsReadMutation.isPending}
               >
                 Прочитать все

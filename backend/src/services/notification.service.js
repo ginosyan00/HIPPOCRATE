@@ -336,17 +336,18 @@ export async function markAllAsRead(clinicId, patientId, userId) {
 
   if (userId) {
     where.userId = userId;
-    // Проверяем что врач принадлежит клинике
-    const doctor = await prisma.user.findFirst({
+    // Проверяем что пользователь принадлежит клинике
+    // Может быть DOCTOR, ADMIN или CLINIC
+    const user = await prisma.user.findFirst({
       where: {
         id: userId,
         clinicId,
-        role: 'DOCTOR',
+        role: { in: ['DOCTOR', 'ADMIN', 'CLINIC'] },
       },
     });
 
-    if (!doctor) {
-      throw new Error('Doctor not found');
+    if (!user) {
+      throw new Error('User not found or does not belong to clinic');
     }
   }
 

@@ -42,6 +42,13 @@ router.get('/clinics/:slug/doctors', publicController.getClinicDoctors);
 router.get('/clinics/:slug/doctors/:doctorId', publicController.getClinicDoctor);
 
 /**
+ * GET /api/v1/public/clinics/:slug/doctors/:doctorId/busy-slots
+ * Получить занятые временные слоты врача на указанную дату
+ * Query params: ?date=2025-01-20
+ */
+router.get('/clinics/:slug/doctors/:doctorId/busy-slots', publicController.getPublicBusySlots);
+
+/**
  * POST /api/v1/public/appointments
  * Создать публичную заявку на приём (онлайн-запись)
  * Без авторизации!

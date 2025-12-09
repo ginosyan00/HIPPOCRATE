@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card } from '../../components/common';
 import { useAuthStore } from '../../store/useAuthStore';
 
@@ -11,6 +11,7 @@ import hippocratesLogo from '../../assets/icons/hippocrates-logo.png';
  * Страница ожидания одобрения для Doctor и Partner
  */
 export const PendingApprovalPage: React.FC = () => {
+  const navigate = useNavigate();
   const user = useAuthStore(state => state.user);
   const logout = useAuthStore(state => state.logout);
 
@@ -100,7 +101,10 @@ export const PendingApprovalPage: React.FC = () => {
             {/* Actions */}
             <div className="pt-4 border-t border-stroke space-y-2">
               <button
-                onClick={logout}
+                onClick={() => {
+                  logout();
+                  navigate('/', { replace: true });
+                }}
                 className="w-full px-4 py-2 text-sm text-text-10 hover:text-main-100 transition-colors"
               >
                 Выйти из аккаунта

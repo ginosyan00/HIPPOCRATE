@@ -50,8 +50,8 @@ export const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
 
   // Шаг 1: Проверка аутентификации
   if (!isAuthenticated || !user || !token) {
-    console.log('🔴 [ROLE PROTECTED ROUTE] Не авторизован -> redirect to /login');
-    return <Navigate to="/login" replace state={{ from: location }} />;
+    console.log('🔴 [ROLE PROTECTED ROUTE] Не авторизован -> redirect to /');
+    return <Navigate to="/" replace state={{ from: location }} />;
   }
 
   // Шаг 2: Специальная проверка для страницы pending-approval

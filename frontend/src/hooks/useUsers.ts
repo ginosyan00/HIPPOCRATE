@@ -141,6 +141,8 @@ export function useDeleteMyAccount() {
       queryClient.clear();
       // Выходим из системы
       logout();
+      // Мгновенный редирект на главную страницу
+      window.location.href = '/';
     },
   });
 }

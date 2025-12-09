@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button, Card, Input, Modal, Spinner, BackButton, Calendar } from '../../components/common';
 import { CertificateGallery } from '../../components/public/CertificateGallery';
 import { useClinic, useClinicDoctors, useCreatePublicAppointment } from '../../hooks/usePublic';
@@ -14,6 +14,7 @@ import doctorIcon from '../../assets/icons/doctor.svg';
  * Страница клиники в стиле медицинского дашборда
  */
 export const ClinicPage: React.FC = () => {
+  const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<string>('');
@@ -77,6 +78,8 @@ export const ClinicPage: React.FC = () => {
       patientEmail: '',
       reason: '',
     });
+    // Мгновенный редирект на главную страницу
+    navigate('/', { replace: true });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -57,13 +57,15 @@ export const LoginPage: React.FC = () => {
         {/* Logo & Title */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4 group">
-            <div className="relative">
-              <img 
-                src={hippocratesLogo} 
-                alt="Logo" 
-                className="w-48 h-28 transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-lg object-contain" 
-              />
-            </div>
+            <Link to="/" className="cursor-pointer">
+              <div className="relative">
+                <img 
+                  src={hippocratesLogo} 
+                  alt="Logo" 
+                  className="w-48 h-28 transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-lg object-contain cursor-pointer" 
+                />
+              </div>
+            </Link>
           </div>
           <p className="text-text-10 text-sm">Войдите в панель управления</p>
         </div>

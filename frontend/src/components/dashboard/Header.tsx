@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useUIStore } from '../../store/useUIStore';
 import { NotificationDropdown } from './NotificationDropdown';
@@ -15,6 +16,7 @@ import arrowDownIcon from '../../assets/icons/arrow-down.svg';
  * Верхняя панель с поиском и профилем
  */
 export const Header: React.FC = () => {
+  const navigate = useNavigate();
   const user = useAuthStore(state => state.user);
   const logout = useAuthStore(state => state.logout);
   const toggleSidebar = useUIStore(state => state.toggleSidebar);
@@ -110,8 +112,8 @@ export const Header: React.FC = () => {
                   onClick={() => {
                     logout();
                     setShowProfileMenu(false);
-                    // Используем window.location для полного перехода, чтобы избежать redirect от ProtectedRoute
-                    window.location.href = '/';
+                    // Мгновенный редирект на главную страницу
+                    navigate('/', { replace: true });
                   }}
                   className="w-full text-left px-4 py-2 text-sm text-text-50 hover:bg-bg-primary transition-smooth"
                 >

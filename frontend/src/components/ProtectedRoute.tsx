@@ -28,8 +28,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }, [location, isAuthenticated, user, token]);
 
   if (!isAuthenticated) {
-    console.log('🔴 [PROTECTED ROUTE] Не авторизован -> redirect to /login');
-    return <Navigate to="/login" replace />;
+    console.log('🔴 [PROTECTED ROUTE] Не авторизован -> redirect to /');
+    return <Navigate to="/" replace />;
   }
 
   console.log('✅ [PROTECTED ROUTE] Доступ разрешен');

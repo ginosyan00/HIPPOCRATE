@@ -91,8 +91,7 @@ export const DoctorSettingsPage: React.FC = () => {
   const handleDeleteAccount = async () => {
     try {
       await deleteAccountMutation.mutateAsync();
-      // Редирект произойдет автоматически через logout в useDeleteMyAccount
-      navigate('/auth/login');
+      // Редирект на главную страницу происходит автоматически в useDeleteMyAccount
     } catch (error: any) {
       // Ошибка уже обработана в компоненте
       throw error;

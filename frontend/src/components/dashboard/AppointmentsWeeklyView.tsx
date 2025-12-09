@@ -219,7 +219,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
 
       {/* Kanban Board - Колонки по дням недели */}
       <div className="w-full">
-        <div className="flex gap-2 pb-4">
+        <div className="flex gap-1.5 pb-4">
           {weekDays.map((day, dayIndex) => {
             const isToday = isSameDay(day, new Date());
             const dayAppointments = getAppointmentsForDay(day);
@@ -234,24 +234,24 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                 className={`flex-1 min-w-0 flex flex-col ${isToday ? 'ring-2 ring-main-100 ring-offset-2' : ''}`}
               >
                 {/* Заголовок колонки */}
-                <div className={`${getDayHeaderColor(dayIndex, isToday)} p-3 rounded-t-lg`}>
+                <div className={`${getDayHeaderColor(dayIndex, isToday)} p-2 rounded-t-lg`}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-sm font-semibold">{dayName}</div>
-                      <div className="text-xs opacity-90 mt-0.5">{dayDate}</div>
+                      <div className="text-xs font-semibold">{dayName}</div>
+                      <div className="text-[10px] opacity-90 mt-0.5">{dayDate}</div>
                     </div>
-                    <div className="text-sm font-bold">({dayCount})</div>
+                    <div className="text-xs font-bold">({dayCount})</div>
                   </div>
                 </div>
 
                 {/* Тело колонки с карточками */}
-                <div className="bg-bg-primary border-x border-b border-stroke rounded-b-lg p-3 min-h-[600px] max-h-[800px] overflow-y-auto">
+                <div className="bg-bg-primary border-x border-b border-stroke rounded-b-lg p-2 min-h-[500px] max-h-[700px] overflow-y-auto">
                   {dayAppointments.length === 0 ? (
-                    <div className="text-center py-8 text-text-10 text-sm">
+                    <div className="text-center py-6 text-text-10 text-xs">
                       Нет приёмов
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {dayAppointments.map((appointment) => {
                         const appointmentDate = parseISO(appointment.appointmentDate.toString());
                         const appointmentTime = formatAppointmentTime(appointmentDate);
@@ -259,44 +259,44 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                         return (
                           <div
                             key={appointment.id}
-                            className="bg-bg-white border border-stroke rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
+                            className="bg-bg-white border border-stroke rounded-lg p-2.5 hover:shadow-md transition-all duration-200 cursor-pointer"
                             onClick={() => onAppointmentClick?.(appointment)}
                           >
                             {/* Верхняя часть карточки */}
-                            <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-start justify-between mb-2">
                               {/* Заголовок карточки */}
                               <div className="flex-1 min-w-0">
-                                <h4 className="text-base font-semibold text-text-100 truncate mb-1">
+                                <h4 className="text-sm font-semibold text-text-100 truncate mb-0.5">
                                   {user?.role === 'PATIENT'
                                     ? (user?.name || 'Я')
                                     : (appointment.patient?.name || 'Пациент')}
                                 </h4>
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-xs text-text-50">⏰ {appointmentTime}</span>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-[10px] text-text-50">⏰ {appointmentTime}</span>
                                   {appointment.duration && (
-                                    <span className="text-xs text-text-50">• {appointment.duration} мин</span>
+                                    <span className="text-[10px] text-text-50">• {appointment.duration} мин</span>
                                   )}
                                 </div>
                               </div>
 
                               {/* Счетчик уведомлений (пока 0) */}
-                              <div className="flex-shrink-0 ml-2">
-                                <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs text-gray-600 font-medium">
+                              <div className="flex-shrink-0 ml-1.5">
+                                <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-600 font-medium">
                                   0
                                 </div>
                               </div>
                             </div>
 
                             {/* Статус бейдж */}
-                            <div className="mb-3">
-                              <span className={`inline-block px-2 py-1 rounded-sm text-xs font-normal border ${getStatusBadgeColor(appointment.status)}`}>
+                            <div className="mb-2">
+                              <span className={`inline-block px-1.5 py-0.5 rounded-sm text-[10px] font-normal border ${getStatusBadgeColor(appointment.status)}`}>
                                 {getStatusLabel(appointment.status)}
                               </span>
                             </div>
 
                             {/* Информация о враче */}
                             {appointment.doctor?.name && (
-                              <div className="mb-3 text-xs text-text-50">
+                              <div className="mb-2 text-[10px] text-text-50">
                                 <span className="font-medium">👨‍⚕️ Врач:</span> {appointment.doctor.name}
                                 {appointment.doctor.specialization && (
                                   <span className="text-text-10"> ({appointment.doctor.specialization})</span>
@@ -306,25 +306,25 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
 
                             {/* Причина визита */}
                             {appointment.reason && (
-                              <div className="mb-3 text-xs">
+                              <div className="mb-2 text-[10px]">
                                 <span className="text-text-10">Причина:</span>
                                 <span className="text-text-50 ml-1">{appointment.reason}</span>
                               </div>
                             )}
 
                             {/* Иконки связи (телефон, email, чат) */}
-                            <div className="flex items-center gap-3 mb-3 pt-2 border-t border-stroke">
+                            <div className="flex items-center gap-2 mb-2 pt-1.5 border-t border-stroke">
                               {appointment.patient?.phone && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     window.location.href = `tel:${appointment.patient?.phone}`;
                                   }}
-                                  className="p-1.5 hover:bg-bg-primary rounded-sm transition-smooth text-text-50 hover:text-main-100"
+                                  className="p-1 hover:bg-bg-primary rounded-sm transition-smooth text-text-50 hover:text-main-100"
                                   title={`Позвонить: ${appointment.patient.phone}`}
                                   type="button"
                                 >
-                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                   </svg>
                                 </button>
@@ -335,11 +335,11 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                                     e.stopPropagation();
                                     window.location.href = `mailto:${appointment.patient?.email}`;
                                   }}
-                                  className="p-1.5 hover:bg-bg-primary rounded-sm transition-smooth text-text-50 hover:text-main-100"
+                                  className="p-1 hover:bg-bg-primary rounded-sm transition-smooth text-text-50 hover:text-main-100"
                                   title={`Написать: ${appointment.patient.email}`}
                                   type="button"
                                 >
-                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                   </svg>
                                 </button>
@@ -349,11 +349,11 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                                   e.stopPropagation();
                                   // TODO: Открыть чат с пациентом
                                 }}
-                                className="p-1.5 hover:bg-bg-primary rounded-sm transition-smooth text-text-50 hover:text-main-100"
+                                className="p-1 hover:bg-bg-primary rounded-sm transition-smooth text-text-50 hover:text-main-100"
                                 title="Открыть чат"
                                 type="button"
                               >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                 </svg>
                               </button>
@@ -365,7 +365,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                                 e.stopPropagation();
                                 // TODO: Открыть модальное окно для добавления активности
                               }}
-                              className="w-full text-left text-xs text-text-50 hover:text-main-100 py-1.5 px-2 hover:bg-bg-primary rounded-sm transition-smooth"
+                              className="w-full text-left text-[10px] text-text-50 hover:text-main-100 py-1 px-1.5 hover:bg-bg-primary rounded-sm transition-smooth"
                               type="button"
                             >
                               + Activity

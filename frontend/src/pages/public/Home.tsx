@@ -68,7 +68,8 @@ export const HomePage: React.FC = () => {
           <div className="flex gap-2 md:gap-3 items-center">
             <Button 
               onClick={() => setIsBookNowModalOpen(true)}
-              className="text-xs md:text-sm font-medium bg-main-100 text-white hover:bg-main-200 hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg px-4 md:px-6 py-2 md:py-2.5 whitespace-nowrap"
+              size="md"
+              className="text-xs md:text-sm font-medium bg-main-100 text-white hover:bg-main-200 hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg whitespace-nowrap min-w-[140px] md:min-w-[160px] px-4 md:px-5 py-2 md:py-2.5"
             >
               <img src={calendarIcon} alt="Calendar" className="w-4 h-4 mr-1 md:mr-2 inline" />
               <span className="hidden sm:inline">Записаться сейчас</span>
@@ -77,14 +78,16 @@ export const HomePage: React.FC = () => {
             <Link to="/clinics" className="hidden md:block">
               <Button 
                 variant="secondary" 
-                className="text-sm font-normal"
+                size="md"
+                className="text-xs md:text-sm font-normal min-w-[140px] md:min-w-[160px] px-4 md:px-5 py-2 md:py-2.5"
               >
                 Каталог клиник
               </Button>
             </Link>
             <Link to="/login">
               <Button 
-                className="text-xs md:text-sm font-normal hover:text-white px-3 md:px-4 py-2 md:py-2.5"
+                size="md"
+                className="text-xs md:text-sm font-normal hover:text-white whitespace-nowrap min-w-[140px] md:min-w-[160px] px-4 md:px-5 py-2 md:py-2.5"
                 style={{ 
                   backgroundColor: '#E6F7F6', 
                   color: '#00a79d'

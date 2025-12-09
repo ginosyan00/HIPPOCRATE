@@ -60,11 +60,11 @@ export const Header: React.FC = () => {
           {(user?.role === 'CLINIC' || user?.role === 'DOCTOR' || user?.role === 'PATIENT') && (
             <button
               onClick={() => setIsChatOpen(true)}
-              className="relative p-2 rounded-sm hover:bg-bg-primary transition-smooth"
+              className="relative p-2 rounded-sm hover:bg-bg-primary/20 transition-smooth"
               title={user?.role === 'CLINIC' ? 'Чат врачей' : 'Чат'}
             >
               <svg  
-                className="w-8 h-8 text-text-50"
+                className="w-8 h-8 text-text-50/50"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

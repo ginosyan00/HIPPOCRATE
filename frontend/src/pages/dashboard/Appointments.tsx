@@ -662,6 +662,7 @@ export const AppointmentsPage: React.FC = () => {
             viewMode={viewMode}
             onStatusChange={handleStatusChange}
             onEditAmount={handleEditAmount}
+            onUpdateAmount={handleUpdateAmount}
             loadingAppointments={loadingAppointments}
             errorMessages={errorMessages}
             isFetching={isFetching}

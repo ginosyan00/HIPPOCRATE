@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Appointment } from '../../types/api.types';
 import { Button } from '../common';
 import { formatAppointmentDateTime } from '../../utils/dateFormat';
+import { Pencil, Check, X } from 'lucide-react';
 
 interface AppointmentsTableProps {
   appointments: Appointment[];
   onStatusChange: (id: string, status: string) => void;
   onEditAmount?: (appointment: Appointment) => void;
+  onUpdateAmount?: (appointmentId: string, amount: number) => Promise<void>;
   loadingAppointments: Record<string, string>;
   errorMessages: Record<string, string>;
 }
@@ -19,9 +21,88 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
   appointments,
   onStatusChange,
   onEditAmount,
+  onUpdateAmount,
   loadingAppointments,
   errorMessages,
 }) => {
+  // Состояние для редактирования суммы
+  const [editingAmountId, setEditingAmountId] = useState<string | null>(null);
+  const [editingAmountValue, setEditingAmountValue] = useState<string>('');
+  const [amountError, setAmountError] = useState<string>('');
+
+  /**
+   * Начинает редактирование суммы
+   */
+  const handleStartEditAmount = (appointment: Appointment) => {
+    setEditingAmountId(appointment.id);
+    setEditingAmountValue(appointment.amount ? String(appointment.amount) : '');
+    setAmountError('');
+  };
+
+  /**
+   * Отменяет редактирование суммы
+   */
+  const handleCancelEditAmount = () => {
+    setEditingAmountId(null);
+    setEditingAmountValue('');
+    setAmountError('');
+  };
+
+  /**
+   * Сохраняет новую сумму
+   */
+  const handleSaveAmount = async (appointmentId: string) => {
+    setAmountError('');
+    
+    // Валидация суммы
+    const amountNum = parseFloat(editingAmountValue.replace(/\s/g, '').replace(',', '.'));
+    if (isNaN(amountNum) || amountNum < 0) {
+      setAmountError('Введите корректную сумму (положительное число)');
+      return;
+    }
+
+    if (onUpdateAmount) {
+      try {
+        await onUpdateAmount(appointmentId, amountNum);
+        setEditingAmountId(null);
+        setEditingAmountValue('');
+        setAmountError('');
+      } catch (err: any) {
+        setAmountError(err.message || 'Ошибка при обновлении суммы');
+      }
+    } else if (onEditAmount) {
+      // Fallback к модальному окну, если onUpdateAmount не предоставлен
+      const appointment = appointments.find(a => a.id === appointmentId);
+      if (appointment) {
+        onEditAmount(appointment);
+      }
+    }
+  };
+
+  /**
+   * Обработка изменения значения суммы
+   */
+  const handleAmountInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Разрешаем только цифры, точку, запятую и пробелы
+    if (value === '' || /^[\d\s.,]+$/.test(value)) {
+      setEditingAmountValue(value);
+      setAmountError('');
+    }
+  };
+
+  /**
+   * Обработка нажатия Enter для сохранения
+   */
+  const handleAmountKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, appointmentId: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveAmount(appointmentId);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancelEditAmount();
+    }
+  };
   const getStatusBadge = (status: string) => {
     const styles = {
       pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
@@ -172,12 +253,64 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
                 {appointment.duration} мин
               </td>
               <td className="px-4 py-3 text-sm">
-                {appointment.amount ? (
-                  <span className="font-semibold text-text-100">
-                    {appointment.amount.toLocaleString('ru-RU')} ֏
-                  </span>
+                {editingAmountId === appointment.id ? (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={editingAmountValue}
+                        onChange={handleAmountInputChange}
+                        onKeyDown={(e) => handleAmountKeyDown(e, appointment.id)}
+                        className="w-24 px-2 py-1 text-sm border border-stroke rounded focus:outline-none focus:ring-2 focus:ring-main-100 focus:border-main-100"
+                        autoFocus
+                        disabled={loadingAppointments[appointment.id] === 'updating'}
+                      />
+                      <span className="text-text-10 text-xs">֏</span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => handleSaveAmount(appointment.id)}
+                          disabled={loadingAppointments[appointment.id] === 'updating'}
+                          className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors disabled:opacity-50"
+                          title="Сохранить"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={handleCancelEditAmount}
+                          disabled={loadingAppointments[appointment.id] === 'updating'}
+                          className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                          title="Отменить"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    {amountError && (
+                      <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1">
+                        {amountError}
+                      </div>
+                    )}
+                  </div>
                 ) : (
-                  <span className="text-text-10">—</span>
+                  <div className="flex items-center gap-2 group">
+                    {appointment.amount ? (
+                      <span className="font-semibold text-text-100">
+                        {appointment.amount.toLocaleString('ru-RU')} ֏
+                      </span>
+                    ) : (
+                      <span className="text-text-10">—</span>
+                    )}
+                    {appointment.status === 'completed' && (onUpdateAmount || onEditAmount) && (
+                      <button
+                        onClick={() => handleStartEditAmount(appointment)}
+                        disabled={!!loadingAppointments[appointment.id]}
+                        className="opacity-0 group-hover:opacity-100 p-1 text-text-10 hover:text-main-100 hover:bg-main-10 rounded transition-all"
+                        title={appointment.amount ? 'Изменить сумму' : 'Добавить сумму'}
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
                 )}
               </td>
               <td className="px-4 py-3 text-sm">
@@ -221,19 +354,6 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
                       disabled={!!loadingAppointments[appointment.id]}
                     >
                       Отменить
-                    </Button>
-                  )}
-
-                  {/* Кнопка редактирования суммы - только для завершенных приёмов */}
-                  {appointment.status === 'completed' && onEditAmount && (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => onEditAmount(appointment)}
-                      isLoading={loadingAppointments[appointment.id] === 'updating'}
-                      disabled={!!loadingAppointments[appointment.id]}
-                    >
-                      {appointment.amount ? 'Изменить сумму' : 'Добавить сумму'}
                     </Button>
                   )}
 

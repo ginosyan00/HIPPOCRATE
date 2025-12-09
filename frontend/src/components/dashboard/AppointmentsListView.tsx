@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, Button } from '../common';
 import { AppointmentsTable } from './AppointmentsTable';
 import { Appointment } from '../../types/api.types';
 import { formatAppointmentDateTime } from '../../utils/dateFormat';
+import { Pencil, Check, X } from 'lucide-react';
 
 interface AppointmentsListViewProps {
   appointments: Appointment[];
   viewMode: 'table' | 'cards';
   onStatusChange: (id: string, status: string) => void;
   onEditAmount?: (appointment: Appointment) => void;
+  onUpdateAmount?: (appointmentId: string, amount: number) => Promise<void>;
   loadingAppointments: Record<string, string>;
   errorMessages: Record<string, string>;
   isFetching?: boolean;
@@ -24,11 +26,91 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
   viewMode,
   onStatusChange,
   onEditAmount,
+  onUpdateAmount,
   loadingAppointments,
   errorMessages,
   isFetching = false,
   isTransitioning = false,
 }) => {
+  // Состояние для редактирования суммы в карточках
+  const [editingAmountId, setEditingAmountId] = useState<string | null>(null);
+  const [editingAmountValue, setEditingAmountValue] = useState<string>('');
+  const [amountError, setAmountError] = useState<string>('');
+
+  /**
+   * Начинает редактирование суммы
+   */
+  const handleStartEditAmount = (appointment: Appointment) => {
+    setEditingAmountId(appointment.id);
+    setEditingAmountValue(appointment.amount ? String(appointment.amount) : '');
+    setAmountError('');
+  };
+
+  /**
+   * Отменяет редактирование суммы
+   */
+  const handleCancelEditAmount = () => {
+    setEditingAmountId(null);
+    setEditingAmountValue('');
+    setAmountError('');
+  };
+
+  /**
+   * Сохраняет новую сумму
+   */
+  const handleSaveAmount = async (appointmentId: string) => {
+    setAmountError('');
+    
+    // Валидация суммы
+    const amountNum = parseFloat(editingAmountValue.replace(/\s/g, '').replace(',', '.'));
+    if (isNaN(amountNum) || amountNum < 0) {
+      setAmountError('Введите корректную сумму (положительное число)');
+      return;
+    }
+
+    if (onUpdateAmount) {
+      try {
+        await onUpdateAmount(appointmentId, amountNum);
+        setEditingAmountId(null);
+        setEditingAmountValue('');
+        setAmountError('');
+      } catch (err: any) {
+        setAmountError(err.message || 'Ошибка при обновлении суммы');
+      }
+    } else if (onEditAmount) {
+      // Fallback к модальному окну, если onUpdateAmount не предоставлен
+      const appointment = appointments.find(a => a.id === appointmentId);
+      if (appointment) {
+        onEditAmount(appointment);
+      }
+    }
+  };
+
+  /**
+   * Обработка изменения значения суммы
+   */
+  const handleAmountInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Разрешаем только цифры, точку, запятую и пробелы
+    if (value === '' || /^[\d\s.,]+$/.test(value)) {
+      setEditingAmountValue(value);
+      setAmountError('');
+    }
+  };
+
+  /**
+   * Обработка нажатия Enter для сохранения
+   */
+  const handleAmountKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, appointmentId: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveAmount(appointmentId);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancelEditAmount();
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const styles = {
       pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
@@ -67,6 +149,7 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
             appointments={appointments}
             onStatusChange={onStatusChange}
             onEditAmount={onEditAmount}
+            onUpdateAmount={onUpdateAmount}
             loadingAppointments={loadingAppointments}
             errorMessages={errorMessages}
           />
@@ -161,11 +244,80 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
                       </p>
                     )}
                     <p className="text-text-10 mt-1">⏱️ Длительность: {appointment.duration} мин</p>
-                    {appointment.amount && (
-                      <p className="text-text-10 mt-1">
-                        💰 Сумма: <span className="font-semibold text-text-100">{appointment.amount.toLocaleString('ru-RU')} ֏</span>
-                      </p>
-                    )}
+                    <div className="text-text-10 mt-1">
+                      💰 Сумма:{' '}
+                      {editingAmountId === appointment.id ? (
+                        <div className="flex flex-col gap-1 mt-1">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={editingAmountValue}
+                              onChange={handleAmountInputChange}
+                              onKeyDown={(e) => handleAmountKeyDown(e, appointment.id)}
+                              className="w-24 px-2 py-1 text-sm border border-stroke rounded focus:outline-none focus:ring-2 focus:ring-main-100 focus:border-main-100"
+                              autoFocus
+                              disabled={loadingAppointments[appointment.id] === 'updating'}
+                            />
+                            <span className="text-text-10 text-xs">֏</span>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => handleSaveAmount(appointment.id)}
+                                disabled={loadingAppointments[appointment.id] === 'updating'}
+                                className="p-1 text-green-600 hover:bg-green-50 rounded transition-colors disabled:opacity-50"
+                                title="Сохранить"
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={handleCancelEditAmount}
+                                disabled={loadingAppointments[appointment.id] === 'updating'}
+                                className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                                title="Отменить"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                          {amountError && (
+                            <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1">
+                              {amountError}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="font-semibold text-text-100 group inline-flex items-center gap-1">
+                          {appointment.amount ? (
+                            <>
+                              {appointment.amount.toLocaleString('ru-RU')} ֏
+                              {appointment.status === 'completed' && (onUpdateAmount || onEditAmount) && (
+                                <button
+                                  onClick={() => handleStartEditAmount(appointment)}
+                                  disabled={!!loadingAppointments[appointment.id]}
+                                  className="opacity-0 group-hover:opacity-100 p-1 text-text-10 hover:text-main-100 hover:bg-main-10 rounded transition-all"
+                                  title={appointment.amount ? 'Изменить сумму' : 'Добавить сумму'}
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              —
+                              {appointment.status === 'completed' && (onUpdateAmount || onEditAmount) && (
+                                <button
+                                  onClick={() => handleStartEditAmount(appointment)}
+                                  disabled={!!loadingAppointments[appointment.id]}
+                                  className="opacity-0 group-hover:opacity-100 p-1 text-text-10 hover:text-main-100 hover:bg-main-10 rounded transition-all"
+                                  title="Добавить сумму"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -229,18 +381,6 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
                     disabled={!!loadingAppointments[appointment.id]}
                   >
                     Отменить
-                  </Button>
-                )}
-
-                {appointment.status === 'completed' && onEditAmount && (
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => onEditAmount(appointment)}
-                    isLoading={loadingAppointments[appointment.id] === 'updating'}
-                    disabled={!!loadingAppointments[appointment.id]}
-                  >
-                    {appointment.amount ? 'Изменить сумму' : 'Добавить сумму'}
                   </Button>
                 )}
 

@@ -526,6 +526,7 @@ export const DoctorAppointmentsSection: React.FC = () => {
             viewMode={viewMode}
             onStatusChange={handleStatusChange}
             onEditAmount={handleEditAmount}
+            onUpdateAmount={handleUpdateAmount}
             loadingAppointments={loadingAppointments}
             errorMessages={errorMessages}
             isFetching={isFetching}

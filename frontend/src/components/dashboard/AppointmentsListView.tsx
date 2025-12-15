@@ -6,12 +6,23 @@ import { formatAppointmentDateTime } from '../../utils/dateFormat';
 import { Pencil, Check, X } from 'lucide-react';
 import { StatusDropdown } from './StatusDropdown';
 
+// Import icons for card view
+import doctorIcon from '../../assets/icons/doctor.svg';
+import calendarIcon from '../../assets/icons/calendar.svg';
+import fileTextIcon from '../../assets/icons/file-text.svg';
+import clockIcon from '../../assets/icons/clock.svg';
+import walletIcon from '../../assets/icons/wallet.svg';
+import mailIcon from '../../assets/icons/mail.svg';
+import phoneIcon from '../../assets/icons/phone.svg';
+import warningIcon from '../../assets/icons/warning.svg';
+
 interface AppointmentsListViewProps {
   appointments: Appointment[];
   viewMode: 'table' | 'cards';
   onStatusChange: (id: string, status: string) => void;
   onEditAmount?: (appointment: Appointment) => void;
   onUpdateAmount?: (appointmentId: string, amount: number) => Promise<void>;
+  onDeleteSelected?: (ids: string[]) => Promise<void>;
   loadingAppointments: Record<string, string>;
   errorMessages: Record<string, string>;
   isFetching?: boolean;
@@ -28,6 +39,7 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
   onStatusChange,
   onEditAmount,
   onUpdateAmount,
+  onDeleteSelected,
   loadingAppointments,
   errorMessages,
   isFetching = false,
@@ -40,6 +52,10 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
   
   // Состояние для управления открытым dropdown
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  // Состояние для выбранных приёмов
+  const [selectedAppointments, setSelectedAppointments] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
 
   /**
    * Начинает редактирование суммы
@@ -115,6 +131,59 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
     }
   };
 
+  /**
+   * Обработка выбора/снятия выбора приёма
+   */
+  const handleToggleSelect = (appointmentId: string) => {
+    setSelectedAppointments(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(appointmentId)) {
+        newSet.delete(appointmentId);
+      } else {
+        newSet.add(appointmentId);
+      }
+      return newSet;
+    });
+  };
+
+  /**
+   * Обработка выбора всех приёмов
+   */
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedAppointments(new Set(appointments.map(a => a.id)));
+    } else {
+      setSelectedAppointments(new Set());
+    }
+  };
+
+  /**
+   * Обработка удаления выбранных приёмов
+   */
+  const handleDeleteSelected = async () => {
+    if (selectedAppointments.size === 0 || !onDeleteSelected) return;
+
+    const selectedIds = Array.from(selectedAppointments);
+    const count = selectedIds.length;
+    const confirmMessage = `Вы уверены, что хотите удалить ${count} ${count === 1 ? 'приём' : count < 5 ? 'приёма' : 'приёмов'}?`;
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await onDeleteSelected(selectedIds);
+      setSelectedAppointments(new Set());
+      console.log(`✅ [APPOINTMENTS] Успешно удалено ${count} приёмов`);
+    } catch (err: any) {
+      console.error('❌ [APPOINTMENTS] Ошибка при массовом удалении:', err);
+      alert(`Ошибка при удалении: ${err.message || 'Неизвестная ошибка'}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (appointments.length === 0) {
     return (
       <Card>
@@ -126,9 +195,33 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
   }
 
   if (viewMode === 'table') {
+    const selectedCount = selectedAppointments.size;
+    const isAllSelected = appointments.length > 0 && selectedAppointments.size === appointments.length;
+    const isIndeterminate = selectedCount > 0 && selectedCount < appointments.length;
+
     return (
-      <Card padding="md" className={`transition-opacity duration-500 ease-out will-change-opacity ${isFetching ? 'opacity-95' : 'opacity-100'}`}>
-        <div className={isTransitioning ? 'opacity-0 transition-opacity duration-300 ease-out' : 'opacity-100 transition-opacity duration-500 ease-out'}>
+      <div className={`space-y-4 transition-opacity duration-500 ease-out will-change-opacity ${isFetching ? 'opacity-95' : 'opacity-100'}`}>
+        {/* Панель выбора */}
+        {selectedCount > 0 && (
+          <Card padding="sm" className="bg-bg-primary">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-text-50">
+                Выбрано {selectedCount} {selectedCount === 1 ? 'приём' : selectedCount < 5 ? 'приёма' : 'приёмов'}
+              </span>
+              <Button
+                onClick={handleDeleteSelected}
+                disabled={isDeleting || !onDeleteSelected}
+                variant="secondary"
+                size="sm"
+                className="bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? 'Удаление...' : 'Удалить выбранные'}
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        <Card padding="md" className={isTransitioning ? 'opacity-0 transition-opacity duration-300 ease-out' : 'opacity-100 transition-opacity duration-500 ease-out'}>
           <AppointmentsTable
             appointments={appointments}
             onStatusChange={onStatusChange}
@@ -136,9 +229,14 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
             onUpdateAmount={onUpdateAmount}
             loadingAppointments={loadingAppointments}
             errorMessages={errorMessages}
+            selectedAppointments={selectedAppointments}
+            onToggleSelect={handleToggleSelect}
+            onSelectAll={handleSelectAll}
+            isAllSelected={isAllSelected}
+            isIndeterminate={isIndeterminate}
           />
-        </div>
-      </Card>
+        </Card>
+      </div>
     );
   }
 

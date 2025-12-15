@@ -7,7 +7,7 @@ import { CreateAppointmentModal } from './CreateAppointmentModal';
 import { CompleteAppointmentModal } from './CompleteAppointmentModal';
 import { CancelAppointmentModal } from './CancelAppointmentModal';
 import { EditAmountModal } from './EditAmountModal';
-import { useAppointments, useUpdateAppointmentStatus, useUpdateAppointment } from '../../hooks/useAppointments';
+import { useAppointments, useUpdateAppointmentStatus, useUpdateAppointment, useDeleteAppointment } from '../../hooks/useAppointments';
 import { useAuthStore } from '../../store/useAuthStore';
 import { Appointment } from '../../types/api.types';
 import { format } from 'date-fns';
@@ -123,6 +123,7 @@ export const DoctorAppointmentsSection: React.FC = () => {
 
   const updateStatusMutation = useUpdateAppointmentStatus();
   const updateAppointmentMutation = useUpdateAppointment();
+  const deleteAppointmentMutation = useDeleteAppointment();
 
   const appointments = data?.appointments || [];
 
@@ -294,6 +295,23 @@ export const DoctorAppointmentsSection: React.FC = () => {
       });
     } catch (err: any) {
       console.error('❌ [DOCTOR APPOINTMENTS] Ошибка обновления суммы:', err);
+      throw err;
+    }
+  };
+
+  /**
+   * Обработчик массового удаления приёмов
+   * @param ids - Массив ID приёмов для удаления
+   */
+  const handleDeleteSelected = async (ids: string[]) => {
+    console.log(`🗑️ [DOCTOR APPOINTMENTS] Начало массового удаления ${ids.length} приёмов`);
+    
+    try {
+      // Удаляем приёмы параллельно
+      await Promise.all(ids.map(id => deleteAppointmentMutation.mutateAsync(id)));
+      console.log(`✅ [DOCTOR APPOINTMENTS] Успешно удалено ${ids.length} приёмов`);
+    } catch (err: any) {
+      console.error('❌ [DOCTOR APPOINTMENTS] Ошибка при массовом удалении:', err);
       throw err;
     }
   };
@@ -550,6 +568,7 @@ export const DoctorAppointmentsSection: React.FC = () => {
             onStatusChange={handleStatusChange}
             onEditAmount={handleEditAmount}
             onUpdateAmount={handleUpdateAmount}
+            onDeleteSelected={handleDeleteSelected}
             loadingAppointments={loadingAppointments}
             errorMessages={errorMessages}
             isFetching={isFetching}

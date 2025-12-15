@@ -18,6 +18,11 @@ interface AppointmentsTableProps {
   onUpdateAmount?: (appointmentId: string, amount: number) => Promise<void>;
   loadingAppointments: Record<string, string>;
   errorMessages: Record<string, string>;
+  selectedAppointments?: Set<string>;
+  onToggleSelect?: (appointmentId: string) => void;
+  onSelectAll?: (checked: boolean) => void;
+  isAllSelected?: boolean;
+  isIndeterminate?: boolean;
 }
 
 /**
@@ -31,6 +36,11 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
   onUpdateAmount,
   loadingAppointments,
   errorMessages,
+  selectedAppointments = new Set(),
+  onToggleSelect,
+  onSelectAll,
+  isAllSelected = false,
+  isIndeterminate = false,
 }) => {
   // Состояние для редактирования суммы
   const [editingAmountId, setEditingAmountId] = useState<string | null>(null);
@@ -170,6 +180,19 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
       <table className="w-full border-collapse">
         <thead>
           <tr className="bg-bg-primary border-b border-stroke transition-colors duration-200">
+            {onToggleSelect && onSelectAll && (
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider w-12">
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  ref={(input) => {
+                    if (input) input.indeterminate = isIndeterminate;
+                  }}
+                  onChange={(e) => onSelectAll(e.target.checked)}
+                  className="w-4 h-4 text-main-100 border-stroke rounded focus:ring-main-100 focus:ring-2 cursor-pointer"
+                />
+              </th>
+            )}
             <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
               Врач
             </th>
@@ -200,6 +223,17 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
               className="appointment-row hover:bg-bg-primary transition-all duration-500 ease-out will-change-opacity animate-fade-in"
               style={{ animationDelay: `${index * 0.02}s` }}
             >
+              {onToggleSelect && (
+                <td className="px-4 py-3 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={selectedAppointments.has(appointment.id)}
+                    onChange={() => onToggleSelect(appointment.id)}
+                    disabled={!!loadingAppointments[appointment.id]}
+                    className="w-4 h-4 text-main-100 border-stroke rounded focus:ring-main-100 focus:ring-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                </td>
+              )}
               <td className="px-4 py-3 text-sm">
                 <div>
                   <p className="font-semibold text-text-100">{appointment.doctor?.name}</p>

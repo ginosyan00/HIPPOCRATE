@@ -10,7 +10,7 @@ import { CompleteAppointmentModal } from '../../components/dashboard/CompleteApp
 import { CancelAppointmentModal } from '../../components/dashboard/CancelAppointmentModal';
 import { EditAmountModal } from '../../components/dashboard/EditAmountModal';
 import { AppointmentDetailModal } from '../../components/dashboard/AppointmentDetailModal';
-import { useAppointments, useUpdateAppointmentStatus, useUpdateAppointment } from '../../hooks/useAppointments';
+import { useAppointments, useUpdateAppointmentStatus, useUpdateAppointment, useDeleteAppointment } from '../../hooks/useAppointments';
 import { userService } from '../../services/user.service';
 import { useAuthStore } from '../../store/useAuthStore';
 import { User, Appointment } from '../../types/api.types';
@@ -190,6 +190,7 @@ export const AppointmentsPage: React.FC = () => {
   });
   const updateStatusMutation = useUpdateAppointmentStatus();
   const updateAppointmentMutation = useUpdateAppointment();
+  const deleteAppointmentMutation = useDeleteAppointment();
 
   // Фильтруем завершенные приёмы, если статус не выбран явно
   // Это гарантирует, что завершенные приёмы не отображаются в разделе Appointments
@@ -212,6 +213,23 @@ export const AppointmentsPage: React.FC = () => {
   }, [data, statusFilter]);
 
   /**
+   * Обработчик массового удаления приёмов
+   * @param ids - Массив ID приёмов для удаления
+   */
+  const handleDeleteSelected = async (ids: string[]) => {
+    console.log(`🗑️ [APPOINTMENTS] Начало массового удаления ${ids.length} приёмов`);
+    
+    try {
+      // Удаляем приёмы параллельно
+      await Promise.all(ids.map(id => deleteAppointmentMutation.mutateAsync(id)));
+      console.log(`✅ [APPOINTMENTS] Успешно удалено ${ids.length} приёмов`);
+    } catch (err: any) {
+      console.error('❌ [APPOINTMENTS] Ошибка при массовом удалении:', err);
+      throw err;
+    }
+  };
+
+  /**
    * Обработчик изменения статуса приёма
    * @param id - ID приёма
    * @param newStatus - Новый статус (confirmed, cancelled, completed)
@@ -219,7 +237,7 @@ export const AppointmentsPage: React.FC = () => {
   const handleStatusChange = async (id: string, newStatus: string) => {
     // Если статус - completed, открываем модальное окно для ввода суммы
     if (newStatus === 'completed') {
-      const appointment = appointments.find((a: Appointment) => a.id === id);
+      const appointment = filteredAppointments.find((a: Appointment) => a.id === id);
       if (appointment) {
         setSelectedAppointmentForComplete(appointment);
         setIsCompleteModalOpen(true);
@@ -229,7 +247,7 @@ export const AppointmentsPage: React.FC = () => {
 
     // Если статус - cancelled, открываем модальное окно для ввода причины отмены
     if (newStatus === 'cancelled') {
-      const appointment = appointments.find((a: Appointment) => a.id === id);
+      const appointment = filteredAppointments.find((a: Appointment) => a.id === id);
       if (appointment) {
         setSelectedAppointmentForCancel(appointment);
         setIsCancelModalOpen(true);
@@ -705,6 +723,7 @@ export const AppointmentsPage: React.FC = () => {
             onStatusChange={handleStatusChange}
             onEditAmount={handleEditAmount}
             onUpdateAmount={handleUpdateAmount}
+            onDeleteSelected={handleDeleteSelected}
             loadingAppointments={loadingAppointments}
             errorMessages={errorMessages}
             isFetching={isFetching}

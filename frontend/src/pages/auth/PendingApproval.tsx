@@ -3,9 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Card } from '../../components/common';
 import { useAuthStore } from '../../store/useAuthStore';
 
-// Import logo
-import hippocratesLogo from '../../assets/icons/hippocrates-logo.png';
-
 /**
  * PendingApproval Page
  * Страница ожидания одобрения для Doctor и Partner
@@ -24,18 +21,6 @@ export const PendingApprovalPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-bg-primary flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo & Title */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4 group">
-            <div className="relative">
-              <img 
-                src={hippocratesLogo} 
-                alt="Logo" 
-                className="w-48 h-28 transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-lg object-contain" 
-              />
-            </div>
-          </div>
-        </div>
 
         <Card padding="lg">
           <div className="text-center space-y-6">

@@ -34,6 +34,7 @@ import { ClinicsPage } from './pages/public/Clinics';
 import { ClinicPage } from './pages/public/ClinicPage';
 import { DoctorPage } from './pages/public/DoctorPage';
 import { DashboardLayout } from './components/dashboard/DashboardLayout';
+import { PublicLayout } from './components/public/PublicLayout';
 import { RoleProtectedRoute } from './components/RoleProtectedRoute';
 import { UserRole } from './types/api.types';
 
@@ -46,20 +47,20 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Public Website */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/clinics" element={<ClinicsPage />} />
-        <Route path="/clinic/:slug" element={<ClinicPage />} />
-        <Route path="/clinic/:slug/doctor/:doctorId" element={<DoctorPage />} />
+        <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
+        <Route path="/clinics" element={<PublicLayout><ClinicsPage /></PublicLayout>} />
+        <Route path="/clinic/:slug" element={<PublicLayout><ClinicPage /></PublicLayout>} />
+        <Route path="/clinic/:slug/doctor/:doctorId" element={<PublicLayout><DoctorPage /></PublicLayout>} />
 
         {/* Auth Routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/register-user" element={<RegisterUserPage />} />
+        <Route path="/login" element={<PublicLayout><LoginPage /></PublicLayout>} />
+        <Route path="/register" element={<PublicLayout><RegisterPage /></PublicLayout>} />
+        <Route path="/register-user" element={<PublicLayout><RegisterUserPage /></PublicLayout>} />
         <Route
           path="/pending-approval"
           element={
             <RoleProtectedRoute requireActive={false}>
-              <PendingApprovalPage />
+              <PublicLayout><PendingApprovalPage /></PublicLayout>
             </RoleProtectedRoute>
           }
         />

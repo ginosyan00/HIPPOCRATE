@@ -1,9 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
 import { Button } from '../../components/common';
 import { usePatientsForTestimonials } from '../../hooks/usePublic';
-import { PublicBookNowModal } from '../../components/public/PublicBookNowModal';
 import searchIcon from '../../assets/icons/search.svg';
 import calendarIcon from '../../assets/icons/calendar.svg';
 import hippocratesLogo from '../../assets/icons/hippocrates-logo.png';
@@ -11,7 +9,6 @@ import doctorIcon from '../../assets/icons/doctor.svg';
 
 export const HomePage: React.FC = () => {
   const { data: patients = [], isLoading: patientsLoading } = usePatientsForTestimonials(3);
-  const [isBookNowModalOpen, setIsBookNowModalOpen] = useState(false);
 
   const testimonials = [
     {
@@ -51,63 +48,6 @@ export const HomePage: React.FC = () => {
         <div className="absolute top-60 right-20 w-96 h-96 bg-accent-500/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
         <div className="absolute bottom-40 left-1/4 w-80 h-80 bg-primary-200/10 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
       </div>
-
-      {/* Figma Style Header */}
-      <header className="bg-bg-white/80 backdrop-blur-md border-b border-stroke sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-8 py-5 flex justify-between items-center">
-          <Link to="/" className="flex items-center group transition-all duration-300 hover:opacity-90">
-            <div className="relative">
-              <img 
-                src={hippocratesLogo} 
-                alt="Logo" 
-                className="w-40 h-22 transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-lg object-contain" 
-              />
-            </div>
-          </Link>
-          
-          <div className="flex gap-2 md:gap-3 items-center">
-            <Button 
-              onClick={() => setIsBookNowModalOpen(true)}
-              size="md"
-              className="text-xs md:text-sm font-medium bg-main-100 text-white hover:bg-main-200 hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg whitespace-nowrap min-w-[140px] md:min-w-[160px] px-4 md:px-5 py-2 md:py-2.5"
-            >
-              <img src={calendarIcon} alt="Calendar" className="w-4 h-4 mr-1 md:mr-2 inline" />
-              <span className="hidden sm:inline">Записаться сейчас</span>
-              <span className="sm:hidden">Записаться</span>
-            </Button>
-            <Link to="/clinics" className="hidden md:block">
-              <Button 
-                variant="secondary" 
-                size="md"
-                className="text-xs md:text-sm font-normal min-w-[140px] md:min-w-[160px] px-4 md:px-5 py-2 md:py-2.5"
-              >
-                Каталог клиник
-              </Button>
-            </Link>
-            <Link to="/login">
-              <Button 
-                size="md"
-                className="text-xs md:text-sm font-normal hover:text-white whitespace-nowrap min-w-[140px] md:min-w-[160px] px-4 md:px-5 py-2 md:py-2.5"
-                style={{ 
-                  backgroundColor: '#E6F7F6', 
-                  color: '#00a79d'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#00a79d';
-                  e.currentTarget.style.color = 'white';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#E6F7F6';
-                  e.currentTarget.style.color = '#00a79d';
-                }}
-              >
-                <span className="hidden sm:inline">Вход для клиник</span>
-                <span className="sm:hidden">Вход</span>
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
 
       {/* Hero Section - Enhanced */}
       <section className="container mx-auto px-8 py-20 md:py-32 relative z-10">
@@ -409,16 +349,6 @@ export const HomePage: React.FC = () => {
           </div>
         </div>
       </section>
-
-      {/* Book Now Modal */}
-      <PublicBookNowModal
-        isOpen={isBookNowModalOpen}
-        onClose={() => setIsBookNowModalOpen(false)}
-        onSuccess={() => {
-          setIsBookNowModalOpen(false);
-          toast.success('✅ Ваша заявка принята! Клиника свяжется с вами в ближайшее время.');
-        }}
-      />
 
       {/* Footer - Enhanced */}
       <footer className="bg-bg-white border-t border-stroke py-12 relative z-10">

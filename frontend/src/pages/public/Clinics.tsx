@@ -5,7 +5,6 @@ import { useClinics, useCities } from '../../hooks/usePublic';
 import { Clinic } from '../../types/api.types';
 
 // Import icons
-import hippocratesLogo from '../../assets/icons/hippocrates-logo.png';
 import searchIcon from '../../assets/icons/search.svg';
 
 /**
@@ -22,27 +21,7 @@ export const ClinicsPage: React.FC = () => {
   const clinics = data?.data || [];
 
   return (
-    <div className="min-h-screen bg-bg-primary">
-      {/* Figma Style Header */}
-      <header className="bg-bg-white border-b border-stroke sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-8 py-5 flex justify-between items-center">
-          <Link to="/" className="flex items-center group transition-all duration-300 hover:opacity-90">
-            <div className="relative">
-              <img 
-                src={hippocratesLogo} 
-                alt="Logo" 
-                className="w-40 h-22 transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-lg object-contain" 
-              />
-            </div>
-          </Link>
-          <Link to="/login">
-            <Button className="text-sm font-normal bg-main-10 text-main-100 hover:bg-main-100 hover:text-white">
-              Вход для клиник
-            </Button>
-          </Link>
-        </div>
-      </header>
-
+    <>
       {/* Main Content */}
       <main className="container mx-auto px-8 py-12">
         {/* Page Header */}
@@ -179,6 +158,6 @@ export const ClinicsPage: React.FC = () => {
           </p>
         </div>
       </footer>
-    </div>
+    </>
   );
 };

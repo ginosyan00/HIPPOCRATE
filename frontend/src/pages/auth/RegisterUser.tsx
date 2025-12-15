@@ -13,9 +13,6 @@ import { authService } from '../../services/auth.service';
 import { useAuthStore } from '../../store/useAuthStore';
 import { getRoleRedirectPath } from '../../utils/roleRedirect';
 
-// Import logo
-import hippocratesLogo from '../../assets/icons/hippocrates-logo.png';
-
 /**
  * RegisterUser Page - Multi-Role Registration
  * Регистрация пользователя с выбором роли (Patient, Doctor, Partner)
@@ -145,17 +142,8 @@ export const RegisterUserPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-bg-primary flex items-center justify-center p-4">
       <div className="w-full max-w-4xl">
-        {/* Logo & Title */}
+        {/* Title */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4 group">
-            <div className="relative">
-              <img 
-                src={hippocratesLogo} 
-                alt="Logo" 
-                className="w-48 h-28 transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-lg object-contain" 
-              />
-            </div>
-          </div>
           <p className="text-text-10 text-sm">Создайте аккаунт</p>
         </div>
 

@@ -20,6 +20,7 @@ import lightbulbIcon from '../../assets/icons/lightbulb.svg';
 import fileTextIcon from '../../assets/icons/file-text.svg';
 import mailIcon from '../../assets/icons/mail.svg';
 import phoneIcon from '../../assets/icons/phone.svg';
+import userIcon from '../../assets/icons/user.svg';
 
 /**
  * AdminDashboard
@@ -116,7 +117,7 @@ export const AdminDashboard: React.FC = () => {
                 <p className="text-xs text-blue-600 mt-2">в системе</p>
               </div>
               <div className="w-14 h-14 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-3xl">👥</span>
+                <img src={userIcon} alt="Пользователи" className="w-8 h-8 filter brightness-0 invert" />
               </div>
             </div>
           </Card>
@@ -249,8 +250,14 @@ export const AdminDashboard: React.FC = () => {
                               {/* Doctor Info */}
                               {pendingUser.role === 'DOCTOR' && (
                                 <>
-                                  <p className="truncate">🩺 {pendingUser.specialization}</p>
-                                  <p className="truncate">📋 {pendingUser.licenseNumber} • {pendingUser.experience} лет</p>
+                                  <p className="truncate flex items-center gap-1">
+                                    <img src={doctorIcon} alt="Специализация" className="w-3 h-3" />
+                                    {pendingUser.specialization}
+                                  </p>
+                                  <p className="truncate flex items-center gap-1">
+                                    <img src={fileTextIcon} alt="Лицензия" className="w-3 h-3" />
+                                    {pendingUser.licenseNumber} • {pendingUser.experience} лет
+                                  </p>
                                 </>
                               )}
 
@@ -322,7 +329,7 @@ export const AdminDashboard: React.FC = () => {
               <div className="space-y-2">
                 <button className="w-full p-3 border-2 border-main-100 bg-main-100 bg-opacity-5 rounded-lg hover:bg-opacity-10 transition-all text-left">
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">👥</span>
+                    <img src={userIcon} alt="Пользователи" className="w-5 h-5" />
                     <div>
                       <h3 className="font-medium text-main-100 text-sm">Пользователи</h3>
                       <p className="text-xs text-text-10">Управление всеми</p>

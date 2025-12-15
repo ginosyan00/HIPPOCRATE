@@ -17,6 +17,9 @@ import analyticsIcon from '../../assets/icons/analytics.svg';
 import plusIcon from '../../assets/icons/plus.svg';
 import phoneIcon from '../../assets/icons/phone.svg';
 import mailIcon from '../../assets/icons/mail.svg';
+import fileTextIcon from '../../assets/icons/file-text.svg';
+import briefcaseIcon from '../../assets/icons/briefcase.svg';
+import userIcon from '../../assets/icons/user.svg';
 
 /**
  * Doctors Page
@@ -332,7 +335,10 @@ export const DoctorsPage: React.FC = () => {
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                 }`}
               >
-                Карточки
+                <span className="flex items-center gap-2">
+                  <img src={userIcon} alt="Карточки" className="w-4 h-4" />
+                  Карточки
+                </span>
               </button>
             </div>
             {canAddDoctors && (
@@ -575,7 +581,7 @@ export const DoctorsPage: React.FC = () => {
                         </div>
                         {doctor.experience && (
                           <div className="flex items-center gap-2">
-                            <span className="text-text-10">💼</span>
+                            <img src={briefcaseIcon} alt="Опыт" className="w-4 h-4" />
                             <span className="text-text-50">
                               Опыт: {doctor.experience}{' '}
                               {doctor.experience === 1
@@ -588,7 +594,7 @@ export const DoctorsPage: React.FC = () => {
                         )}
                         {doctor.licenseNumber && (
                           <div className="flex items-center gap-2">
-                            <span className="text-text-10">📋</span>
+                            <img src={fileTextIcon} alt="Лицензия" className="w-4 h-4" />
                             <span className="text-text-50 font-mono">
                               Лицензия: {doctor.licenseNumber}
                             </span>

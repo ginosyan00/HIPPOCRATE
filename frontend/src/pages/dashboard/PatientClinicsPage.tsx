@@ -9,6 +9,7 @@ import { Clinic } from '../../types/api.types';
 import searchIcon from '../../assets/icons/search.svg';
 import hospitalIcon from '../../assets/icons/hospital.svg';
 import warningIcon from '../../assets/icons/warning.svg';
+import checkIcon from '../../assets/icons/check.svg';
 
 /**
  * PatientClinicsPage
@@ -156,7 +157,8 @@ export const PatientClinicsPage: React.FC = () => {
                     <div className="px-4 py-2 bg-gradient-to-r from-main-100 to-blue-500 text-white rounded-xl shadow-md">
                       <span className="text-sm font-bold">{clinics.length}</span>
                     </div>
-                    <p className="text-sm font-medium text-text-50">
+                    <p className="text-sm font-medium text-text-50 flex items-center gap-2">
+                      <img src={checkIcon} alt="Найдено" className="w-4 h-4 text-main-100" />
                       {clinics.length === 1 ? 'Клиника найдена' : clinics.length < 5 ? 'Клиники найдены' : 'Клиник найдено'}
                     </p>
                   </div>

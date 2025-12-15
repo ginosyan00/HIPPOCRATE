@@ -16,6 +16,8 @@ import analyticsIcon from '../../assets/icons/analytics.svg';
 import trendingUpIcon from '../../assets/icons/trending-up.svg';
 import clockIcon from '../../assets/icons/clock.svg';
 import packageIcon from '../../assets/icons/package.svg';
+import userIcon from '../../assets/icons/user.svg';
+import fileTextIcon from '../../assets/icons/file-text.svg';
 
 /**
  * PartnerDashboard
@@ -132,7 +134,7 @@ export const PartnerDashboard: React.FC = () => {
                 <p className="text-xs text-purple-600 mt-2">в каталоге</p>
               </div>
               <div className="w-14 h-14 bg-purple-500 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-3xl">📋</span>
+                <img src={fileTextIcon} alt="Товары" className="w-8 h-8 filter brightness-0 invert" />
               </div>
             </div>
           </Card>
@@ -145,7 +147,7 @@ export const PartnerDashboard: React.FC = () => {
                 <p className="text-xs text-orange-600 mt-2">всего</p>
               </div>
               <div className="w-14 h-14 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-3xl">👥</span>
+                <img src={userIcon} alt="Клиенты" className="w-8 h-8 filter brightness-0 invert" />
               </div>
             </div>
           </Card>
@@ -271,7 +273,7 @@ export const PartnerDashboard: React.FC = () => {
 
                 <button className="w-full p-3 border border-stroke rounded-lg hover:border-main-100 hover:bg-main-100 hover:bg-opacity-5 transition-all text-left">
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">👥</span>
+                    <img src={userIcon} alt="Клиенты" className="w-5 h-5" />
                     <div>
                       <h3 className="font-medium text-text-50 text-sm">Клиенты</h3>
                       <p className="text-xs text-text-10">База клиентов</p>

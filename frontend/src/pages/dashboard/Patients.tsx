@@ -14,6 +14,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import searchIcon from '../../assets/icons/search.svg';
 import analyticsIcon from '../../assets/icons/analytics.svg';
 import plusIcon from '../../assets/icons/plus.svg';
+import userIcon from '../../assets/icons/user.svg';
 
 /**
  * Тип для уникального пациента с историей визитов
@@ -316,7 +317,10 @@ export const PatientsPage: React.FC = () => {
                       : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                   }`}
                 >
-                  Карточки пациентов
+                  <span className="flex items-center gap-2">
+                    <img src={userIcon} alt="Карточки" className="w-4 h-4" />
+                    Карточки пациентов
+                  </span>
                 </button>
               </div>
             )}

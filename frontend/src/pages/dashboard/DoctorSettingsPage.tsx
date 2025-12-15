@@ -3,8 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
 import { DoctorProfileSection } from '../../components/dashboard/DoctorProfileSection';
 import { PasswordSection } from '../../components/dashboard/PasswordSection';
+import { DoctorScheduleEditor } from '../../components/dashboard/DoctorScheduleEditor';
 import { useUser, useUpdateUser, useDeleteMyAccount } from '../../hooks/useUsers';
-import { useDoctorProfile, useUpdateDoctorProfile, useUploadDoctorAvatar } from '../../hooks/useDoctor';
+import { useDoctorProfile, useUpdateDoctorProfile, useUploadDoctorAvatar, useDoctorSchedule, useUpdateDoctorSchedule } from '../../hooks/useDoctor';
 import { useUpdatePassword } from '../../hooks/useAuth';
 import { useAuthStore } from '../../store/useAuthStore';
 import { Spinner, BackButton, DeleteAccountSection } from '../../components/common';
@@ -39,6 +40,10 @@ export const DoctorSettingsPage: React.FC = () => {
   const uploadDoctorAvatarMutation = useUploadDoctorAvatar();
   const updatePasswordMutation = useUpdatePassword();
   const deleteAccountMutation = useDeleteMyAccount();
+  
+  // Hooks для расписания (только для врача, редактирующего себя)
+  const { data: schedule, isLoading: isLoadingSchedule } = useDoctorSchedule();
+  const updateScheduleMutation = useUpdateDoctorSchedule();
   
   const handleUpdateProfile = async (data: any) => {
     try {
@@ -97,6 +102,21 @@ export const DoctorSettingsPage: React.FC = () => {
       throw error;
     }
   };
+
+  const handleUpdateSchedule = async (scheduleData: Array<{
+    dayOfWeek: number;
+    startTime: string | null;
+    endTime: string | null;
+    isWorking: boolean;
+  }>) => {
+    try {
+      await updateScheduleMutation.mutateAsync(scheduleData);
+      toast.success('Расписание успешно обновлено');
+    } catch (error: any) {
+      toast.error(error.message || 'Ошибка при обновлении расписания');
+      throw error;
+    }
+  };
   
   if (isLoading) {
     return (
@@ -136,7 +156,7 @@ export const DoctorSettingsPage: React.FC = () => {
 
         {isEditingSelf && (
           <div>
-            <h1 className="text-2xl font-bold text-text-100">Мои настройки</h1>
+            <h1 className="text-2xl font-bold text-text-100">Мой профиль</h1>
             <p className="text-sm text-text-10 mt-1">Управление профилем и настройками</p>
           </div>
         )}
@@ -150,6 +170,16 @@ export const DoctorSettingsPage: React.FC = () => {
           isAvatarLoading={isEditingSelf ? uploadDoctorAvatarMutation.isPending : updateUserMutation.isPending}
           isEditingSelf={isEditingSelf}
         />
+
+        {/* Рабочее расписание (только если врач редактирует себя) */}
+        {isEditingSelf && (
+          <DoctorScheduleEditor
+            schedule={schedule}
+            onUpdate={handleUpdateSchedule}
+            isLoading={updateScheduleMutation.isPending || isLoadingSchedule}
+            hideCopyButton={true}
+          />
+        )}
 
         {/* Пароль (только если врач редактирует себя) */}
         {isEditingSelf && (

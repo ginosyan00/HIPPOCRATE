@@ -13,6 +13,7 @@ interface DoctorScheduleEditorProps {
   }>) => Promise<void>;
   isLoading?: boolean;
   hideSubmitButton?: boolean; // Скрыть кнопку "Сохранить расписание"
+  hideCopyButton?: boolean; // Скрыть кнопку "Копировать"
 }
 
 export interface DoctorScheduleEditorRef {
@@ -38,6 +39,7 @@ export const DoctorScheduleEditor = forwardRef<DoctorScheduleEditorRef, DoctorSc
   onUpdate,
   isLoading = false,
   hideSubmitButton = false,
+  hideCopyButton = false,
 }, ref) => {
   // Преобразуем массив расписания в объект для удобства работы (мемоизируем)
   const scheduleMap = useMemo(() => {
@@ -250,14 +252,16 @@ export const DoctorScheduleEditor = forwardRef<DoctorScheduleEditorRef, DoctorSc
                 {/* Кнопки действий */}
                 {daySchedule.isWorking && (
                   <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleCopyDay(key, key === 1 ? 0 : 1)}
-                      className="text-xs text-main-100 hover:text-main-100/80 transition-smooth"
-                      title="Копировать на другой день"
-                    >
-                      Копировать
-                    </button>
+                    {!hideCopyButton && (
+                      <button
+                        type="button"
+                        onClick={() => handleCopyDay(key, key === 1 ? 0 : 1)}
+                        className="text-xs text-main-100 hover:text-main-100/80 transition-smooth"
+                        title="Копировать на другой день"
+                      >
+                        Копировать
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => handleApplyToAll(key)}

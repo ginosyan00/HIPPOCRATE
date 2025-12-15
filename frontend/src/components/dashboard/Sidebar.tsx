@@ -6,7 +6,6 @@ import { useUIStore } from '../../store/useUIStore';
 // Import icons
 import dashboardIcon from '../../assets/icons/dashboard.svg';
 import calendarIcon from '../../assets/icons/calendar.svg';
-import clockIcon from '../../assets/icons/clock.svg';
 import doctorIcon from '../../assets/icons/doctor.svg';
 import patientIcon from '../../assets/icons/patient.svg';
 import analyticsIcon from '../../assets/icons/analytics.svg';
@@ -131,19 +130,14 @@ export const Sidebar: React.FC = () => {
                 <span className="text-sm">Patient</span>
               </NavLink>
 
-              <NavLink to="/dashboard/doctor/graphics" className={navLinkClass}>
-                <img src={clockIcon} alt="Graphics" className="w-6 h-6" />
-                <span className="text-sm">Graphics</span>
-              </NavLink>
-
               <NavLink to="/dashboard/doctor/analytics" className={navLinkClass}>
                 <img src={analyticsIcon} alt="Analytics" className="w-6 h-6" />
                 <span className="text-sm">Analytics</span>
               </NavLink>
 
               <NavLink to="/dashboard/doctor/settings" className={navLinkClass}>
-                <img src={settingsIcon} alt="Settings" className="w-6 h-6" />
-                <span className="text-sm">Settings</span>
+                <img src={settingsIcon} alt="Profile" className="w-6 h-6" />
+                <span className="text-sm">Profile</span>
               </NavLink>
             </>
           )}

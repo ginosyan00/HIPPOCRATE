@@ -136,8 +136,8 @@ export const Sidebar: React.FC = () => {
               </NavLink>
 
               <NavLink to="/dashboard/doctor/settings" className={navLinkClass}>
-                <img src={settingsIcon} alt="Profile" className="w-6 h-6" />
-                <span className="text-sm">Profile</span>
+                <img src={settingsIcon} alt="Profile/Settings" className="w-6 h-6" />
+                <span className="text-sm">Profile/Settings</span>
               </NavLink>
             </>
           )}

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
-import { Button, Input, Card, BackButton } from '../../components/common';
+import { Button, Card, BackButton } from '../../components/common';
 import { useCreateCertificate } from '../../hooks/useCertificates';
 import { toast } from 'react-hot-toast';
 
@@ -12,31 +12,41 @@ import plusIcon from '../../assets/icons/plus.svg';
  * AddCertificatePage
  * Отдельная страница для добавления сертификата клиники
  * Доступ: только CLINIC (владелец клиники)
+ * Упрощенная версия: только загрузка изображения
  */
 export const AddCertificatePage: React.FC = () => {
   const navigate = useNavigate();
   const createCertificateMutation = useCreateCertificate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const [formData, setFormData] = useState({
-    title: '',
-    certificateNumber: '',
-    issuedBy: '',
-    issueDate: '',
-    expiryDate: '',
-    file: null as File | null,
-    fileUrl: '',
-    fileType: 'pdf' as 'pdf' | 'jpg' | 'jpeg' | 'png',
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [file, setFile] = useState<File | null>(null);
+  const [fileUrl, setFileUrl] = useState<string>('');
+  const [fileType, setFileType] = useState<'jpg' | 'jpeg' | 'png'>('jpg');
+  const [error, setError] = useState<string>('');
 
-  // Валидация файла
+  /**
+   * Генерация названия сертификата из имени файла
+   * Убирает расширение и форматирует название
+   */
+  const generateTitleFromFileName = (fileName: string): string => {
+    // Убираем расширение файла
+    const nameWithoutExt = fileName.replace(/\.[^/.]+$/, '');
+    // Заменяем подчеркивания и дефисы на пробелы
+    const formattedName = nameWithoutExt.replace(/[_-]/g, ' ');
+    // Делаем первую букву заглавной
+    return formattedName.charAt(0).toUpperCase() + formattedName.slice(1) || 'Сертификат';
+  };
+
+  /**
+   * Валидация файла
+   * Проверяет тип (только изображения) и размер
+   */
   const validateFile = (file: File): boolean => {
-    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     const maxSize = 10 * 1024 * 1024; // 10 MB
 
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Неподдерживаемый формат файла. Разрешены: PDF, JPG, PNG');
+      toast.error('Неподдерживаемый формат файла. Разрешены только изображения: JPG, PNG');
       return false;
     }
 
@@ -49,7 +59,9 @@ export const AddCertificatePage: React.FC = () => {
     return true;
   };
 
-  // Конвертация файла в base64
+  /**
+   * Конвертация файла в base64
+   */
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -59,68 +71,54 @@ export const AddCertificatePage: React.FC = () => {
     });
   };
 
-  // Обработка выбора файла
+  /**
+   * Обработка выбора файла
+   */
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
 
-    if (!validateFile(file)) {
-      return;
-    }
+    setError('');
 
-    const fileType = file.type === 'application/pdf' ? 'pdf' : file.type.split('/')[1] as 'jpg' | 'jpeg' | 'png';
-    const fileUrl = await fileToBase64(file);
-
-    setFormData(prev => ({
-      ...prev,
-      file,
-      fileUrl,
-      fileType,
-    }));
-  };
-
-  // Валидация формы
-  const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.title.trim()) {
-      newErrors.title = 'Название обязательно';
-    }
-
-    if (!formData.fileUrl && !formData.file) {
-      newErrors.file = 'Файл обязателен';
-    }
-
-    if (formData.issueDate && formData.expiryDate) {
-      const issue = new Date(formData.issueDate);
-      const expiry = new Date(formData.expiryDate);
-      if (expiry < issue) {
-        newErrors.expiryDate = 'Дата окончания должна быть после даты выдачи';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Создание сертификата
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validate()) {
+    if (!validateFile(selectedFile)) {
       return;
     }
 
     try {
+      const type = selectedFile.type.split('/')[1] as 'jpg' | 'jpeg' | 'png';
+      const url = await fileToBase64(selectedFile);
+
+      setFile(selectedFile);
+      setFileUrl(url);
+      setFileType(type);
+    } catch (error) {
+      console.error('Ошибка обработки файла:', error);
+      toast.error('Ошибка при обработке файла');
+      setError('Ошибка при обработке файла');
+    }
+  };
+
+  /**
+   * Создание сертификата
+   */
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!file || !fileUrl) {
+      setError('Пожалуйста, выберите изображение');
+      toast.error('Пожалуйста, выберите изображение');
+      return;
+    }
+
+    try {
+      // Генерируем название из имени файла
+      const title = generateTitleFromFileName(file.name);
+
       await createCertificateMutation.mutateAsync({
-        title: formData.title,
-        certificateNumber: formData.certificateNumber || undefined,
-        issuedBy: formData.issuedBy || undefined,
-        issueDate: formData.issueDate ? new Date(formData.issueDate).toISOString() : undefined,
-        expiryDate: formData.expiryDate ? new Date(formData.expiryDate).toISOString() : undefined,
-        fileUrl: formData.fileUrl,
-        fileType: formData.fileType,
-        fileSize: formData.file?.size,
+        title,
+        fileUrl,
+        fileType,
+        fileSize: file.size,
       });
 
       toast.success('Сертификат успешно добавлен');
@@ -137,10 +135,6 @@ export const AddCertificatePage: React.FC = () => {
         toast.error(error.message || 'Ошибка при создании сертификата');
       }
     }
-  };
-
-  const handleCancel = () => {
-    navigate('/dashboard/web');
   };
 
   return (
@@ -160,94 +154,23 @@ export const AddCertificatePage: React.FC = () => {
             </span>
           </h1>
           <p className="text-text-10 text-sm">
-            Заполните форму для добавления нового сертификата клиники
+            Загрузите изображение сертификата. Название будет сгенерировано автоматически.
           </p>
         </div>
 
         {/* Form */}
         <Card padding="lg">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Название */}
+            {/* Загрузка изображения */}
             <div>
               <label className="block text-sm font-medium text-text-50 mb-2">
-                Название сертификата <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                className="block w-full px-4 py-3 border border-stroke rounded-lg bg-bg-white text-sm text-text-100 focus:outline-none focus:ring-2 focus:ring-main-100 transition-smooth"
-                placeholder="Например: Лицензия на медицинскую деятельность"
-                required
-              />
-              {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
-            </div>
-
-            {/* Номер сертификата */}
-            <div>
-              <label className="block text-sm font-medium text-text-50 mb-2">
-                Номер сертификата
-              </label>
-              <input
-                type="text"
-                value={formData.certificateNumber}
-                onChange={e => setFormData(prev => ({ ...prev, certificateNumber: e.target.value }))}
-                className="block w-full px-4 py-3 border border-stroke rounded-lg bg-bg-white text-sm text-text-100 focus:outline-none focus:ring-2 focus:ring-main-100 transition-smooth"
-                placeholder="Например: ЛО-77-01-012345"
-              />
-            </div>
-
-            {/* Выдан */}
-            <div>
-              <label className="block text-sm font-medium text-text-50 mb-2">
-                Выдан организацией
-              </label>
-              <input
-                type="text"
-                value={formData.issuedBy}
-                onChange={e => setFormData(prev => ({ ...prev, issuedBy: e.target.value }))}
-                className="block w-full px-4 py-3 border border-stroke rounded-lg bg-bg-white text-sm text-text-100 focus:outline-none focus:ring-2 focus:ring-main-100 transition-smooth"
-                placeholder="Например: Министерство здравоохранения"
-              />
-            </div>
-
-            {/* Даты */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-text-50 mb-2">
-                  Дата выдачи
-                </label>
-                <input
-                  type="date"
-                  value={formData.issueDate}
-                  onChange={e => setFormData(prev => ({ ...prev, issueDate: e.target.value }))}
-                  className="block w-full px-4 py-3 border border-stroke rounded-lg bg-bg-white text-sm text-text-100 focus:outline-none focus:ring-2 focus:ring-main-100 transition-smooth"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-50 mb-2">
-                  Дата окончания
-                </label>
-                <input
-                  type="date"
-                  value={formData.expiryDate}
-                  onChange={e => setFormData(prev => ({ ...prev, expiryDate: e.target.value }))}
-                  className="block w-full px-4 py-3 border border-stroke rounded-lg bg-bg-white text-sm text-text-100 focus:outline-none focus:ring-2 focus:ring-main-100 transition-smooth"
-                />
-                {errors.expiryDate && <p className="text-red-500 text-xs mt-1">{errors.expiryDate}</p>}
-              </div>
-            </div>
-
-            {/* Файл */}
-            <div>
-              <label className="block text-sm font-medium text-text-50 mb-2">
-                Файл сертификата <span className="text-red-500">*</span>
+                Изображение сертификата <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
+                  accept=".jpg,.jpeg,.png"
                   onChange={handleFileSelect}
                   className="hidden"
                   required
@@ -257,35 +180,35 @@ export const AddCertificatePage: React.FC = () => {
                   onClick={() => fileInputRef.current?.click()}
                   className="w-full px-4 py-3 border border-stroke rounded-lg bg-bg-white text-sm text-text-100 hover:bg-bg-secondary focus:outline-none focus:ring-2 focus:ring-main-100 transition-smooth text-left"
                 >
-                  {formData.file ? formData.file.name : 'Выбрать файл'}
+                  {file ? file.name : 'Выбрать изображение'}
                 </button>
-                {!formData.file && (
+                {!file && (
                   <p className="text-xs text-text-10 mt-1">
-                    Файл не выбран
+                    Изображение не выбрано
                   </p>
                 )}
               </div>
               <p className="text-xs text-text-10 mt-1">
-                Разрешены форматы: PDF, JPG, PNG. Максимальный размер: 10 MB
+                Разрешены форматы: JPG, PNG. Максимальный размер: 10 MB
               </p>
-              {errors.file && <p className="text-red-500 text-xs mt-1">{errors.file}</p>}
-              {formData.file && (
+              {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+              {file && (
                 <p className="text-xs text-main-100 mt-1">
-                  Выбран файл: {formData.file.name} ({(formData.file.size / 1024 / 1024).toFixed(2)} MB)
+                  Выбран файл: {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
                 </p>
               )}
             </div>
 
             {/* Preview */}
-            {formData.fileUrl && formData.fileType !== 'pdf' && (
+            {fileUrl && (
               <div>
                 <label className="block text-sm font-medium text-text-50 mb-2">
                   Предпросмотр
                 </label>
                 <img
-                  src={formData.fileUrl}
-                  alt="Предпросмотр"
-                  className="w-full max-h-64 object-contain border border-stroke rounded-lg"
+                  src={fileUrl}
+                  alt="Предпросмотр сертификата"
+                  className="w-full max-h-96 object-contain border border-stroke rounded-lg bg-bg-secondary"
                 />
               </div>
             )}
@@ -295,7 +218,7 @@ export const AddCertificatePage: React.FC = () => {
               <Button
                 type="button"
                 variant="secondary"
-                onClick={handleCancel}
+                onClick={() => navigate('/dashboard/web')}
                 disabled={createCertificateMutation.isPending}
                 className="flex-1"
               >
@@ -305,7 +228,7 @@ export const AddCertificatePage: React.FC = () => {
                 type="submit"
                 variant="primary"
                 isLoading={createCertificateMutation.isPending}
-                disabled={createCertificateMutation.isPending}
+                disabled={createCertificateMutation.isPending || !file}
                 className="flex-1"
               >
                 Добавить сертификат

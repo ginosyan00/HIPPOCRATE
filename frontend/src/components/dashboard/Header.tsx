@@ -8,7 +8,6 @@ import { ClinicChat } from '../chat/ClinicChat';
 import { useUnreadCount } from '../../hooks/useChat';
 
 // Import icons
-import searchIcon from '../../assets/icons/search.svg';
 import arrowDownIcon from '../../assets/icons/arrow-down.svg';
 
 /**
@@ -38,20 +37,6 @@ export const Header: React.FC = () => {
             </svg>
           </button>
           <h1 className="text-2xl font-semibold text-text-100">Dashboard</h1>
-        </div>
-
-        {/* Center: Search Bar */}
-        <div className="hidden lg:flex relative max-w-md w-full">
-          <img 
-            src={searchIcon} 
-            alt="Search" 
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-[18px] h-[18px]"
-          />
-          <input
-            type="text"
-            placeholder="Search..."
-            className="w-full pl-11 pr-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm placeholder-text-10 focus:outline-none focus:border-main-100 transition-smooth"
-          />
         </div>
 
         {/* Right: Icons & Profile */}

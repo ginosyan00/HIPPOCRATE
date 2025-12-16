@@ -498,13 +498,23 @@ export const AppointmentsPage: React.FC = () => {
               </button>
             </div>
             )}
-            
-            <Button variant="primary" onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2">
-              <img src={plusIcon} alt="Добавить" className="w-4 h-4" />
+          </div>
+        </div>
+
+        {/* Appointment Section - Create Button */}
+        <Card padding="lg" className="bg-main-10/30 border-main-100/20">
+          <div className="flex justify-center">
+            <Button 
+              variant="primary" 
+              onClick={() => setIsCreateModalOpen(true)} 
+              className="flex items-center gap-3 px-8 py-4 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+              style={{ minHeight: '56px' }}
+            >
+              <img src={plusIcon} alt="Добавить" className="w-6 h-6" />
               Создать приём
             </Button>
           </div>
-        </div>
+        </Card>
 
       {/* Filters */}
       <Card padding="md">

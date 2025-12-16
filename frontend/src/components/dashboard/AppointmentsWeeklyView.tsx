@@ -339,12 +339,6 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                                 </div>
                               </div>
 
-                              {/* Счетчик уведомлений (пока 0) */}
-                              <div className="flex-shrink-0 ml-1.5">
-                                <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-600 font-medium">
-                                  0
-                                </div>
-                              </div>
                             </div>
 
                             {/* Статус бейдж */}
@@ -423,17 +417,6 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                               </button>
                             </div>
 
-                            {/* Кнопка "+ Activity" */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // TODO: Открыть модальное окно для добавления активности
-                              }}
-                              className="w-full text-left text-[10px] text-text-50 hover:text-main-100 py-1 px-1.5 hover:bg-bg-primary rounded-sm transition-smooth"
-                              type="button"
-                            >
-                              + Activity
-                            </button>
                           </div>
                         );
                       })}

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { RotateCcw } from 'lucide-react';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
 import { Button, Input } from '../../components/common';
 import { MetricsCards } from '../../components/dashboard/MetricsCards';
@@ -157,9 +158,6 @@ export const AnalyticsPage: React.FC = () => {
             <h1 className="text-2xl font-semibold text-text-100">Аналитика</h1>
             <p className="text-sm text-text-10 mt-1">Общая статистика и аналитика клиники</p>
           </div>
-          <Button onClick={handleResetFilters} variant="secondary">
-            Сбросить фильтры
-          </Button>
         </div>
 
         {/* Filters */}
@@ -254,6 +252,16 @@ export const AnalyticsPage: React.FC = () => {
               </select>
             </div>
           </div>
+          {(doctorId || dateFrom || dateTo || week || category) && (
+            <div className="mt-4 pt-4 border-t border-stroke flex justify-end">
+              <Button onClick={handleResetFilters} variant="secondary" size="sm">
+                <span className="flex items-center gap-1.5">
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Сбросить фильтры
+                </span>
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Metrics Cards */}

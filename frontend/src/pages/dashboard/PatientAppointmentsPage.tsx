@@ -9,13 +9,12 @@ import { BookNowModal } from '../../components/dashboard/BookNowModal';
 import { usePatientAppointments } from '../../hooks/usePatientAppointments';
 import { useUpdateAppointmentStatus } from '../../hooks/useAppointments';
 import { Appointment } from '../../types/api.types';
-import { Calendar, Clock, Filter, Search } from 'lucide-react';
+import { Calendar, Clock, Filter, Search, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 
 // Import icons
 import calendarIcon from '../../assets/icons/calendar.svg';
 import analyticsIcon from '../../assets/icons/analytics.svg';
-import refreshIcon from '../../assets/icons/refresh.svg';
 
 /**
  * PatientAppointmentsPage
@@ -352,10 +351,12 @@ export const PatientAppointmentsPage: React.FC = () => {
           </div>
 
           {(statusFilter || dateFilter || timeFilter || categoryFilter) && (
-            <div className="mt-4 pt-4 border-t border-stroke">
-              <Button variant="secondary" size="sm" onClick={handleResetFilters} className="flex items-center gap-2">
-                <img src={refreshIcon} alt="Сбросить" className="w-4 h-4" />
-                Сбросить фильтры
+            <div className="mt-4 pt-4 border-t border-stroke flex justify-end">
+              <Button variant="secondary" size="sm" onClick={handleResetFilters}>
+                <span className="flex items-center gap-1.5">
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Сбросить фильтры
+                </span>
               </Button>
             </div>
           )}

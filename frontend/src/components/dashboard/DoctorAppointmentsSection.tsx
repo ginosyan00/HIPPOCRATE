@@ -11,10 +11,10 @@ import { useAppointments, useUpdateAppointmentStatus, useUpdateAppointment, useD
 import { useAuthStore } from '../../store/useAuthStore';
 import { Appointment } from '../../types/api.types';
 import { format } from 'date-fns';
+import { RotateCcw } from 'lucide-react';
 
 // Import icons
 import plusIcon from '../../assets/icons/plus.svg';
-import refreshIcon from '../../assets/icons/refresh.svg';
 import analyticsIcon from '../../assets/icons/analytics.svg';
 import calendarIcon from '../../assets/icons/calendar.svg';
 
@@ -441,7 +441,7 @@ export const DoctorAppointmentsSection: React.FC = () => {
           </div>
         </div>
         {(statusFilter || dateFilter || timeFilter || weekFilter || categoryFilter) && (
-          <div className="mt-4 pt-4 border-t border-stroke">
+          <div className="mt-4 pt-4 border-t border-stroke flex justify-end">
             <Button
               variant="secondary"
               size="sm"
@@ -454,8 +454,8 @@ export const DoctorAppointmentsSection: React.FC = () => {
                 setCategoryInput('');
               }}
             >
-              <span className="flex items-center gap-2">
-                <img src={refreshIcon} alt="Сбросить" className="w-4 h-4" />
+              <span className="flex items-center gap-1.5">
+                <RotateCcw className="w-3.5 h-3.5" />
                 Сбросить фильтры
               </span>
             </Button>

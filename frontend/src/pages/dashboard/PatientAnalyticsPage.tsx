@@ -8,10 +8,7 @@ import { PatientAnalyticsBarChart } from '../../components/dashboard/PatientAnal
 import { PatientAnalyticsPieChart } from '../../components/dashboard/PatientAnalyticsPieChart';
 import { PatientAnalyticsTable } from '../../components/dashboard/PatientAnalyticsTable';
 import { usePatientAppointments } from '../../hooks/usePatientAppointments';
-import { Calendar, Filter, Search, BarChart3, TrendingUp } from 'lucide-react';
-
-// Import icons
-import refreshIcon from '../../assets/icons/refresh.svg';
+import { Calendar, Filter, Search, BarChart3, TrendingUp, RotateCcw } from 'lucide-react';
 
 /**
  * PatientAnalyticsPage
@@ -294,10 +291,10 @@ export const PatientAnalyticsPage: React.FC = () => {
               </div>
 
               {(dateFromFilter || dateToFilter || weekFilter || categoryFilter || doctorFilter) && (
-                <div className="mt-4 pt-4 border-t border-stroke">
+                <div className="mt-4 pt-4 border-t border-stroke flex justify-end">
                   <Button variant="secondary" size="sm" onClick={handleResetFilters}>
-                    <span className="flex items-center gap-2">
-                      <img src={refreshIcon} alt="Сбросить" className="w-4 h-4" />
+                    <span className="flex items-center gap-1.5">
+                      <RotateCcw className="w-3.5 h-3.5" />
                       Сбросить фильтры
                     </span>
                   </Button>

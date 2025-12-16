@@ -20,7 +20,7 @@ import { format } from 'date-fns';
 import analyticsIcon from '../../assets/icons/analytics.svg';
 import plusIcon from '../../assets/icons/plus.svg';
 import calendarIcon from '../../assets/icons/calendar.svg';
-import refreshIcon from '../../assets/icons/refresh.svg';
+import { RotateCcw } from 'lucide-react';
 
 /**
  * Appointments Page - Figma Design
@@ -599,7 +599,7 @@ export const AppointmentsPage: React.FC = () => {
           </div>
         </div>
         {(!isDoctor && doctorFilter || statusFilter || dateFilter || timeFilter || weekFilter || categoryFilter) && (
-          <div className="mt-4 pt-4 border-t border-stroke">
+          <div className="mt-4 pt-4 border-t border-stroke flex justify-end">
             <Button
               variant="secondary"
               size="sm"
@@ -615,8 +615,8 @@ export const AppointmentsPage: React.FC = () => {
                 setSearchParams({}, { replace: true });
               }}
             >
-              <span className="flex items-center gap-2">
-                <img src={refreshIcon} alt="Сбросить" className="w-4 h-4" />
+              <span className="flex items-center gap-1.5">
+                <RotateCcw className="w-3.5 h-3.5" />
                 Сбросить фильтры
               </span>
             </Button>

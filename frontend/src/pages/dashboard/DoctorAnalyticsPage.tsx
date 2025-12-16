@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { RotateCcw } from 'lucide-react';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
 import { Button, Input } from '../../components/common';
 import { MetricsCards } from '../../components/dashboard/MetricsCards';
@@ -161,9 +162,6 @@ export const DoctorAnalyticsPage: React.FC = () => {
               Статистика и аналитика ваших пациентов и приёмов
             </p>
           </div>
-          <Button onClick={handleResetFilters} variant="outline">
-            Сбросить фильтры
-          </Button>
         </div>
 
         {/* Filters */}
@@ -239,6 +237,16 @@ export const DoctorAnalyticsPage: React.FC = () => {
               </select>
             </div>
           </div>
+          {(dateFrom || dateTo || week || category) && (
+            <div className="mt-4 pt-4 border-t border-stroke flex justify-end">
+              <Button onClick={handleResetFilters} variant="secondary" size="sm">
+                <span className="flex items-center gap-1.5">
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Сбросить фильтры
+                </span>
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Metrics Cards */}

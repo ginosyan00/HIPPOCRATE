@@ -423,12 +423,6 @@ export const DoctorsPage: React.FC = () => {
                         Специальность
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-                        Опыт
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-                        Лицензия
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
                         Статус
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
@@ -480,18 +474,6 @@ export const DoctorsPage: React.FC = () => {
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="text-sm text-text-100 font-medium">
                             {doctor.specialization || '-'}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-sm text-text-50">
-                            {doctor.experience
-                              ? `${doctor.experience} ${doctor.experience === 1 ? 'год' : doctor.experience < 5 ? 'года' : 'лет'}`
-                              : '-'}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-sm text-text-50 font-mono">
-                            {doctor.licenseNumber || '-'}
                           </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
@@ -579,27 +561,6 @@ export const DoctorsPage: React.FC = () => {
                             {doctor.email}
                           </span>
                         </div>
-                        {doctor.experience && (
-                          <div className="flex items-center gap-2">
-                            <img src={briefcaseIcon} alt="Опыт" className="w-4 h-4" />
-                            <span className="text-text-50">
-                              Опыт: {doctor.experience}{' '}
-                              {doctor.experience === 1
-                                ? 'год'
-                                : doctor.experience < 5
-                                ? 'года'
-                                : 'лет'}
-                            </span>
-                          </div>
-                        )}
-                        {doctor.licenseNumber && (
-                          <div className="flex items-center gap-2">
-                            <img src={fileTextIcon} alt="Лицензия" className="w-4 h-4" />
-                            <span className="text-text-50 font-mono">
-                              Лицензия: {doctor.licenseNumber}
-                            </span>
-                          </div>
-                        )}
                       </div>
 
                       <div className="pt-2 border-t border-stroke">

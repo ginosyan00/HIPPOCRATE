@@ -96,7 +96,9 @@ export function useDoctorSchedule() {
     queryKey: ['doctor', 'schedule', user?.id],
     queryFn: () => doctorService.getSchedule(),
     enabled: !!user && user.role === 'DOCTOR',
-    staleTime: 5 * 60 * 1000, // 5 минут
+    staleTime: 30 * 1000, // 30 секунд - для быстрой синхронизации
+    refetchOnWindowFocus: true, // Обновляем при фокусе окна
+    refetchOnMount: true, // Обновляем при монтировании
   });
 }
 
@@ -111,15 +113,24 @@ export function useUpdateDoctorSchedule() {
     mutationFn: (schedule: UpdateDoctorScheduleRequest['schedule']) => 
       doctorService.updateSchedule(schedule),
     onSuccess: () => {
-      // Инвалидируем кэш расписания врача
-      queryClient.invalidateQueries({ queryKey: ['doctor', 'schedule', user?.id] });
+      if (!user?.id) return;
+
+      console.log('🔄 [USE DOCTOR] Инвалидация кэша после обновления расписания врачом:', user.id);
+
+      // Инвалидируем кэш расписания врача (все варианты ключей)
+      queryClient.invalidateQueries({ queryKey: ['doctor', 'schedule', user.id] });
       queryClient.invalidateQueries({ queryKey: ['doctor', 'schedule'] });
       
       // Инвалидируем кэш расписания для клиники (чтобы клиника видела изменения)
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: ['users', user.id, 'schedule'] });
-        queryClient.invalidateQueries({ queryKey: ['users', 'schedule'] });
-      }
+      queryClient.invalidateQueries({ queryKey: ['users', user.id, 'schedule'] });
+      queryClient.invalidateQueries({ queryKey: ['users', 'schedule'] });
+      
+      // Инвалидируем кэш списка врачей (чтобы клиника видела изменения в списке)
+      queryClient.invalidateQueries({ queryKey: ['users', 'doctors'] });
+      
+      // Инвалидируем кэш конкретного пользователя (если клиника просматривает его профиль)
+      queryClient.invalidateQueries({ queryKey: ['users', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
       
       toast.success('Расписание успешно обновлено');
     },

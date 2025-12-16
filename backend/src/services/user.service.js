@@ -459,6 +459,22 @@ export async function createDoctorByClinic(clinicId, data) {
   });
 
   console.log('✅ [USER SERVICE] Врач успешно создан:', doctor.id);
+
+  // Если передан schedule, создаем расписание врача
+  if (data.schedule && Array.isArray(data.schedule) && data.schedule.length > 0) {
+    console.log('🔵 [USER SERVICE] Создание расписания для врача:', doctor.id);
+    try {
+      // Импортируем сервис расписания динамически, чтобы избежать циклических зависимостей
+      const { updateSchedule } = await import('./doctorSchedule.service.js');
+      await updateSchedule(doctor.id, data.schedule);
+      console.log('✅ [USER SERVICE] Расписание врача успешно создано');
+    } catch (scheduleError) {
+      console.error('🔴 [USER SERVICE] Ошибка при создании расписания:', scheduleError.message);
+      // Не прерываем создание врача, если расписание не удалось создать
+      // Можно будет создать его позже
+    }
+  }
+
   return doctor;
 }
 

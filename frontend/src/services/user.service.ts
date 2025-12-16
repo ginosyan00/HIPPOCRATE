@@ -106,6 +106,12 @@ export const userService = {
     phone?: string;
     dateOfBirth?: string;
     gender?: 'male' | 'female' | 'other';
+    schedule?: Array<{
+      dayOfWeek: number;
+      startTime: string | null;
+      endTime: string | null;
+      isWorking: boolean;
+    }>;
   }): Promise<User> {
     console.log('🔵 [USER SERVICE] Создание врача для клиники');
     const { data } = await api.post<ApiResponse<User>>('/users/doctors', doctor);

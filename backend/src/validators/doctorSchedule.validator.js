@@ -7,7 +7,7 @@ import Joi from 'joi';
 /**
  * Схема для одного дня недели
  */
-const dayScheduleSchema = Joi.object({
+export const dayScheduleSchema = Joi.object({
   dayOfWeek: Joi.number().integer().min(0).max(6).required()
     .messages({
       'number.base': 'dayOfWeek must be a number',

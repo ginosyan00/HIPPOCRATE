@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
 // Import icons
 import plusIcon from '../../assets/icons/plus.svg';
@@ -8,6 +8,7 @@ import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayou
 import { Button, Input, Card, BackButton } from '../../components/common';
 import { userService } from '../../services/user.service';
 import { clinicService } from '../../services/clinic.service';
+import { DoctorScheduleEditor, DoctorScheduleEditorRef } from '../../components/dashboard/DoctorScheduleEditor';
 
 /**
  * AddDoctorPage
@@ -30,6 +31,9 @@ export const AddDoctorPage: React.FC = () => {
 
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Ref для редактора расписания
+  const scheduleEditorRef = useRef<DoctorScheduleEditorRef>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +42,18 @@ export const AddDoctorPage: React.FC = () => {
 
     try {
       console.log('🔵 [ADD DOCTOR PAGE] Создание врача:', { name, email });
+
+      // Получаем расписание из редактора
+      let scheduleData: Array<{
+        dayOfWeek: number;
+        startTime: string | null;
+        endTime: string | null;
+        isWorking: boolean;
+      }> = [];
+
+      if (scheduleEditorRef.current) {
+        scheduleData = scheduleEditorRef.current.getSchedule();
+      }
 
       const createdDoctor = await userService.createDoctor({
         name,
@@ -49,6 +65,7 @@ export const AddDoctorPage: React.FC = () => {
         phone: phone || undefined,
         dateOfBirth: dateOfBirth || undefined,
         gender,
+        schedule: scheduleData.length > 0 ? scheduleData : undefined,
       });
 
       console.log('✅ [ADD DOCTOR PAGE] Врач успешно создан:', createdDoctor.id);
@@ -198,6 +215,27 @@ export const AddDoctorPage: React.FC = () => {
                   />
                 </div>
               </div>
+            </div>
+
+            {/* График работы */}
+            <div>
+              <h3 className="text-base font-semibold text-text-50 mb-4">
+                График работы
+              </h3>
+              <p className="text-sm text-text-10 mb-4">
+                Настройте рабочий график врача. Вы можете настроить расписание для каждого дня недели.
+              </p>
+              <DoctorScheduleEditor
+                ref={scheduleEditorRef}
+                schedule={[]}
+                onUpdate={async () => {
+                  // Пустая функция, так как расписание будет сохранено при отправке формы
+                }}
+                isLoading={false}
+                hideSubmitButton={true}
+                hideCopyButton={true}
+                title="График работы врача"
+              />
             </div>
 
             {/* Info Card */}

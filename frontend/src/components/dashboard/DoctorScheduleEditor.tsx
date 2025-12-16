@@ -14,10 +14,17 @@ interface DoctorScheduleEditorProps {
   isLoading?: boolean;
   hideSubmitButton?: boolean; // Скрыть кнопку "Сохранить расписание"
   hideCopyButton?: boolean; // Скрыть кнопку "Копировать"
+  title?: string; // Заголовок карточки (по умолчанию "Мое рабочее расписание")
 }
 
 export interface DoctorScheduleEditorRef {
   save: () => Promise<void>;
+  getSchedule: () => Array<{
+    dayOfWeek: number;
+    startTime: string | null;
+    endTime: string | null;
+    isWorking: boolean;
+  }>;
 }
 
 const DAYS = [
@@ -40,6 +47,7 @@ export const DoctorScheduleEditor = forwardRef<DoctorScheduleEditorRef, DoctorSc
   isLoading = false,
   hideSubmitButton = false,
   hideCopyButton = false,
+  title = 'Мое рабочее расписание',
 }, ref) => {
   // Преобразуем массив расписания в объект для удобства работы (мемоизируем)
   const scheduleMap = useMemo(() => {
@@ -196,13 +204,24 @@ export const DoctorScheduleEditor = forwardRef<DoctorScheduleEditorRef, DoctorSc
     await saveSchedule();
   };
 
-  // Expose save function to parent via ref
+  // Функция для получения текущего расписания
+  const getSchedule = useCallback(() => {
+    return Object.values(scheduleState).map(day => ({
+      dayOfWeek: day.dayOfWeek,
+      startTime: day.isWorking ? day.startTime : null,
+      endTime: day.isWorking ? day.endTime : null,
+      isWorking: day.isWorking,
+    }));
+  }, [scheduleState]);
+
+  // Expose save function and getSchedule to parent via ref
   useImperativeHandle(ref, () => ({
     save: saveSchedule,
-  }), [saveSchedule]);
+    getSchedule,
+  }), [saveSchedule, getSchedule]);
 
   return (
-    <Card title="Мое рабочее расписание" padding="lg">
+    <Card title={title} padding="lg">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-3">
           {DAYS.map(({ key, label, short }) => {

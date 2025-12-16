@@ -155,7 +155,9 @@ export function useDoctorSchedule(doctorId: string) {
     queryKey: ['users', doctorId, 'schedule'],
     queryFn: () => userService.getDoctorSchedule(doctorId),
     enabled: !!doctorId,
-    staleTime: 5 * 60 * 1000, // 5 минут
+    staleTime: 30 * 1000, // 30 секунд - для быстрой синхронизации
+    refetchOnWindowFocus: true, // Обновляем при фокусе окна
+    refetchOnMount: true, // Обновляем при монтировании
   });
 }
 
@@ -169,13 +171,28 @@ export function useUpdateDoctorSchedule(doctorId: string) {
     mutationFn: (schedule: UpdateDoctorScheduleRequest['schedule']) => 
       userService.updateDoctorSchedule(doctorId, schedule),
     onSuccess: () => {
-      // Инвалидируем кэш расписания для клиники
+      if (!doctorId) return;
+
+      console.log('🔄 [USE USERS] Инвалидация кэша после обновления расписания клиникой:', doctorId);
+
+      // Инвалидируем кэш расписания для клиники (все варианты ключей)
       queryClient.invalidateQueries({ queryKey: ['users', doctorId, 'schedule'] });
       queryClient.invalidateQueries({ queryKey: ['users', 'schedule'] });
       
       // Инвалидируем кэш расписания для врача (чтобы врач видел изменения)
       queryClient.invalidateQueries({ queryKey: ['doctor', 'schedule', doctorId] });
       queryClient.invalidateQueries({ queryKey: ['doctor', 'schedule'] });
+      
+      // Инвалидируем кэш списка врачей (чтобы обновления были видны в списке)
+      queryClient.invalidateQueries({ queryKey: ['users', 'doctors'] });
+      
+      // Инвалидируем кэш конкретного пользователя (чтобы врач видел изменения в профиле)
+      queryClient.invalidateQueries({ queryKey: ['users', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      
+      // Инвалидируем кэш профиля врача (если врач просматривает свой профиль)
+      queryClient.invalidateQueries({ queryKey: ['doctor', 'profile', doctorId] });
+      queryClient.invalidateQueries({ queryKey: ['doctor', 'profile'] });
       
       toast.success('Расписание врача успешно обновлено');
     },

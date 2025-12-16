@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { dayScheduleSchema } from './doctorSchedule.validator.js';
 
 /**
  * User Validators
@@ -115,6 +116,23 @@ export const createDoctorByClinicSchema = Joi.object({
     'date.max': 'Date of birth cannot be in the future',
   }),
   gender: Joi.string().valid('male', 'female', 'other').optional(),
+  schedule: Joi.array().items(dayScheduleSchema).min(0).max(7).optional()
+    .messages({
+      'array.base': 'schedule must be an array',
+      'array.max': 'schedule must contain at most 7 days',
+    }),
+}).custom((value, helpers) => {
+  // Если schedule передан, проверяем что все дни недели уникальны
+  if (value.schedule && Array.isArray(value.schedule)) {
+    const dayOfWeeks = value.schedule.map(day => day.dayOfWeek);
+    const uniqueDays = new Set(dayOfWeeks);
+    if (uniqueDays.size !== dayOfWeeks.length) {
+      return helpers.error('any.custom', {
+        message: 'Each dayOfWeek must be unique in the schedule array',
+      });
+    }
+  }
+  return value;
 });
 
 /**

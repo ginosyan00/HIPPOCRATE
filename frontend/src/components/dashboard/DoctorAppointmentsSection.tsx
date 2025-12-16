@@ -578,6 +578,7 @@ export const DoctorAppointmentsSection: React.FC = () => {
             errorMessages={errorMessages}
             isFetching={isFetching}
             isTransitioning={isTransitioning}
+            userRole="DOCTOR"
           />
         </div>
       )}

@@ -729,6 +729,7 @@ export const AppointmentsPage: React.FC = () => {
             errorMessages={errorMessages}
             isFetching={isFetching}
             isTransitioning={isTransitioning}
+            userRole={user?.role as 'DOCTOR' | 'CLINIC' | 'ADMIN'}
           />
         </div>
       )}

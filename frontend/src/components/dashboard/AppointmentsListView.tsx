@@ -25,6 +25,7 @@ interface AppointmentsListViewProps {
   errorMessages: Record<string, string>;
   isFetching?: boolean;
   isTransitioning?: boolean;
+  userRole?: 'DOCTOR' | 'CLINIC' | 'ADMIN'; // Роль пользователя для определения колонок
 }
 
 /**
@@ -42,6 +43,7 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
   errorMessages,
   isFetching = false,
   isTransitioning = false,
+  userRole,
 }) => {
   // Состояние для редактирования суммы в карточках
   const [editingAmountId, setEditingAmountId] = useState<string | null>(null);
@@ -257,6 +259,7 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
             onSelectAll={handleSelectAll}
             isAllSelected={isAllSelected}
             isIndeterminate={isIndeterminate}
+            userRole={userRole}
           />
         </Card>
       </div>

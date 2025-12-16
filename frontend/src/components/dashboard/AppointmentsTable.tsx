@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Appointment } from '../../types/api.types';
 import { Button } from '../common';
-import { formatAppointmentDateTime } from '../../utils/dateFormat';
-import { Pencil, Check, X } from 'lucide-react';
+import { formatAppointmentDate, formatAppointmentTime } from '../../utils/dateFormat';
+import { Calendar, Clock, User, Building2, FileText, Pencil, Check, X } from 'lucide-react';
 import { StatusDropdown } from './StatusDropdown';
 import { AppointmentDetailModal } from './AppointmentDetailModal';
 
 // Import icons
 import warningIcon from '../../assets/icons/warning.svg';
 import phoneIcon from '../../assets/icons/phone.svg';
+import clockIcon from '../../assets/icons/clock.svg';
+import checkIcon from '../../assets/icons/check.svg';
+import xIcon from '../../assets/icons/x.svg';
+import mapPinIcon from '../../assets/icons/map-pin.svg';
 
 interface AppointmentsTableProps {
   appointments: Appointment[];
@@ -22,7 +26,11 @@ interface AppointmentsTableProps {
   onSelectAll?: (checked: boolean) => void;
   isAllSelected?: boolean;
   isIndeterminate?: boolean;
+  userRole?: 'DOCTOR' | 'CLINIC' | 'ADMIN'; // Роль пользователя для определения колонок
 }
+
+type SortField = 'date' | 'time' | 'doctor' | 'patient' | 'clinic' | 'category' | 'status';
+type SortDirection = 'asc' | 'desc';
 
 /**
  * AppointmentsTable Component
@@ -40,7 +48,12 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
   onSelectAll,
   isAllSelected = false,
   isIndeterminate = false,
+  userRole,
 }) => {
+  // Состояние для сортировки
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
   // Состояние для редактирования суммы
   const [editingAmountId, setEditingAmountId] = useState<string | null>(null);
   const [editingAmountValue, setEditingAmountValue] = useState<string>('');
@@ -148,6 +161,101 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
     }
   };
 
+  // Сортировка записей
+  const sortedAppointments = useMemo(() => {
+    if (!appointments.length) return [];
+
+    const sorted = [...appointments].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortField) {
+        case 'date':
+          aValue = new Date(a.appointmentDate).getTime();
+          bValue = new Date(b.appointmentDate).getTime();
+          break;
+        case 'time':
+          aValue = new Date(a.appointmentDate).getTime();
+          bValue = new Date(b.appointmentDate).getTime();
+          break;
+        case 'category':
+          aValue = a.reason || '';
+          bValue = b.reason || '';
+          break;
+        case 'doctor':
+          aValue = a.doctor?.name || '';
+          bValue = b.doctor?.name || '';
+          break;
+        case 'patient':
+          aValue = a.patient?.name || '';
+          bValue = b.patient?.name || '';
+          break;
+        case 'clinic':
+          aValue = a.clinic?.name || '';
+          bValue = b.clinic?.name || '';
+          break;
+        case 'status':
+          aValue = a.status || '';
+          bValue = b.status || '';
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return sorted;
+  }, [appointments, sortField, sortDirection]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const styles = {
+      pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+      confirmed: 'bg-green-100 text-green-700 border-green-200',
+      completed: 'bg-blue-100 text-blue-700 border-blue-200',
+      cancelled: 'bg-gray-100 text-gray-700 border-gray-200',
+    };
+    const labels = {
+      pending: 'Ожидает',
+      confirmed: 'Подтверждено',
+      completed: 'Завершено',
+      cancelled: 'Отменено',
+    };
+    const icons = {
+      pending: clockIcon,
+      confirmed: checkIcon,
+      completed: checkIcon,
+      cancelled: xIcon,
+    };
+    const label = labels[status as keyof typeof labels] || status;
+    const icon = icons[status as keyof typeof icons] || clockIcon;
+    const style = styles[status as keyof typeof styles] || 'bg-gray-100 text-gray-700 border-gray-200';
+    
+    return { label, icon, style };
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) {
+      return <span className="text-gray-400">↕</span>;
+    }
+    return sortDirection === 'asc' ? <span>↑</span> : <span>↓</span>;
+  };
+
+  // Определяем, какие колонки показывать в зависимости от роли
+  const isDoctor = userRole === 'DOCTOR';
+  const isClinic = userRole === 'CLINIC' || userRole === 'ADMIN';
+
 
 
   if (appointments.length === 0) {
@@ -162,9 +270,9 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
-          <tr className="bg-bg-primary border-b border-stroke transition-colors duration-200">
+          <tr className="bg-bg-primary border-b-2 border-stroke">
             {onToggleSelect && onSelectAll && (
-              <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider w-12">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 w-12">
                 <input
                   type="checkbox"
                   checked={isAllSelected}
@@ -176,17 +284,69 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
                 />
               </th>
             )}
-            <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-              Врач
+            <th
+              className="px-4 py-3 text-left text-xs font-semibold text-text-50 cursor-pointer hover:bg-bg-secondary transition-colors"
+              onClick={() => handleSort('date')}
+            >
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4" />
+                Дата
+                <SortIcon field="date" />
+              </div>
             </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-              Пациент
+            <th
+              className="px-4 py-3 text-left text-xs font-semibold text-text-50 cursor-pointer hover:bg-bg-secondary transition-colors"
+              onClick={() => handleSort('time')}
+            >
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Время
+                <SortIcon field="time" />
+              </div>
             </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-              Дата и время
+            {isClinic && (
+              <th
+                className="px-4 py-3 text-left text-xs font-semibold text-text-50 cursor-pointer hover:bg-bg-secondary transition-colors"
+                onClick={() => handleSort('doctor')}
+              >
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Врач
+                  <SortIcon field="doctor" />
+                </div>
+              </th>
+            )}
+            <th
+              className="px-4 py-3 text-left text-xs font-semibold text-text-50 cursor-pointer hover:bg-bg-secondary transition-colors"
+              onClick={() => handleSort('patient')}
+            >
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Пациент
+                <SortIcon field="patient" />
+              </div>
             </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-              Процедура
+            {isClinic && (
+              <th
+                className="px-4 py-3 text-left text-xs font-semibold text-text-50 cursor-pointer hover:bg-bg-secondary transition-colors"
+                onClick={() => handleSort('clinic')}
+              >
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4" />
+                  Клиника
+                  <SortIcon field="clinic" />
+                </div>
+              </th>
+            )}
+            <th
+              className="px-4 py-3 text-left text-xs font-semibold text-text-50 cursor-pointer hover:bg-bg-secondary transition-colors"
+              onClick={() => handleSort('category')}
+            >
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Процедура / Причина
+                <SortIcon field="category" />
+              </div>
             </th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
               Сумма
@@ -196,57 +356,96 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
             </th>
           </tr>
         </thead>
-        <tbody className="bg-bg-white divide-y divide-stroke">
-          {appointments.map((appointment, index) => (
+        <tbody>
+          {sortedAppointments.map((appointment, index) => (
             <tr 
               key={appointment.id}
-              className="appointment-row hover:bg-bg-primary transition-all duration-500 ease-out will-change-opacity animate-fade-in cursor-pointer"
-              style={{ animationDelay: `${index * 0.02}s` }}
+              className="border-b border-stroke hover:bg-bg-secondary transition-colors cursor-pointer"
               onClick={(e) => handleRowClick(appointment, e)}
             >
-                  {onToggleSelect && (
-                    <td 
-                      className="px-4 py-3 text-sm"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedAppointments.has(appointment.id)}
-                        onChange={() => onToggleSelect(appointment.id)}
-                        disabled={!!loadingAppointments[appointment.id]}
-                        className="w-4 h-4 text-main-100 border-stroke rounded focus:ring-main-100 focus:ring-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      />
-                    </td>
-                  )}
-                  <td className="px-4 py-3 text-sm">
+              {onToggleSelect && (
+                <td 
+                  className="px-4 py-3"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedAppointments.has(appointment.id)}
+                    onChange={() => onToggleSelect(appointment.id)}
+                    disabled={!!loadingAppointments[appointment.id]}
+                    className="w-4 h-4 text-main-100 border-stroke rounded focus:ring-main-100 focus:ring-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                </td>
+              )}
+              <td className="px-4 py-3">
+                <div className="text-sm font-medium text-text-50">
+                  {formatAppointmentDate(appointment.appointmentDate, 'short')}
+                </div>
+              </td>
+              <td className="px-4 py-3">
+                <div className="text-sm font-medium text-text-50">
+                  {formatAppointmentTime(appointment.appointmentDate)}
+                </div>
+              </td>
+              {isClinic && (
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-main-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs font-medium text-main-100">
+                        {appointment.doctor?.name?.charAt(0).toUpperCase() || '?'}
+                      </span>
+                    </div>
                     <div>
-                      <p className="font-semibold text-text-100">{appointment.doctor?.name}</p>
+                      <div className="text-sm font-medium text-text-50">
+                        {appointment.doctor?.name || 'Не указан'}
+                      </div>
                       {appointment.doctor?.specialization && (
-                        <p className="text-xs text-text-10 mt-1">{appointment.doctor.specialization}</p>
+                        <div className="text-xs text-text-10">{appointment.doctor.specialization}</div>
                       )}
                     </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <div>
-                      <p className="font-semibold text-text-100">{appointment.patient?.name}</p>
-                      {appointment.patient?.phone && (
-                        <div className="flex flex-col gap-1 mt-1">
-                          <p className="text-xs text-text-10 flex items-center gap-1">
-                            <img src={phoneIcon} alt="Телефон" className="w-3 h-3" />
-                            {appointment.patient.phone}
-                          </p>
-                        </div>
-                      )}
+                  </div>
+                </td>
+              )}
+              <td className="px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-main-10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-medium text-main-100">
+                      {appointment.patient?.name?.charAt(0).toUpperCase() || '?'}
+                    </span>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-text-50">
+                      {appointment.patient?.name || 'Не указан'}
                     </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <div>
-                      <p className="text-text-100">{formatAppointmentDateTime(appointment.appointmentDate)}</p>
+                    {appointment.patient?.phone && (
+                      <div className="text-xs text-text-10 flex items-center gap-1">
+                        <img src={phoneIcon} alt="Телефон" className="w-3 h-3" />
+                        {appointment.patient.phone}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </td>
+              {isClinic && (
+                <td className="px-4 py-3">
+                  <div className="text-sm font-medium text-text-50">
+                    {appointment.clinic?.name || 'Не указана'}
+                  </div>
+                  {appointment.clinic?.city && (
+                    <div className="text-xs text-text-10 flex items-center gap-1">
+                      <img src={mapPinIcon} alt="Местоположение" className="w-3 h-3" />
+                      {appointment.clinic.city}
                     </div>
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <p className="text-text-100">{appointment.reason || '—'}</p>
-                  </td>
+                  )}
+                </td>
+              )}
+              <td className="px-4 py-3">
+                <div className="text-sm text-text-50">
+                  {appointment.reason || (
+                    <span className="text-text-10 italic">Не указана</span>
+                  )}
+                </div>
+              </td>
               <td className="px-4 py-3 text-sm">
                 {editingAmountId === appointment.id ? (
                   <div className="flex flex-col gap-1">

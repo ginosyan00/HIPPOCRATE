@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
-import { Button, Card, Spinner } from '../../components/common';
+import { Button, Card, Spinner, Input } from '../../components/common';
 import { AppointmentsListView } from '../../components/dashboard/AppointmentsListView';
 import { AppointmentsMonthlyCalendar } from '../../components/dashboard/AppointmentsMonthlyCalendar';
 import { AppointmentsWeeklyView } from '../../components/dashboard/AppointmentsWeeklyView';
@@ -15,6 +15,7 @@ import { userService } from '../../services/user.service';
 import { useAuthStore } from '../../store/useAuthStore';
 import { User, Appointment } from '../../types/api.types';
 import { format } from 'date-fns';
+import { Filter, Calendar, Clock, Search, User as UserIcon, CalendarPlus } from 'lucide-react';
 
 // Import icons
 import analyticsIcon from '../../assets/icons/analytics.svg';
@@ -481,24 +482,35 @@ export const AppointmentsPage: React.FC = () => {
             </div>
             )}
             
-            <Button variant="primary" onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2">
-              <img src={plusIcon} alt="Добавить" className="w-4 h-4" />
+            <Button 
+              variant="primary" 
+              onClick={() => setIsCreateModalOpen(true)} 
+              className="flex items-center gap-3 px-12 py-5 text-xl font-bold shadow-lg hover:shadow-xl transition-all min-w-[220px]"
+            >
+              <CalendarPlus className="w-7 h-7" />
               Создать приём
             </Button>
           </div>
         </div>
 
-      {/* Filters */}
-      <Card padding="md">
-        <div className={`grid grid-cols-1 md:grid-cols-3 ${isDoctor ? 'lg:grid-cols-5' : 'lg:grid-cols-6'} gap-4`}>
+      {/* Фильтры */}
+      <Card padding="lg" className="border border-stroke shadow-md">
+        <div className="flex items-center gap-2 mb-4">
+          <Filter className="w-5 h-5 text-text-50" />
+          <h2 className="text-lg font-semibold text-text-50">Фильтры</h2>
+        </div>
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${isDoctor ? 'lg:grid-cols-5' : 'lg:grid-cols-6'} gap-4`}>
           {/* Фильтр "Врач" скрыт для врачей, так как они видят только свои назначения */}
           {!isDoctor && (
             <div>
-              <label className="block text-sm font-normal text-text-10 mb-2">Врач</label>
+              <label className="block text-sm font-medium text-text-50 mb-2 flex items-center gap-2">
+                <UserIcon className="w-4 h-4" />
+                Врач
+              </label>
               <select
                 value={doctorFilter}
                 onChange={e => setDoctorFilter(e.target.value)}
-                className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
+                className="w-full px-4 py-2.5 border border-stroke rounded-lg bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all"
                 disabled={isDoctorsLoading}
               >
                 <option value="">Все врачи</option>
@@ -510,22 +522,27 @@ export const AppointmentsPage: React.FC = () => {
               </select>
             </div>
           )}
+
           <div>
-            <label className="block text-sm font-normal text-text-10 mb-2">Статус</label>
+            <label className="block text-sm font-medium text-text-50 mb-2">Статус</label>
             <select
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
-              className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
+              className="w-full px-4 py-2.5 border border-stroke rounded-lg bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all"
             >
               <option value="">Все статусы</option>
               <option value="pending">Ожидает подтверждения</option>
-              <option value="confirmed">Подтвержден</option>
-              <option value="completed">Завершен</option>
-              <option value="cancelled">Отменен</option>
+              <option value="confirmed">Подтверждено</option>
+              <option value="completed">Завершено</option>
+              <option value="cancelled">Отменено</option>
             </select>
           </div>
+
           <div>
-            <label className="block text-sm font-normal text-text-10 mb-2">Дата</label>
+            <label className="block text-sm font-medium text-text-50 mb-2 flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Дата
+            </label>
             <input
               type="date"
               value={dateFilter}
@@ -534,20 +551,28 @@ export const AppointmentsPage: React.FC = () => {
                 // Очищаем фильтр по неделе при выборе даты
                 if (e.target.value) setWeekFilter('');
               }}
-              className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
+              className="w-full px-4 py-2.5 border border-stroke rounded-lg bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-normal text-text-10 mb-2">Время</label>
+            <label className="block text-sm font-medium text-text-50 mb-2 flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              Время
+            </label>
             <input
               type="time"
               value={timeFilter}
               onChange={e => setTimeFilter(e.target.value)}
-              className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
+              className="w-full px-4 py-2.5 border border-stroke rounded-lg bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-normal text-text-10 mb-2">Неделя</label>
+            <label className="block text-sm font-medium text-text-50 mb-2 flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Неделя
+            </label>
             <input
               type="week"
               value={weekFilter}
@@ -556,20 +581,25 @@ export const AppointmentsPage: React.FC = () => {
                 // Очищаем фильтр по дате при выборе недели
                 if (e.target.value) setDateFilter('');
               }}
-              className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
+              className="w-full px-4 py-2.5 border border-stroke rounded-lg bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-normal text-text-10 mb-2">Категория</label>
-            <input
+            <label className="block text-sm font-medium text-text-50 mb-2 flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Процедура / Причина
+            </label>
+            <Input
               type="text"
               value={categoryInput}
-              onChange={e => setCategoryInput(e.target.value)}
-              placeholder="Процедура..."
-              className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
+              onChange={(e) => setCategoryInput(e.target.value)}
+              placeholder="Поиск по процедуре..."
+              className="w-full"
             />
           </div>
         </div>
+
         {(!isDoctor && doctorFilter || statusFilter || dateFilter || timeFilter || weekFilter || categoryFilter) && (
           <div className="mt-4 pt-4 border-t border-stroke">
             <Button

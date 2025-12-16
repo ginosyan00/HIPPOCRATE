@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Button, Spinner } from '../common';
+import { Card, Button, Spinner, Input } from '../common';
 import { AppointmentsListView } from './AppointmentsListView';
 import { AppointmentsMonthlyCalendar } from './AppointmentsMonthlyCalendar';
 import { AppointmentsWeeklyView } from './AppointmentsWeeklyView';
@@ -11,6 +11,7 @@ import { useAppointments, useUpdateAppointmentStatus, useUpdateAppointment } fro
 import { useAuthStore } from '../../store/useAuthStore';
 import { Appointment } from '../../types/api.types';
 import { format } from 'date-fns';
+import { Filter, Calendar, Clock, Search } from 'lucide-react';
 
 // Import icons
 import plusIcon from '../../assets/icons/plus.svg';
@@ -271,6 +272,18 @@ export const DoctorAppointmentsSection: React.FC = () => {
   };
 
   /**
+   * Сброс фильтров
+   */
+  const handleResetFilters = () => {
+    setStatusFilter('');
+    setDateFilter('');
+    setTimeFilter('');
+    setWeekFilter('');
+    setCategoryFilter('');
+    setCategoryInput('');
+  };
+
+  /**
    * Обработчик редактирования суммы
    */
   const handleEditAmount = (appointment: Appointment) => {
@@ -361,25 +374,33 @@ export const DoctorAppointmentsSection: React.FC = () => {
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card padding="md">
+      {/* Фильтры */}
+      <Card padding="lg" className="border border-stroke shadow-md">
+        <div className="flex items-center gap-2 mb-4">
+          <Filter className="w-5 h-5 text-text-50" />
+          <h2 className="text-lg font-semibold text-text-50">Фильтры</h2>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div>
-            <label className="block text-sm font-normal text-text-10 mb-2">Статус</label>
+            <label className="block text-sm font-medium text-text-50 mb-2">Статус</label>
             <select
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
-              className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
+              className="w-full px-4 py-2.5 border border-stroke rounded-lg bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all"
             >
               <option value="">Все статусы</option>
               <option value="pending">Ожидает подтверждения</option>
-              <option value="confirmed">Подтвержден</option>
-              <option value="completed">Завершен</option>
-              <option value="cancelled">Отменен</option>
+              <option value="confirmed">Подтверждено</option>
+              <option value="completed">Завершено</option>
+              <option value="cancelled">Отменено</option>
             </select>
           </div>
+
           <div>
-            <label className="block text-sm font-normal text-text-10 mb-2">Дата</label>
+            <label className="block text-sm font-medium text-text-50 mb-2 flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Дата
+            </label>
             <input
               type="date"
               value={dateFilter}
@@ -387,20 +408,28 @@ export const DoctorAppointmentsSection: React.FC = () => {
                 setDateFilter(e.target.value);
                 if (e.target.value) setWeekFilter('');
               }}
-              className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
+              className="w-full px-4 py-2.5 border border-stroke rounded-lg bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-normal text-text-10 mb-2">Время</label>
+            <label className="block text-sm font-medium text-text-50 mb-2 flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              Время
+            </label>
             <input
               type="time"
               value={timeFilter}
               onChange={e => setTimeFilter(e.target.value)}
-              className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
+              className="w-full px-4 py-2.5 border border-stroke rounded-lg bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-normal text-text-10 mb-2">Неделя</label>
+            <label className="block text-sm font-medium text-text-50 mb-2 flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              Неделя
+            </label>
             <input
               type="week"
               value={weekFilter}
@@ -408,38 +437,30 @@ export const DoctorAppointmentsSection: React.FC = () => {
                 setWeekFilter(e.target.value);
                 if (e.target.value) setDateFilter('');
               }}
-              className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
+              className="w-full px-4 py-2.5 border border-stroke rounded-lg bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all"
             />
           </div>
+
           <div>
-            <label className="block text-sm font-normal text-text-10 mb-2">Категория</label>
-            <input
+            <label className="block text-sm font-medium text-text-50 mb-2 flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Процедура / Причина
+            </label>
+            <Input
               type="text"
               value={categoryInput}
-              onChange={e => setCategoryInput(e.target.value)}
-              placeholder="Процедура..."
-              className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
+              onChange={(e) => setCategoryInput(e.target.value)}
+              placeholder="Поиск по процедуре..."
+              className="w-full"
             />
           </div>
         </div>
+
         {(statusFilter || dateFilter || timeFilter || weekFilter || categoryFilter) && (
           <div className="mt-4 pt-4 border-t border-stroke">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => {
-                setStatusFilter('');
-                setDateFilter('');
-                setTimeFilter('');
-                setWeekFilter('');
-                setCategoryFilter('');
-                setCategoryInput('');
-              }}
-            >
-              <span className="flex items-center gap-2">
-                <img src={refreshIcon} alt="Сбросить" className="w-4 h-4" />
-                Сбросить фильтры
-              </span>
+            <Button variant="secondary" size="sm" onClick={handleResetFilters} className="flex items-center gap-2">
+              <img src={refreshIcon} alt="Сбросить" className="w-4 h-4" />
+              Сбросить фильтры
             </Button>
           </div>
         )}

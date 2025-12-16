@@ -198,7 +198,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
             <div className="flex items-center gap-2 border border-stroke rounded-sm overflow-hidden">
               <button
                 onClick={() => onViewChange('list')}
-                className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
+                className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
                   currentView === 'list'
                     ? 'bg-main-100 text-white'
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
@@ -206,13 +206,21 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                 title="Таблица"
               >
                 <span className="flex items-center gap-2">
-                  <img src={analyticsIcon} alt="Таблица" className="w-4 h-4" />
+                  <img 
+                    src={analyticsIcon} 
+                    alt="Таблица" 
+                    className={`w-4 h-4 transition-smooth ${
+                      currentView === 'list'
+                        ? 'brightness-0 invert'
+                        : 'group-hover:brightness-0 group-hover:invert'
+                    }`} 
+                  />
                   Таблица
                 </span>
               </button>
               <button
                 onClick={() => onViewChange('monthly')}
-                className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
+                className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
                   currentView === 'monthly'
                     ? 'bg-main-100 text-white'
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
@@ -220,13 +228,21 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                 title="Месячный календарь"
               >
                 <span className="flex items-center gap-2">
-                  <img src={calendarIcon} alt="Месяц" className="w-4 h-4" />
+                  <img 
+                    src={calendarIcon} 
+                    alt="Месяц" 
+                    className={`w-4 h-4 transition-smooth ${
+                      currentView === 'monthly'
+                        ? 'brightness-0 invert'
+                        : 'group-hover:brightness-0 group-hover:invert'
+                    }`} 
+                  />
                   Месяц
                 </span>
               </button>
               <button
                 onClick={() => onViewChange('weekly')}
-                className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
+                className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
                   currentView === 'weekly'
                     ? 'bg-main-100 text-white'
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
@@ -234,7 +250,15 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                 title="Недельный вид"
               >
                 <span className="flex items-center gap-2">
-                  <img src={calendarIcon} alt="Неделя" className="w-4 h-4" />
+                  <img 
+                    src={calendarIcon} 
+                    alt="Неделя" 
+                    className={`w-4 h-4 transition-smooth ${
+                      currentView === 'weekly'
+                        ? 'brightness-0 invert'
+                        : 'group-hover:brightness-0 group-hover:invert'
+                    }`} 
+                  />
                   Неделя
                 </span>
               </button>
@@ -314,6 +338,13 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                                   )}
                                 </div>
                               </div>
+
+                              {/* Счетчик уведомлений (пока 0) */}
+                              <div className="flex-shrink-0 ml-1.5">
+                                <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-[10px] text-gray-600 font-medium">
+                                  0
+                                </div>
+                              </div>
                             </div>
 
                             {/* Статус бейдж */}
@@ -391,6 +422,18 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                                 </svg>
                               </button>
                             </div>
+
+                            {/* Кнопка "+ Activity" */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // TODO: Открыть модальное окно для добавления активности
+                              }}
+                              className="w-full text-left text-[10px] text-text-50 hover:text-main-100 py-1 px-1.5 hover:bg-bg-primary rounded-sm transition-smooth"
+                              type="button"
+                            >
+                              + Activity
+                            </button>
                           </div>
                         );
                       })}

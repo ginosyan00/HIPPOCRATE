@@ -208,47 +208,134 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
 
           {/* Центральная часть - переключение видов */}
           {onViewChange && (
-            <div className="flex items-center gap-2 border border-stroke rounded-sm overflow-hidden">
+            <div 
+              className="flex items-center border border-stroke rounded-sm overflow-hidden" 
+              style={{ 
+                height: '44px',
+                width: '420px',
+                position: 'relative',
+                boxSizing: 'border-box',
+                gap: '0'
+              }}
+            >
               <button
-                onClick={() => onViewChange('list')}
-                className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onViewChange('list');
+                }}
+                className={`group text-base font-medium transition-colors duration-150 flex-shrink-0 relative ${
                   currentView === 'list'
                     ? 'bg-main-100 text-white'
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                 }`}
+                style={{ 
+                  width: '140px', 
+                  height: '44px',
+                  padding: '0',
+                  border: 'none',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
                 title="Таблица"
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
               >
-                <span className="flex items-center gap-2">
-                  <img src={analyticsIcon} alt="Таблица" className="w-4 h-4" />
-                  Таблица
+                <span className="flex items-center gap-2" style={{ pointerEvents: 'none' }}>
+                  <img 
+                    src={analyticsIcon} 
+                    alt="Таблица" 
+                    className={`w-4 h-4 flex-shrink-0 transition-smooth ${
+                      currentView === 'list'
+                        ? 'brightness-0 invert'
+                        : 'group-hover:brightness-0 group-hover:invert'
+                    }`} 
+                    style={{ display: 'block' }} 
+                  />
+                  <span style={{ whiteSpace: 'nowrap' }}>Таблица</span>
                 </span>
               </button>
               <button
-                onClick={() => onViewChange('monthly')}
-                className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onViewChange('monthly');
+                }}
+                className={`group text-base font-medium transition-colors duration-150 flex-shrink-0 relative ${
                   currentView === 'monthly'
                     ? 'bg-main-100 text-white'
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                 }`}
+                style={{ 
+                  width: '140px', 
+                  height: '44px',
+                  padding: '0',
+                  border: 'none',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
                 title="Месячный календарь"
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
               >
-                <span className="flex items-center gap-2">
-                  <img src={calendarIcon} alt="Месяц" className="w-4 h-4" />
-                  Месяц
+                <span className="flex items-center gap-2" style={{ pointerEvents: 'none' }}>
+                  <img 
+                    src={calendarIcon} 
+                    alt="Месяц" 
+                    className={`w-4 h-4 flex-shrink-0 transition-smooth ${
+                      currentView === 'monthly'
+                        ? 'brightness-0 invert'
+                        : 'group-hover:brightness-0 group-hover:invert'
+                    }`} 
+                    style={{ display: 'block' }} 
+                  />
+                  <span style={{ whiteSpace: 'nowrap' }}>Месяц</span>
                 </span>
               </button>
               <button
-                onClick={() => onViewChange('weekly')}
-                className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onViewChange('weekly');
+                }}
+                className={`group text-base font-medium transition-colors duration-150 flex-shrink-0 relative ${
                   currentView === 'weekly'
                     ? 'bg-main-100 text-white'
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                 }`}
+                style={{ 
+                  width: '140px', 
+                  height: '44px',
+                  padding: '0',
+                  border: 'none',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
                 title="Недельный вид"
+                type="button"
+                onMouseDown={(e) => e.preventDefault()}
               >
-                <span className="flex items-center gap-2">
-                  <img src={calendarIcon} alt="Неделя" className="w-4 h-4" />
-                  Неделя
+                <span className="flex items-center gap-2" style={{ pointerEvents: 'none' }}>
+                  <img 
+                    src={calendarIcon} 
+                    alt="Неделя" 
+                    className={`w-4 h-4 flex-shrink-0 transition-smooth ${
+                      currentView === 'weekly'
+                        ? 'brightness-0 invert'
+                        : 'group-hover:brightness-0 group-hover:invert'
+                    }`} 
+                    style={{ display: 'block' }} 
+                  />
+                  <span style={{ whiteSpace: 'nowrap' }}>Неделя</span>
                 </span>
               </button>
             </div>

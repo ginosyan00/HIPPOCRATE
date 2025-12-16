@@ -7,14 +7,14 @@ import { CreateAppointmentModal } from './CreateAppointmentModal';
 import { CompleteAppointmentModal } from './CompleteAppointmentModal';
 import { CancelAppointmentModal } from './CancelAppointmentModal';
 import { EditAmountModal } from './EditAmountModal';
-import { useAppointments, useUpdateAppointmentStatus, useUpdateAppointment, useDeleteAppointment } from '../../hooks/useAppointments';
+import { useAppointments, useUpdateAppointmentStatus, useUpdateAppointment } from '../../hooks/useAppointments';
 import { useAuthStore } from '../../store/useAuthStore';
 import { Appointment } from '../../types/api.types';
 import { format } from 'date-fns';
-import { RotateCcw } from 'lucide-react';
 
 // Import icons
 import plusIcon from '../../assets/icons/plus.svg';
+import refreshIcon from '../../assets/icons/refresh.svg';
 import analyticsIcon from '../../assets/icons/analytics.svg';
 import calendarIcon from '../../assets/icons/calendar.svg';
 
@@ -123,7 +123,6 @@ export const DoctorAppointmentsSection: React.FC = () => {
 
   const updateStatusMutation = useUpdateAppointmentStatus();
   const updateAppointmentMutation = useUpdateAppointment();
-  const deleteAppointmentMutation = useDeleteAppointment();
 
   const appointments = data?.appointments || [];
 
@@ -299,23 +298,6 @@ export const DoctorAppointmentsSection: React.FC = () => {
     }
   };
 
-  /**
-   * Обработчик массового удаления приёмов
-   * @param ids - Массив ID приёмов для удаления
-   */
-  const handleDeleteSelected = async (ids: string[]) => {
-    console.log(`🗑️ [DOCTOR APPOINTMENTS] Начало массового удаления ${ids.length} приёмов`);
-    
-    try {
-      // Удаляем приёмы параллельно
-      await Promise.all(ids.map(id => deleteAppointmentMutation.mutateAsync(id)));
-      console.log(`✅ [DOCTOR APPOINTMENTS] Успешно удалено ${ids.length} приёмов`);
-    } catch (err: any) {
-      console.error('❌ [DOCTOR APPOINTMENTS] Ошибка при массовом удалении:', err);
-      throw err;
-    }
-  };
-
 
   if (error && !data) {
     return (
@@ -441,7 +423,7 @@ export const DoctorAppointmentsSection: React.FC = () => {
           </div>
         </div>
         {(statusFilter || dateFilter || timeFilter || weekFilter || categoryFilter) && (
-          <div className="mt-4 pt-4 border-t border-stroke flex justify-end">
+          <div className="mt-4 pt-4 border-t border-stroke">
             <Button
               variant="secondary"
               size="sm"
@@ -454,8 +436,8 @@ export const DoctorAppointmentsSection: React.FC = () => {
                 setCategoryInput('');
               }}
             >
-              <span className="flex items-center gap-1.5">
-                <RotateCcw className="w-3.5 h-3.5" />
+              <span className="flex items-center gap-2">
+                <img src={refreshIcon} alt="Сбросить" className="w-4 h-4" />
                 Сбросить фильтры
               </span>
             </Button>
@@ -519,7 +501,7 @@ export const DoctorAppointmentsSection: React.FC = () => {
               <div className="flex border border-stroke rounded-sm overflow-hidden">
                 <button
                   onClick={() => handleViewTypeChange('list')}
-                  className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
+                  className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
                     viewType === 'list'
                       ? 'bg-main-100 text-white'
                       : 'bg-bg-white text-text-50 hover:bg-bg-primary'
@@ -527,13 +509,21 @@ export const DoctorAppointmentsSection: React.FC = () => {
                   title="Таблица"
                 >
                   <span className="flex items-center gap-2">
-                    <img src={analyticsIcon} alt="Таблица" className="w-4 h-4" />
+                    <img 
+                      src={analyticsIcon} 
+                      alt="Таблица" 
+                      className={`w-4 h-4 transition-smooth ${
+                        viewType === 'list'
+                          ? 'brightness-0 invert'
+                          : 'group-hover:brightness-0 group-hover:invert'
+                      }`} 
+                    />
                     Таблица
                   </span>
                 </button>
                 <button
                   onClick={() => handleViewTypeChange('monthly')}
-                  className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
+                  className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
                     viewType === 'monthly'
                       ? 'bg-main-100 text-white'
                       : 'bg-bg-white text-text-50 hover:bg-bg-primary'
@@ -541,13 +531,21 @@ export const DoctorAppointmentsSection: React.FC = () => {
                   title="Месячный календарь"
                 >
                   <span className="flex items-center gap-2">
-                    <img src={calendarIcon} alt="Месяц" className="w-4 h-4" />
+                    <img 
+                      src={calendarIcon} 
+                      alt="Месяц" 
+                      className={`w-4 h-4 transition-smooth ${
+                        viewType === 'monthly'
+                          ? 'brightness-0 invert'
+                          : 'group-hover:brightness-0 group-hover:invert'
+                      }`} 
+                    />
                     Месяц
                   </span>
                 </button>
                 <button
                   onClick={() => handleViewTypeChange('weekly')}
-                  className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
+                  className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
                     viewType === 'weekly'
                       ? 'bg-main-100 text-white'
                       : 'bg-bg-white text-text-50 hover:bg-bg-primary'
@@ -555,7 +553,15 @@ export const DoctorAppointmentsSection: React.FC = () => {
                   title="Недельный вид"
                 >
                   <span className="flex items-center gap-2">
-                    <img src={calendarIcon} alt="Неделя" className="w-4 h-4" />
+                    <img 
+                      src={calendarIcon} 
+                      alt="Неделя" 
+                      className={`w-4 h-4 transition-smooth ${
+                        viewType === 'weekly'
+                          ? 'brightness-0 invert'
+                          : 'group-hover:brightness-0 group-hover:invert'
+                      }`} 
+                    />
                     Неделя
                   </span>
                 </button>
@@ -568,7 +574,6 @@ export const DoctorAppointmentsSection: React.FC = () => {
             onStatusChange={handleStatusChange}
             onEditAmount={handleEditAmount}
             onUpdateAmount={handleUpdateAmount}
-            onDeleteSelected={handleDeleteSelected}
             loadingAppointments={loadingAppointments}
             errorMessages={errorMessages}
             isFetching={isFetching}

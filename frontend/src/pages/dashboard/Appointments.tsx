@@ -10,7 +10,7 @@ import { CompleteAppointmentModal } from '../../components/dashboard/CompleteApp
 import { CancelAppointmentModal } from '../../components/dashboard/CancelAppointmentModal';
 import { EditAmountModal } from '../../components/dashboard/EditAmountModal';
 import { AppointmentDetailModal } from '../../components/dashboard/AppointmentDetailModal';
-import { useAppointments, useUpdateAppointmentStatus, useUpdateAppointment, useDeleteAppointment } from '../../hooks/useAppointments';
+import { useAppointments, useUpdateAppointmentStatus, useUpdateAppointment } from '../../hooks/useAppointments';
 import { userService } from '../../services/user.service';
 import { useAuthStore } from '../../store/useAuthStore';
 import { User, Appointment } from '../../types/api.types';
@@ -20,7 +20,7 @@ import { format } from 'date-fns';
 import analyticsIcon from '../../assets/icons/analytics.svg';
 import plusIcon from '../../assets/icons/plus.svg';
 import calendarIcon from '../../assets/icons/calendar.svg';
-import { RotateCcw } from 'lucide-react';
+import refreshIcon from '../../assets/icons/refresh.svg';
 
 /**
  * Appointments Page - Figma Design
@@ -190,7 +190,6 @@ export const AppointmentsPage: React.FC = () => {
   });
   const updateStatusMutation = useUpdateAppointmentStatus();
   const updateAppointmentMutation = useUpdateAppointment();
-  const deleteAppointmentMutation = useDeleteAppointment();
 
   // Фильтруем завершенные приёмы, если статус не выбран явно
   // Это гарантирует, что завершенные приёмы не отображаются в разделе Appointments
@@ -213,23 +212,6 @@ export const AppointmentsPage: React.FC = () => {
   }, [data, statusFilter]);
 
   /**
-   * Обработчик массового удаления приёмов
-   * @param ids - Массив ID приёмов для удаления
-   */
-  const handleDeleteSelected = async (ids: string[]) => {
-    console.log(`🗑️ [APPOINTMENTS] Начало массового удаления ${ids.length} приёмов`);
-    
-    try {
-      // Удаляем приёмы параллельно
-      await Promise.all(ids.map(id => deleteAppointmentMutation.mutateAsync(id)));
-      console.log(`✅ [APPOINTMENTS] Успешно удалено ${ids.length} приёмов`);
-    } catch (err: any) {
-      console.error('❌ [APPOINTMENTS] Ошибка при массовом удалении:', err);
-      throw err;
-    }
-  };
-
-  /**
    * Обработчик изменения статуса приёма
    * @param id - ID приёма
    * @param newStatus - Новый статус (confirmed, cancelled, completed)
@@ -237,7 +219,7 @@ export const AppointmentsPage: React.FC = () => {
   const handleStatusChange = async (id: string, newStatus: string) => {
     // Если статус - completed, открываем модальное окно для ввода суммы
     if (newStatus === 'completed') {
-      const appointment = filteredAppointments.find((a: Appointment) => a.id === id);
+      const appointment = appointments.find((a: Appointment) => a.id === id);
       if (appointment) {
         setSelectedAppointmentForComplete(appointment);
         setIsCompleteModalOpen(true);
@@ -247,7 +229,7 @@ export const AppointmentsPage: React.FC = () => {
 
     // Если статус - cancelled, открываем модальное окно для ввода причины отмены
     if (newStatus === 'cancelled') {
-      const appointment = filteredAppointments.find((a: Appointment) => a.id === id);
+      const appointment = appointments.find((a: Appointment) => a.id === id);
       if (appointment) {
         setSelectedAppointmentForCancel(appointment);
         setIsCancelModalOpen(true);
@@ -498,23 +480,13 @@ export const AppointmentsPage: React.FC = () => {
               </button>
             </div>
             )}
-          </div>
-        </div>
-
-        {/* Appointment Section - Create Button */}
-        <Card padding="lg" className="bg-main-10/30 border-main-100/20">
-          <div className="flex justify-center">
-            <Button 
-              variant="primary" 
-              onClick={() => setIsCreateModalOpen(true)} 
-              className="flex items-center gap-3 px-8 py-4 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
-              style={{ minHeight: '56px' }}
-            >
-              <img src={plusIcon} alt="Добавить" className="w-6 h-6" />
+            
+            <Button variant="primary" onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2">
+              <img src={plusIcon} alt="Добавить" className="w-4 h-4" />
               Создать приём
             </Button>
           </div>
-        </Card>
+        </div>
 
       {/* Filters */}
       <Card padding="md">
@@ -599,7 +571,7 @@ export const AppointmentsPage: React.FC = () => {
           </div>
         </div>
         {(!isDoctor && doctorFilter || statusFilter || dateFilter || timeFilter || weekFilter || categoryFilter) && (
-          <div className="mt-4 pt-4 border-t border-stroke flex justify-end">
+          <div className="mt-4 pt-4 border-t border-stroke">
             <Button
               variant="secondary"
               size="sm"
@@ -615,8 +587,8 @@ export const AppointmentsPage: React.FC = () => {
                 setSearchParams({}, { replace: true });
               }}
             >
-              <span className="flex items-center gap-1.5">
-                <RotateCcw className="w-3.5 h-3.5" />
+              <span className="flex items-center gap-2">
+                <img src={refreshIcon} alt="Сбросить" className="w-4 h-4" />
                 Сбросить фильтры
               </span>
             </Button>
@@ -683,7 +655,7 @@ export const AppointmentsPage: React.FC = () => {
                 <div className="flex border border-stroke rounded-sm overflow-hidden">
                   <button
                     onClick={() => handleViewTypeChange('list')}
-                    className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
+                    className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
                       viewType === 'list'
                         ? 'bg-main-100 text-white'
                         : 'bg-bg-white text-text-50 hover:bg-bg-primary'
@@ -691,13 +663,21 @@ export const AppointmentsPage: React.FC = () => {
                     title="Таблица"
                   >
                     <span className="flex items-center gap-2">
-                      <img src={analyticsIcon} alt="Таблица" className="w-4 h-4" />
+                      <img 
+                        src={analyticsIcon} 
+                        alt="Таблица" 
+                        className={`w-4 h-4 transition-smooth ${
+                          viewType === 'list'
+                            ? 'brightness-0 invert'
+                            : 'group-hover:brightness-0 group-hover:invert'
+                        }`} 
+                      />
                       Таблица
                     </span>
                   </button>
                   <button
                     onClick={() => handleViewTypeChange('monthly')}
-                    className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
+                    className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
                       viewType === 'monthly'
                         ? 'bg-main-100 text-white'
                         : 'bg-bg-white text-text-50 hover:bg-bg-primary'
@@ -705,13 +685,21 @@ export const AppointmentsPage: React.FC = () => {
                     title="Месячный календарь"
                   >
                     <span className="flex items-center gap-2">
-                      <img src={calendarIcon} alt="Месяц" className="w-4 h-4" />
+                      <img 
+                        src={calendarIcon} 
+                        alt="Месяц" 
+                        className={`w-4 h-4 transition-smooth ${
+                          viewType === 'monthly'
+                            ? 'brightness-0 invert'
+                            : 'group-hover:brightness-0 group-hover:invert'
+                        }`} 
+                      />
                       Месяц
                     </span>
                   </button>
                   <button
                     onClick={() => handleViewTypeChange('weekly')}
-                    className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
+                    className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
                       viewType === 'weekly'
                         ? 'bg-main-100 text-white'
                         : 'bg-bg-white text-text-50 hover:bg-bg-primary'
@@ -719,7 +707,15 @@ export const AppointmentsPage: React.FC = () => {
                     title="Недельный вид"
                   >
                     <span className="flex items-center gap-2">
-                      <img src={calendarIcon} alt="Неделя" className="w-4 h-4" />
+                      <img 
+                        src={calendarIcon} 
+                        alt="Неделя" 
+                        className={`w-4 h-4 transition-smooth ${
+                          viewType === 'weekly'
+                            ? 'brightness-0 invert'
+                            : 'group-hover:brightness-0 group-hover:invert'
+                        }`} 
+                      />
                       Неделя
                     </span>
                   </button>
@@ -733,7 +729,6 @@ export const AppointmentsPage: React.FC = () => {
             onStatusChange={handleStatusChange}
             onEditAmount={handleEditAmount}
             onUpdateAmount={handleUpdateAmount}
-            onDeleteSelected={handleDeleteSelected}
             loadingAppointments={loadingAppointments}
             errorMessages={errorMessages}
             isFetching={isFetching}

@@ -9,12 +9,13 @@ import { BookNowModal } from '../../components/dashboard/BookNowModal';
 import { usePatientAppointments } from '../../hooks/usePatientAppointments';
 import { useUpdateAppointmentStatus } from '../../hooks/useAppointments';
 import { Appointment } from '../../types/api.types';
-import { Calendar, Clock, Filter, Search, RotateCcw } from 'lucide-react';
+import { Calendar, Clock, Filter, Search } from 'lucide-react';
 import { format } from 'date-fns';
 
 // Import icons
 import calendarIcon from '../../assets/icons/calendar.svg';
 import analyticsIcon from '../../assets/icons/analytics.svg';
+import refreshIcon from '../../assets/icons/refresh.svg';
 
 /**
  * PatientAppointmentsPage
@@ -351,12 +352,10 @@ export const PatientAppointmentsPage: React.FC = () => {
           </div>
 
           {(statusFilter || dateFilter || timeFilter || categoryFilter) && (
-            <div className="mt-4 pt-4 border-t border-stroke flex justify-end">
-              <Button variant="secondary" size="sm" onClick={handleResetFilters}>
-                <span className="flex items-center gap-1.5">
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  Сбросить фильтры
-                </span>
+            <div className="mt-4 pt-4 border-t border-stroke">
+              <Button variant="secondary" size="sm" onClick={handleResetFilters} className="flex items-center gap-2">
+                <img src={refreshIcon} alt="Сбросить" className="w-4 h-4" />
+                Сбросить фильтры
               </Button>
             </div>
           )}
@@ -429,7 +428,7 @@ export const PatientAppointmentsPage: React.FC = () => {
                 <div className="flex border border-stroke rounded-sm overflow-hidden">
                   <button
                     onClick={() => handleViewTypeChange('list')}
-                    className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
+                    className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
                       viewType === 'list'
                         ? 'bg-main-100 text-white'
                         : 'bg-bg-white text-text-50 hover:bg-bg-primary'
@@ -437,13 +436,21 @@ export const PatientAppointmentsPage: React.FC = () => {
                     title="Таблица"
                   >
                     <span className="flex items-center gap-2">
-                      <img src={analyticsIcon} alt="Таблица" className="w-4 h-4" />
+                      <img 
+                        src={analyticsIcon} 
+                        alt="Таблица" 
+                        className={`w-4 h-4 transition-smooth ${
+                          viewType === 'list'
+                            ? 'brightness-0 invert'
+                            : 'group-hover:brightness-0 group-hover:invert'
+                        }`} 
+                      />
                       Таблица
                     </span>
                   </button>
                   <button
                     onClick={() => handleViewTypeChange('monthly')}
-                    className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
+                    className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
                       viewType === 'monthly'
                         ? 'bg-main-100 text-white'
                         : 'bg-bg-white text-text-50 hover:bg-bg-primary'
@@ -451,13 +458,21 @@ export const PatientAppointmentsPage: React.FC = () => {
                     title="Месячный календарь"
                   >
                     <span className="flex items-center gap-2">
-                      <img src={calendarIcon} alt="Месяц" className="w-4 h-4" />
+                      <img 
+                        src={calendarIcon} 
+                        alt="Месяц" 
+                        className={`w-4 h-4 transition-smooth ${
+                          viewType === 'monthly'
+                            ? 'brightness-0 invert'
+                            : 'group-hover:brightness-0 group-hover:invert'
+                        }`} 
+                      />
                       Месяц
                     </span>
                   </button>
                   <button
                     onClick={() => handleViewTypeChange('weekly')}
-                    className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
+                    className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
                       viewType === 'weekly'
                         ? 'bg-main-100 text-white'
                         : 'bg-bg-white text-text-50 hover:bg-bg-primary'
@@ -465,7 +480,15 @@ export const PatientAppointmentsPage: React.FC = () => {
                     title="Недельный вид"
                   >
                     <span className="flex items-center gap-2">
-                      <img src={calendarIcon} alt="Неделя" className="w-4 h-4" />
+                      <img 
+                        src={calendarIcon} 
+                        alt="Неделя" 
+                        className={`w-4 h-4 transition-smooth ${
+                          viewType === 'weekly'
+                            ? 'brightness-0 invert'
+                            : 'group-hover:brightness-0 group-hover:invert'
+                        }`} 
+                      />
                       Неделя
                     </span>
                   </button>

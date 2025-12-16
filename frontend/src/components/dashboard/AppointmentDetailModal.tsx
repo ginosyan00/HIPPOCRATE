@@ -283,31 +283,6 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
           </Card>
         )}
 
-        {/* Дополнительная информация */}
-        <Card padding="md" className="bg-bg-primary">
-          <div className="grid grid-cols-2 gap-4 text-xs">
-            <div>
-              <p className="text-text-10 mb-1">Дата создания</p>
-              <p className="text-text-100">
-                {format(parseISO(appointment.createdAt.toString()), 'd MMM yyyy, HH:mm', { locale: ru })}
-              </p>
-            </div>
-            <div>
-              <p className="text-text-10 mb-1">Последнее обновление</p>
-              <p className="text-text-100">
-                {format(parseISO(appointment.updatedAt.toString()), 'd MMM yyyy, HH:mm', { locale: ru })}
-              </p>
-            </div>
-            {appointment.registeredAt && (
-              <div className="col-span-2">
-                <p className="text-text-10 mb-1">Время регистрации на сайте</p>
-                <p className="text-text-100">
-                  {format(parseISO(appointment.registeredAt.toString()), 'd MMM yyyy, HH:mm', { locale: ru })}
-                </p>
-              </div>
-            )}
-          </div>
-        </Card>
       </div>
     </Modal>
   );

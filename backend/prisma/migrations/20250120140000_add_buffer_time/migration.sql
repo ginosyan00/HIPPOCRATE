@@ -6,3 +6,4 @@ ALTER TABLE "clinic_settings" ADD COLUMN "defaultBufferTime" INTEGER NOT NULL DE
 
 
 
+

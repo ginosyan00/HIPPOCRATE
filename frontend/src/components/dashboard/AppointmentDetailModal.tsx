@@ -10,9 +10,6 @@ import { useAuthStore } from '../../store/useAuthStore';
 import doctorIcon from '../../assets/icons/doctor.svg';
 import phoneIcon from '../../assets/icons/phone.svg';
 import mailIcon from '../../assets/icons/mail.svg';
-import mapPinIcon from '../../assets/icons/map-pin.svg';
-import clockIcon from '../../assets/icons/clock.svg';
-import fileTextIcon from '../../assets/icons/file-text.svg';
 
 interface AppointmentDetailModalProps {
   isOpen: boolean;
@@ -84,42 +81,6 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
     return `${amount.toLocaleString('ru-RU')} ֏`;
   };
 
-  /**
-   * Форматирует дату регистрации приёма
-   * Использует ту же логику, что и в других компонентах
-   */
-  const formatRegisteredAt = (): string | null => {
-    if (!appointment.registeredAt && !appointment.createdAt) {
-      return null;
-    }
-
-    // Сначала проверяем, есть ли исходная строка времени в notes
-    let registeredAtOriginalStr = null;
-    if (appointment.notes) {
-      const match = appointment.notes.match(/REGISTERED_AT_ORIGINAL:\s*(.+)/);
-      if (match) {
-        registeredAtOriginalStr = match[1].trim();
-      }
-    }
-    
-    // Если есть исходная строка, используем её для отображения локального времени клиента
-    if (registeredAtOriginalStr) {
-      const match = registeredAtOriginalStr.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/);
-      if (match) {
-        const [datePart, timePart] = [match[1], match[2]];
-        const [year, month, day] = datePart.split('-');
-        const [hours, minutes] = timePart.split(':');
-        return format(parseISO(`${year}-${month}-${day}T${hours}:${minutes}:00`), 'd MMMM yyyy, HH:mm', { locale: ru });
-      }
-    }
-    
-    // Если исходной строки нет, используем стандартное форматирование
-    const registeredAtStr = appointment.registeredAt || appointment.createdAt;
-    if (!registeredAtStr) return null;
-    
-    return format(parseISO(registeredAtStr.toString()), 'd MMMM yyyy, HH:mm', { locale: ru });
-  };
-
   return (
     <Modal
       isOpen={isOpen}
@@ -145,37 +106,12 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
               </span>
             </div>
           </div>
-          <div className="mt-3 pt-3 border-t border-stroke space-y-2">
-            {appointment.duration && (
-              <div className="flex items-center gap-2">
-                <img src={clockIcon} alt="Длительность" className="w-4 h-4" />
-                <div>
-                  <p className="text-xs text-text-10">Длительность процедуры</p>
-                  <p className="text-sm font-medium text-text-100">{appointment.duration} минут</p>
-                </div>
-              </div>
-            )}
-            {/* Точная дата и время приёма */}
-            <div className="flex items-center gap-2">
-              <img src={fileTextIcon} alt="Дата и время" className="w-4 h-4" />
-              <div>
-                <p className="text-xs text-text-10">Точная дата и время приёма</p>
-                <p className="text-sm font-medium text-text-100">
-                  {formatAppointmentDateTime(appointment.appointmentDate)}
-                </p>
-              </div>
+          {appointment.duration && (
+            <div className="mt-3 pt-3 border-t border-stroke">
+              <p className="text-xs text-text-10">Длительность</p>
+              <p className="text-sm font-medium text-text-100">{appointment.duration} минут</p>
             </div>
-            {/* Дата регистрации */}
-            {formatRegisteredAt() && (
-              <div className="flex items-center gap-2">
-                <img src={fileTextIcon} alt="Регистрация" className="w-4 h-4" />
-                <div>
-                  <p className="text-xs text-text-10">Дата регистрации</p>
-                  <p className="text-sm font-medium text-text-100">{formatRegisteredAt()}</p>
-                </div>
-              </div>
-            )}
-          </div>
+          )}
         </Card>
 
         {/* Информация о пациенте */}
@@ -199,21 +135,11 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
                 </div>
               )}
               {appointment.patient?.email && (
-                <div className="mb-2">
+                <div>
                   <p className="text-xs text-text-10 mb-1">Email</p>
                   <p className="text-sm text-text-100 flex items-center gap-1">
                     <img src={mailIcon} alt="Email" className="w-4 h-4" />
                     {appointment.patient.email}
-                  </p>
-                </div>
-              )}
-              {/* Адрес пациента (если есть) */}
-              {(appointment.patient as any)?.address && (
-                <div>
-                  <p className="text-xs text-text-10 mb-1">Адрес</p>
-                  <p className="text-sm text-text-100 flex items-start gap-1">
-                    <img src={mapPinIcon} alt="Адрес" className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                    <span>{(appointment.patient as any).address}</span>
                   </p>
                 </div>
               )}
@@ -283,8 +209,19 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
           </Card>
         )}
 
+        {/* Время регистрации на сайте */}
+        {appointment.registeredAt && (
+          <Card padding="md" className="bg-bg-primary">
+            <div className="text-xs">
+              <p className="text-text-10 mb-1">Время регистрации на сайте</p>
+              <p className="text-text-100">
+                {format(parseISO(appointment.registeredAt.toString()), 'd MMM yyyy, HH:mm', { locale: ru })}
+              </p>
+            </div>
+          </Card>
+        )}
+
       </div>
     </Modal>
   );
 };
-

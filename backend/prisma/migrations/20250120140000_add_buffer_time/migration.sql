@@ -5,3 +5,4 @@ ALTER TABLE "users" ADD COLUMN "bufferTime" INTEGER;
 ALTER TABLE "clinic_settings" ADD COLUMN "defaultBufferTime" INTEGER NOT NULL DEFAULT 0;
 
 
+

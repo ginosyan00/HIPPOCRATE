@@ -198,7 +198,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
             <div className="flex items-center gap-2 border border-stroke rounded-sm overflow-hidden">
               <button
                 onClick={() => onViewChange('list')}
-                className={`px-5 py-2.5 text-base font-medium transition-smooth ${
+                className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
                   currentView === 'list'
                     ? 'bg-main-100 text-white'
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
@@ -212,7 +212,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
               </button>
               <button
                 onClick={() => onViewChange('monthly')}
-                className={`px-5 py-2.5 text-base font-medium transition-smooth ${
+                className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
                   currentView === 'monthly'
                     ? 'bg-main-100 text-white'
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
@@ -226,7 +226,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
               </button>
               <button
                 onClick={() => onViewChange('weekly')}
-                className={`px-5 py-2.5 text-base font-medium transition-smooth ${
+                className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
                   currentView === 'weekly'
                     ? 'bg-main-100 text-white'
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'

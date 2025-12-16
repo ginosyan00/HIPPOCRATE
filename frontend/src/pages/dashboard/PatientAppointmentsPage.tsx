@@ -429,7 +429,7 @@ export const PatientAppointmentsPage: React.FC = () => {
                 <div className="flex border border-stroke rounded-sm overflow-hidden">
                   <button
                     onClick={() => handleViewTypeChange('list')}
-                    className={`px-5 py-2.5 text-base font-medium transition-smooth ${
+                    className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
                       viewType === 'list'
                         ? 'bg-main-100 text-white'
                         : 'bg-bg-white text-text-50 hover:bg-bg-primary'
@@ -443,7 +443,7 @@ export const PatientAppointmentsPage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => handleViewTypeChange('monthly')}
-                    className={`px-5 py-2.5 text-base font-medium transition-smooth ${
+                    className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
                       viewType === 'monthly'
                         ? 'bg-main-100 text-white'
                         : 'bg-bg-white text-text-50 hover:bg-bg-primary'
@@ -457,7 +457,7 @@ export const PatientAppointmentsPage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => handleViewTypeChange('weekly')}
-                    className={`px-5 py-2.5 text-base font-medium transition-smooth ${
+                    className={`px-5 py-2.5 text-base font-medium transition-smooth min-w-[120px] flex items-center justify-center ${
                       viewType === 'weekly'
                         ? 'bg-main-100 text-white'
                         : 'bg-bg-white text-text-50 hover:bg-bg-primary'

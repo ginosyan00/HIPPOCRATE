@@ -299,7 +299,7 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
                       <button
                         onClick={() => handleStartEditAmount(appointment)}
                         disabled={!!loadingAppointments[appointment.id]}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-text-10 hover:text-main-100 hover:bg-main-10 rounded transition-all"
+                        className="p-1 text-text-10 hover:text-main-100 hover:bg-main-10 rounded transition-all"
                         title={appointment.amount ? 'Изменить сумму' : 'Добавить сумму'}
                       >
                         <Pencil className="w-3.5 h-3.5" />

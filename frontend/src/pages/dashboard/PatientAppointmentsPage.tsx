@@ -6,6 +6,7 @@ import { PatientAppointmentsTable } from '../../components/dashboard/PatientAppo
 import { AppointmentsMonthlyCalendar } from '../../components/dashboard/AppointmentsMonthlyCalendar';
 import { AppointmentsWeeklyView } from '../../components/dashboard/AppointmentsWeeklyView';
 import { BookNowModal } from '../../components/dashboard/BookNowModal';
+import { AppointmentDetailModal } from '../../components/dashboard/AppointmentDetailModal';
 import { usePatientAppointments } from '../../hooks/usePatientAppointments';
 import { useUpdateAppointmentStatus } from '../../hooks/useAppointments';
 import { Appointment } from '../../types/api.types';
@@ -34,6 +35,10 @@ export const PatientAppointmentsPage: React.FC = () => {
   // Модальное окно создания записи
   const [isBookNowModalOpen, setIsBookNowModalOpen] = useState(false);
   const [createModalDefaultDate, setCreateModalDefaultDate] = useState<string | undefined>(undefined);
+
+  // Модальное окно с деталями записи
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [isAppointmentDetailModalOpen, setIsAppointmentDetailModalOpen] = useState(false);
 
   // Вид отображения (list/monthly/weekly)
   const [viewType, setViewType] = useState<'list' | 'monthly' | 'weekly'>(() => {
@@ -393,8 +398,9 @@ export const PatientAppointmentsPage: React.FC = () => {
           <AppointmentsMonthlyCalendar
             appointments={filteredAppointments}
             onAppointmentClick={(appointment) => {
-              // При клике на запись в календаре - можно показать детали или отменить
-              console.log('📅 [PATIENT APPOINTMENTS] Клик по записи:', appointment);
+              // При клике на запись в календаре - открываем модальное окно с деталями
+              setSelectedAppointment(appointment);
+              setIsAppointmentDetailModalOpen(true);
             }}
             onDateClick={(date) => {
               // При клике на ячейку календаря - открываем модальное окно создания записи с предзаполненной датой
@@ -409,8 +415,9 @@ export const PatientAppointmentsPage: React.FC = () => {
           <AppointmentsWeeklyView
             appointments={filteredAppointments}
             onAppointmentClick={(appointment) => {
-              // При клике на запись в недельном виде
-              console.log('📅 [PATIENT APPOINTMENTS] Клик по записи:', appointment);
+              // При клике на запись в недельном виде - открываем модальное окно с деталями
+              setSelectedAppointment(appointment);
+              setIsAppointmentDetailModalOpen(true);
             }}
             onTimeSlotClick={() => {
               // При клике на временной слот - открываем модальное окно создания записи
@@ -515,6 +522,16 @@ export const PatientAppointmentsPage: React.FC = () => {
           }}
           onSuccess={handleAppointmentCreated}
           defaultDate={createModalDefaultDate}
+        />
+
+        {/* Модальное окно с деталями записи */}
+        <AppointmentDetailModal
+          isOpen={isAppointmentDetailModalOpen}
+          onClose={() => {
+            setIsAppointmentDetailModalOpen(false);
+            setSelectedAppointment(null);
+          }}
+          appointment={selectedAppointment}
         />
       </div>
     </NewDashboardLayout>

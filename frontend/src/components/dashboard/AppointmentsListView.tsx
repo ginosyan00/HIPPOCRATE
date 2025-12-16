@@ -5,14 +5,12 @@ import { Appointment } from '../../types/api.types';
 import { formatAppointmentDateTime } from '../../utils/dateFormat';
 import { Pencil, Check, X } from 'lucide-react';
 import { StatusDropdown } from './StatusDropdown';
+import { AppointmentDetailModal } from './AppointmentDetailModal';
 
 // Import icons for card view
 import doctorIcon from '../../assets/icons/doctor.svg';
 import calendarIcon from '../../assets/icons/calendar.svg';
-import fileTextIcon from '../../assets/icons/file-text.svg';
-import clockIcon from '../../assets/icons/clock.svg';
 import walletIcon from '../../assets/icons/wallet.svg';
-import mailIcon from '../../assets/icons/mail.svg';
 import phoneIcon from '../../assets/icons/phone.svg';
 import warningIcon from '../../assets/icons/warning.svg';
 
@@ -56,6 +54,31 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
   // Состояние для выбранных приёмов
   const [selectedAppointments, setSelectedAppointments] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Состояние для модального окна с деталями приёма
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  /**
+   * Открывает модальное окно с деталями приёма
+   */
+  const handleCardClick = (appointment: Appointment, e: React.MouseEvent) => {
+    // Предотвращаем открытие модального окна при клике на интерактивные элементы
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('button') ||
+      target.closest('input') ||
+      target.closest('select') ||
+      target.closest('[role="button"]') ||
+      target.closest('.status-dropdown') ||
+      target.closest('a')
+    ) {
+      return;
+    }
+
+    setSelectedAppointment(appointment);
+    setIsDetailModalOpen(true);
+  };
 
   /**
    * Начинает редактирование суммы
@@ -248,8 +271,9 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
           <Card 
             key={appointment.id} 
             padding="md"
-            className="appointment-card transition-all duration-500 ease-out will-change-opacity animate-fade-in"
+            className="appointment-card transition-all duration-500 ease-out will-change-opacity animate-fade-in cursor-pointer hover:shadow-md"
             style={{ animationDelay: `${index * 0.02}s` }}
+            onClick={(e) => handleCardClick(appointment, e)}
           >
             <div className="flex items-start justify-between">
               <div className="flex-1 space-y-3">
@@ -264,20 +288,14 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
                     <h3 className="text-base font-semibold text-text-100 truncate">
                       {appointment.patient?.name}
                     </h3>
-                    <div className="flex items-center gap-3 mt-1 flex-wrap">
-                      {appointment.patient?.email && (
-                        <p className="text-xs text-text-10 flex items-center gap-1">
-                          <img src={mailIcon} alt="Email" className="w-3 h-3" />
-                          {appointment.patient.email}
-                        </p>
-                      )}
-                      {appointment.patient?.phone && (
+                    {appointment.patient?.phone && (
+                      <div className="flex items-center gap-3 mt-1 flex-wrap">
                         <p className="text-xs text-text-10 flex items-center gap-1">
                           <img src={phoneIcon} alt="Телефон" className="w-3 h-3" />
                           {appointment.patient.phone}
                         </p>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -300,48 +318,6 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
                     </p>
                     <p className="font-semibold text-text-50 text-sm">
                       {formatAppointmentDateTime(appointment.appointmentDate, { dateFormat: 'long' })}
-                    </p>
-                    {(appointment.registeredAt || appointment.createdAt) && (
-                      <p className="text-text-10 mt-1 text-xs">
-                        <span className="flex items-center gap-1">
-                          <img src={fileTextIcon} alt="Зарегистрировано" className="w-3 h-3" />
-                          Зарегистрировано: {(() => {
-                            let registeredAtOriginalStr = null;
-                            if (appointment.notes) {
-                              const match = appointment.notes.match(/REGISTERED_AT_ORIGINAL:\s*(.+)/);
-                              if (match) {
-                                registeredAtOriginalStr = match[1].trim();
-                              }
-                            }
-                            
-                            if (registeredAtOriginalStr) {
-                              const match = registeredAtOriginalStr.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/);
-                              if (match) {
-                                const [datePart, timePart] = [match[1], match[2]];
-                                const [year, month, day] = datePart.split('-');
-                                const [hours, minutes] = timePart.split(':');
-                                return `${day}.${month}.${year} ${hours}:${minutes}`;
-                              }
-                            }
-                            
-                            const registeredAtStr = appointment.registeredAt || appointment.createdAt;
-                            if (!registeredAtStr) return '';
-                            
-                            const date = new Date(registeredAtStr);
-                            return date.toLocaleString('ru-RU', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            });
-                          })()}
-                        </span>
-                      </p>
-                    )}
-                    <p className="text-text-10 mt-1 flex items-center gap-1">
-                      <img src={clockIcon} alt="Длительность" className="w-3 h-3" />
-                      Длительность: {appointment.duration} мин
                     </p>
                     <div className="text-text-10 mt-1">
                       <span className="flex items-center gap-1">
@@ -449,7 +425,10 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
               </div>
 
               {/* Actions */}
-              <div className="flex flex-col gap-2 ml-4 min-w-[140px]">
+              <div 
+                className="flex flex-col gap-2 ml-4 min-w-[140px]"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {/* Dropdown для выбора статуса */}
                 <StatusDropdown
                   currentStatus={appointment.status}
@@ -474,6 +453,18 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
           </Card>
         ))}
       </div>
+
+      {/* Модальное окно с деталями приёма */}
+      {selectedAppointment && (
+        <AppointmentDetailModal
+          isOpen={isDetailModalOpen}
+          onClose={() => {
+            setIsDetailModalOpen(false);
+            setSelectedAppointment(null);
+          }}
+          appointment={selectedAppointment}
+        />
+      )}
     </div>
   );
 };

@@ -4,12 +4,11 @@ import { Button } from '../common';
 import { formatAppointmentDateTime } from '../../utils/dateFormat';
 import { Pencil, Check, X } from 'lucide-react';
 import { StatusDropdown } from './StatusDropdown';
+import { AppointmentDetailModal } from './AppointmentDetailModal';
 
 // Import icons
-import fileTextIcon from '../../assets/icons/file-text.svg';
 import warningIcon from '../../assets/icons/warning.svg';
 import phoneIcon from '../../assets/icons/phone.svg';
-import mailIcon from '../../assets/icons/mail.svg';
 
 interface AppointmentsTableProps {
   appointments: Appointment[];
@@ -49,6 +48,31 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
   
   // Состояние для управления открытым dropdown
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+
+  // Состояние для модального окна с деталями приёма
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  /**
+   * Открывает модальное окно с деталями приёма
+   */
+  const handleRowClick = (appointment: Appointment, e: React.MouseEvent) => {
+    // Предотвращаем открытие модального окна при клике на интерактивные элементы
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('button') ||
+      target.closest('input') ||
+      target.closest('select') ||
+      target.closest('[role="button"]') ||
+      target.closest('.status-dropdown') ||
+      target.closest('a')
+    ) {
+      return;
+    }
+
+    setSelectedAppointment(appointment);
+    setIsDetailModalOpen(true);
+  };
 
   /**
    * Начинает редактирование суммы
@@ -124,48 +148,7 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
     }
   };
 
-  /**
-   * Форматирует дату регистрации приёма
-   * Использует ту же логику, что и в карточном представлении
-   */
-  const formatRegisteredAt = (appointment: Appointment): string | null => {
-    if (!appointment.registeredAt && !appointment.createdAt) {
-      return null;
-    }
 
-    // Сначала проверяем, есть ли исходная строка времени в notes
-    let registeredAtOriginalStr = null;
-    if (appointment.notes) {
-      const match = appointment.notes.match(/REGISTERED_AT_ORIGINAL:\s*(.+)/);
-      if (match) {
-        registeredAtOriginalStr = match[1].trim();
-      }
-    }
-    
-    // Если есть исходная строка, используем её для отображения локального времени клиента
-    if (registeredAtOriginalStr) {
-      const match = registeredAtOriginalStr.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/);
-      if (match) {
-        const [datePart, timePart] = [match[1], match[2]];
-        const [year, month, day] = datePart.split('-');
-        const [hours, minutes] = timePart.split(':');
-        return `${day}.${month}.${year} ${hours}:${minutes}`;
-      }
-    }
-    
-    // Если исходной строки нет, используем стандартное форматирование
-    const registeredAtStr = appointment.registeredAt || appointment.createdAt;
-    if (!registeredAtStr) return null;
-    
-    const date = new Date(registeredAtStr);
-    return date.toLocaleString('ru-RU', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
 
   if (appointments.length === 0) {
     return (
@@ -206,9 +189,6 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
               Процедура
             </th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-              Длительность
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
               Сумма
             </th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
@@ -219,70 +199,54 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
         <tbody className="bg-bg-white divide-y divide-stroke">
           {appointments.map((appointment, index) => (
             <tr 
-              key={appointment.id} 
-              className="appointment-row hover:bg-bg-primary transition-all duration-500 ease-out will-change-opacity animate-fade-in"
+              key={appointment.id}
+              className="appointment-row hover:bg-bg-primary transition-all duration-500 ease-out will-change-opacity animate-fade-in cursor-pointer"
               style={{ animationDelay: `${index * 0.02}s` }}
+              onClick={(e) => handleRowClick(appointment, e)}
             >
-              {onToggleSelect && (
-                <td className="px-4 py-3 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={selectedAppointments.has(appointment.id)}
-                    onChange={() => onToggleSelect(appointment.id)}
-                    disabled={!!loadingAppointments[appointment.id]}
-                    className="w-4 h-4 text-main-100 border-stroke rounded focus:ring-main-100 focus:ring-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                </td>
-              )}
-              <td className="px-4 py-3 text-sm">
-                <div>
-                  <p className="font-semibold text-text-100">{appointment.doctor?.name}</p>
-                  {appointment.doctor?.specialization && (
-                    <p className="text-xs text-text-10 mt-1">{appointment.doctor.specialization}</p>
+                  {onToggleSelect && (
+                    <td 
+                      className="px-4 py-3 text-sm"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedAppointments.has(appointment.id)}
+                        onChange={() => onToggleSelect(appointment.id)}
+                        disabled={!!loadingAppointments[appointment.id]}
+                        className="w-4 h-4 text-main-100 border-stroke rounded focus:ring-main-100 focus:ring-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      />
+                    </td>
                   )}
-                </div>
-              </td>
-              <td className="px-4 py-3 text-sm">
-                <div>
-                  <p className="font-semibold text-text-100">{appointment.patient?.name}</p>
-                  <div className="flex flex-col gap-1 mt-1">
-                    {appointment.patient?.phone && (
-                      <p className="text-xs text-text-10 flex items-center gap-1">
-                        <img src={phoneIcon} alt="Телефон" className="w-3 h-3" />
-                        {appointment.patient.phone}
-                      </p>
-                    )}
-                    {appointment.patient?.email && (
-                      <p className="text-xs text-text-10 flex items-center gap-1">
-                        <img src={mailIcon} alt="Email" className="w-3 h-3" />
-                        {appointment.patient.email}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </td>
-              <td className="px-4 py-3 text-sm">
-                <div>
-                  <p className="text-text-100">{formatAppointmentDateTime(appointment.appointmentDate)}</p>
-                  {(() => {
-                    const registeredAtFormatted = formatRegisteredAt(appointment);
-                    return registeredAtFormatted ? (
-                      <p className="text-xs text-text-10 mt-1">
-                        <span className="flex items-center gap-1">
-                          <img src={fileTextIcon} alt="Зарегистрировано" className="w-3 h-3" />
-                          Зарегистрировано: {registeredAtFormatted}
-                        </span>
-                      </p>
-                    ) : null;
-                  })()}
-                </div>
-              </td>
-              <td className="px-4 py-3 text-sm">
-                <p className="text-text-100">{appointment.reason || '—'}</p>
-              </td>
-              <td className="px-4 py-3 text-sm text-text-100">
-                {appointment.duration} мин
-              </td>
+                  <td className="px-4 py-3 text-sm">
+                    <div>
+                      <p className="font-semibold text-text-100">{appointment.doctor?.name}</p>
+                      {appointment.doctor?.specialization && (
+                        <p className="text-xs text-text-10 mt-1">{appointment.doctor.specialization}</p>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <div>
+                      <p className="font-semibold text-text-100">{appointment.patient?.name}</p>
+                      {appointment.patient?.phone && (
+                        <div className="flex flex-col gap-1 mt-1">
+                          <p className="text-xs text-text-10 flex items-center gap-1">
+                            <img src={phoneIcon} alt="Телефон" className="w-3 h-3" />
+                            {appointment.patient.phone}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <div>
+                      <p className="text-text-100">{formatAppointmentDateTime(appointment.appointmentDate)}</p>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <p className="text-text-100">{appointment.reason || '—'}</p>
+                  </td>
               <td className="px-4 py-3 text-sm">
                 {editingAmountId === appointment.id ? (
                   <div className="flex flex-col gap-1">
@@ -344,7 +308,10 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
                   </div>
                 )}
               </td>
-              <td className="px-4 py-3 text-sm">
+              <td 
+                className="px-4 py-3 text-sm"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="flex flex-col gap-2 min-w-[140px]">
                   {/* Dropdown для выбора статуса */}
                   <StatusDropdown
@@ -381,6 +348,18 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
           ))}
         </tbody>
       </table>
+
+      {/* Модальное окно с деталями приёма */}
+      {selectedAppointment && (
+        <AppointmentDetailModal
+          isOpen={isDetailModalOpen}
+          onClose={() => {
+            setIsDetailModalOpen(false);
+            setSelectedAppointment(null);
+          }}
+          appointment={selectedAppointment}
+        />
+      )}
     </div>
   );
 };

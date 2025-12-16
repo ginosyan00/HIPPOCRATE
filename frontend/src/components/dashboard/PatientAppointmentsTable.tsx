@@ -3,6 +3,7 @@ import { Appointment } from '../../types/api.types';
 import { Button, Spinner } from '../common';
 import { formatAppointmentDate, formatAppointmentTime } from '../../utils/dateFormat';
 import { Calendar, Clock, User, Building2, FileText, XCircle } from 'lucide-react';
+import { AppointmentDetailModal } from './AppointmentDetailModal';
 
 // Import icons
 import clockIcon from '../../assets/icons/clock.svg';
@@ -33,6 +34,30 @@ export const PatientAppointmentsTable: React.FC<PatientAppointmentsTableProps> =
 }) => {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  // Состояние для модального окна с деталями приёма
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  /**
+   * Открывает модальное окно с деталями приёма
+   */
+  const handleRowClick = (appointment: Appointment, e: React.MouseEvent) => {
+    // Предотвращаем открытие модального окна при клике на интерактивные элементы
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('button') ||
+      target.closest('input') ||
+      target.closest('select') ||
+      target.closest('[role="button"]') ||
+      target.closest('a')
+    ) {
+      return;
+    }
+
+    setSelectedAppointment(appointment);
+    setIsDetailModalOpen(true);
+  };
 
   // Сортировка записей
   const sortedAppointments = useMemo(() => {
@@ -192,7 +217,8 @@ export const PatientAppointmentsTable: React.FC<PatientAppointmentsTableProps> =
           {sortedAppointments.map((appointment) => (
             <tr
               key={appointment.id}
-              className="border-b border-stroke hover:bg-bg-secondary transition-colors"
+              className="border-b border-stroke hover:bg-bg-secondary transition-colors cursor-pointer"
+              onClick={(e) => handleRowClick(appointment, e)}
             >
               <td className="px-4 py-3">
                 <div className="text-sm font-medium text-text-50">
@@ -250,7 +276,10 @@ export const PatientAppointmentsTable: React.FC<PatientAppointmentsTableProps> =
                   );
                 })()}
               </td>
-              <td className="px-4 py-3">
+              <td 
+                className="px-4 py-3"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="flex items-center gap-2">
                   {appointment.status !== 'cancelled' &&
                     appointment.status !== 'completed' &&
@@ -276,6 +305,18 @@ export const PatientAppointmentsTable: React.FC<PatientAppointmentsTableProps> =
           ))}
         </tbody>
       </table>
+
+      {/* Модальное окно с деталями приёма */}
+      {selectedAppointment && (
+        <AppointmentDetailModal
+          isOpen={isDetailModalOpen}
+          onClose={() => {
+            setIsDetailModalOpen(false);
+            setSelectedAppointment(null);
+          }}
+          appointment={selectedAppointment}
+        />
+      )}
     </div>
   );
 };

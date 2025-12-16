@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Appointment } from '../../types/api.types';
 import { formatAppointmentDate, formatAppointmentTime } from '../../utils/dateFormat';
 import { Calendar, Clock, User, Building2, FileText, DollarSign } from 'lucide-react';
+import { AppointmentDetailModal } from './AppointmentDetailModal';
 
 // Import icons
 import clockIcon from '../../assets/icons/clock.svg';
@@ -24,6 +25,30 @@ type SortDirection = 'asc' | 'desc';
 export const PatientAnalyticsTable: React.FC<PatientAnalyticsTableProps> = ({ appointments }) => {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  // Состояние для модального окна с деталями приёма
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+  /**
+   * Открывает модальное окно с деталями приёма
+   */
+  const handleRowClick = (appointment: Appointment, e: React.MouseEvent) => {
+    // Предотвращаем открытие модального окна при клике на интерактивные элементы
+    const target = e.target as HTMLElement;
+    if (
+      target.closest('button') ||
+      target.closest('input') ||
+      target.closest('select') ||
+      target.closest('[role="button"]') ||
+      target.closest('a')
+    ) {
+      return;
+    }
+
+    setSelectedAppointment(appointment);
+    setIsDetailModalOpen(true);
+  };
 
   const formatCurrency = (amount: number | null | undefined) => {
     if (!amount) return '-';
@@ -217,7 +242,8 @@ export const PatientAnalyticsTable: React.FC<PatientAnalyticsTableProps> = ({ ap
           {sortedAppointments.map((appointment) => (
             <tr
               key={appointment.id}
-              className="border-b border-stroke hover:bg-bg-secondary transition-colors"
+              className="border-b border-stroke hover:bg-bg-secondary transition-colors cursor-pointer"
+              onClick={(e) => handleRowClick(appointment, e)}
             >
               <td className="px-4 py-3">
                 <div className="text-sm font-medium text-text-50">
@@ -281,6 +307,18 @@ export const PatientAnalyticsTable: React.FC<PatientAnalyticsTableProps> = ({ ap
           ))}
         </tbody>
       </table>
+
+      {/* Модальное окно с деталями приёма */}
+      {selectedAppointment && (
+        <AppointmentDetailModal
+          isOpen={isDetailModalOpen}
+          onClose={() => {
+            setIsDetailModalOpen(false);
+            setSelectedAppointment(null);
+          }}
+          appointment={selectedAppointment}
+        />
+      )}
     </div>
   );
 };

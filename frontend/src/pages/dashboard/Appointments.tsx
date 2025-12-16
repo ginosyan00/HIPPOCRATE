@@ -630,13 +630,9 @@ export const AppointmentsPage: React.FC = () => {
         <AppointmentsWeeklyView
           appointments={appointments}
           onAppointmentClick={(appointment) => {
-            // При клике на приём в недельном виде
-            if (appointment.status === 'pending') {
-              handleStatusChange(appointment.id, 'confirmed');
-            } else if (appointment.status === 'confirmed' || appointment.status === 'completed') {
-              // Для confirmed и completed - открываем модальное окно завершения/изменения
-              handleStatusChange(appointment.id, 'completed');
-            }
+            // При клике на приём в недельном виде - открываем модальное окно с детальной информацией
+            setSelectedAppointmentForDetail(appointment);
+            setIsAppointmentDetailModalOpen(true);
           }}
           onTimeSlotClick={() => {
             // При клике на временной слот - открываем модальное окно создания приёма

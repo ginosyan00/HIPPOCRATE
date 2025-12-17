@@ -13,7 +13,6 @@ interface DoctorScheduleEditorProps {
   }>) => Promise<void>;
   isLoading?: boolean;
   hideSubmitButton?: boolean; // Скрыть кнопку "Сохранить расписание"
-  hideCopyButton?: boolean; // Скрыть кнопку "Копировать"
   title?: string; // Заголовок карточки (по умолчанию "Мое рабочее расписание")
 }
 
@@ -46,7 +45,6 @@ export const DoctorScheduleEditor = forwardRef<DoctorScheduleEditorRef, DoctorSc
   onUpdate,
   isLoading = false,
   hideSubmitButton = false,
-  hideCopyButton = false,
   title = 'Мое рабочее расписание',
 }, ref) => {
   // Преобразуем массив расписания в объект для удобства работы (мемоизируем)
@@ -166,13 +164,6 @@ export const DoctorScheduleEditor = forwardRef<DoctorScheduleEditorRef, DoctorSc
     }));
   };
 
-  const handleCopyDay = (sourceDay: number, targetDay: number) => {
-    setScheduleState(prev => ({
-      ...prev,
-      [targetDay]: { ...prev[sourceDay], dayOfWeek: targetDay },
-    }));
-  };
-
   const handleApplyToAll = (dayOfWeek: number) => {
     const daySchedule = scheduleState[dayOfWeek];
     const newState: typeof scheduleState = {};
@@ -271,16 +262,6 @@ export const DoctorScheduleEditor = forwardRef<DoctorScheduleEditorRef, DoctorSc
                 {/* Кнопки действий */}
                 {daySchedule.isWorking && (
                   <div className="flex gap-2">
-                    {!hideCopyButton && (
-                      <button
-                        type="button"
-                        onClick={() => handleCopyDay(key, key === 1 ? 0 : 1)}
-                        className="text-xs text-main-100 hover:text-main-100/80 transition-smooth"
-                        title="Копировать на другой день"
-                      >
-                        Копировать
-                      </button>
-                    )}
                     <button
                       type="button"
                       onClick={() => handleApplyToAll(key)}

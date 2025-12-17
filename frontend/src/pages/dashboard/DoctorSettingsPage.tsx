@@ -177,7 +177,6 @@ export const DoctorSettingsPage: React.FC = () => {
             schedule={schedule}
             onUpdate={handleUpdateSchedule}
             isLoading={updateScheduleMutation.isPending || isLoadingSchedule}
-            hideCopyButton={true}
           />
         )}
 

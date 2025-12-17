@@ -233,7 +233,6 @@ export const AddDoctorPage: React.FC = () => {
                 }}
                 isLoading={false}
                 hideSubmitButton={true}
-                hideCopyButton={true}
                 title="График работы врача"
               />
             </div>

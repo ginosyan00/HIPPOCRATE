@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button, Card, Input, Modal, Spinner, BackButton, Calendar } from '../../components/common';
 import { CertificateGallery } from '../../components/public/CertificateGallery';
 import { useClinic, useClinicDoctors, useCreatePublicAppointment } from '../../hooks/usePublic';
@@ -16,6 +16,7 @@ import lightbulbIcon from '../../assets/icons/lightbulb.svg';
  */
 export const ClinicPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { slug } = useParams<{ slug: string }>();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<string>('');
@@ -238,7 +239,9 @@ export const ClinicPage: React.FC = () => {
       <main className="container mx-auto px-8 py-12">
         {/* Back Button */}
         <div className="mb-6">
-          <BackButton fallback="/clinics" />
+          <BackButton 
+            fallback={location.pathname.startsWith('/dashboard') ? '/dashboard/patient/clinics' : '/clinics'} 
+          />
         </div>
 
         {/* Hero Image Section */}

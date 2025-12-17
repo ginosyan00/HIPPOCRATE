@@ -34,6 +34,7 @@ import { ClinicsPage } from './pages/public/Clinics';
 import { ClinicPage } from './pages/public/ClinicPage';
 import { DoctorPage } from './pages/public/DoctorPage';
 import { DashboardLayout } from './components/dashboard/DashboardLayout';
+import { NewDashboardLayout } from './components/dashboard/NewDashboardLayout';
 import { PublicLayout } from './components/public/PublicLayout';
 import { RoleProtectedRoute } from './components/RoleProtectedRoute';
 import { UserRole } from './types/api.types';
@@ -87,6 +88,16 @@ function App() {
           element={
             <RoleProtectedRoute allowedRoles={[UserRole.PATIENT]}>
               <PatientClinicsPage />
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/patient/clinic/:slug"
+          element={
+            <RoleProtectedRoute allowedRoles={[UserRole.PATIENT]}>
+              <NewDashboardLayout>
+                <ClinicPage />
+              </NewDashboardLayout>
             </RoleProtectedRoute>
           }
         />

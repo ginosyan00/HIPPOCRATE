@@ -27,8 +27,8 @@ export const PatientClinicsPage: React.FC = () => {
   const clinics = data?.data || [];
 
   const handleClinicClick = (clinic: Clinic) => {
-    // Redirect to clinic's public page via landing
-    navigate(`/clinic/${clinic.slug}`);
+    // Navigate to clinic page within patient dashboard (without public header)
+    navigate(`/dashboard/patient/clinic/${clinic.slug}`);
   };
 
   return (

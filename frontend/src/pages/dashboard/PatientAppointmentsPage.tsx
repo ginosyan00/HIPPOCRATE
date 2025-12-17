@@ -10,7 +10,7 @@ import { AppointmentDetailModal } from '../../components/dashboard/AppointmentDe
 import { usePatientAppointments } from '../../hooks/usePatientAppointments';
 import { useUpdateAppointmentStatus } from '../../hooks/useAppointments';
 import { Appointment } from '../../types/api.types';
-import { Calendar, Clock, Filter, Search } from 'lucide-react';
+import { Calendar, Clock, Filter, Search, CalendarPlus } from 'lucide-react';
 import { format } from 'date-fns';
 
 // Import icons
@@ -106,7 +106,8 @@ export const PatientAppointmentsPage: React.FC = () => {
 
   const updateStatusMutation = useUpdateAppointmentStatus();
 
-  const appointments = data?.appointments || [];
+  // Backend возвращает { appointments: [...], meta: {...} }, а не { data: [...] }
+  const appointments = (data as any)?.appointments || [];
 
   // Фильтрация по дате, времени и категории на клиенте
   const filteredAppointments = React.useMemo(() => {
@@ -204,15 +205,6 @@ export const PatientAppointmentsPage: React.FC = () => {
     setSearchParams({}, { replace: true });
   };
 
-  // Статистика
-  const stats = {
-    total: appointments.length,
-    pending: appointments.filter((a) => a.status === 'pending').length,
-    confirmed: appointments.filter((a) => a.status === 'confirmed').length,
-    completed: appointments.filter((a) => a.status === 'completed').length,
-    cancelled: appointments.filter((a) => a.status === 'cancelled').length,
-  };
-
   if (error && !data) {
     return (
       <NewDashboardLayout>
@@ -243,54 +235,15 @@ export const PatientAppointmentsPage: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-text-50 mb-2">Мои записи</h1>
-            <p className="text-text-10 text-sm">
-              Всего записей: <strong>{filteredAppointments.length}</strong> из {stats.total}
-            </p>
           </div>
           <Button
             variant="primary"
             onClick={() => setIsBookNowModalOpen(true)}
-            className="shadow-md hover:shadow-lg transition-shadow"
+            className="flex items-center gap-3 px-12 py-5 text-xl font-bold shadow-lg hover:shadow-xl transition-all min-w-[220px]"
           >
-            <span className="flex items-center gap-2">
-              <img src={calendarIcon} alt="Записаться" className="w-4 h-4" />
-              Записаться на прием
-            </span>
+            <CalendarPlus className="w-7 h-7" />
+            Записаться на прием
           </Button>
-        </div>
-
-        {/* Статистика */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <Card padding="md" className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-            <div className="text-center">
-              <p className="text-xs text-blue-700 mb-1 font-medium">Всего</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.total}</p>
-            </div>
-          </Card>
-          <Card padding="md" className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
-            <div className="text-center">
-              <p className="text-xs text-yellow-700 mb-1 font-medium">Ожидают</p>
-              <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-            </div>
-          </Card>
-          <Card padding="md" className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-            <div className="text-center">
-              <p className="text-xs text-green-700 mb-1 font-medium">Подтверждено</p>
-              <p className="text-2xl font-bold text-green-600">{stats.confirmed}</p>
-            </div>
-          </Card>
-          <Card padding="md" className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-            <div className="text-center">
-              <p className="text-xs text-purple-700 mb-1 font-medium">Завершено</p>
-              <p className="text-2xl font-bold text-purple-600">{stats.completed}</p>
-            </div>
-          </Card>
-          <Card padding="md" className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200">
-            <div className="text-center">
-              <p className="text-xs text-gray-700 mb-1 font-medium">Отменено</p>
-              <p className="text-2xl font-bold text-gray-600">{stats.cancelled}</p>
-            </div>
-          </Card>
         </div>
 
         {/* Фильтры */}
@@ -386,11 +339,13 @@ export const PatientAppointmentsPage: React.FC = () => {
                   : ''}{' '}
                 Запишитесь на прием, чтобы увидеть свои записи здесь
               </p>
-              <Button variant="primary" onClick={() => setIsBookNowModalOpen(true)}>
-                <span className="flex items-center gap-2">
-                  <img src={calendarIcon} alt="Записаться" className="w-4 h-4" />
-                  Записаться на прием
-                </span>
+              <Button 
+                variant="primary" 
+                onClick={() => setIsBookNowModalOpen(true)}
+                className="flex items-center gap-3 px-12 py-5 text-xl font-bold shadow-lg hover:shadow-xl transition-all min-w-[220px]"
+              >
+                <CalendarPlus className="w-7 h-7" />
+                Записаться на прием
               </Button>
             </div>
           </Card>
@@ -458,7 +413,7 @@ export const PatientAppointmentsPage: React.FC = () => {
                   <button
                     onClick={() => handleViewTypeChange('monthly')}
                     className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
-                      viewType === 'monthly'
+                      (viewType as 'list' | 'monthly' | 'weekly') === 'monthly'
                         ? 'bg-main-100 text-white'
                         : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                     }`}
@@ -469,7 +424,7 @@ export const PatientAppointmentsPage: React.FC = () => {
                         src={calendarIcon} 
                         alt="Месяц" 
                         className={`w-4 h-4 transition-smooth ${
-                          viewType === 'monthly'
+                          (viewType as 'list' | 'monthly' | 'weekly') === 'monthly'
                             ? 'brightness-0 invert'
                             : 'group-hover:brightness-0 group-hover:invert'
                         }`} 
@@ -480,7 +435,7 @@ export const PatientAppointmentsPage: React.FC = () => {
                   <button
                     onClick={() => handleViewTypeChange('weekly')}
                     className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
-                      viewType === 'weekly'
+                      (viewType as 'list' | 'monthly' | 'weekly') === 'weekly'
                         ? 'bg-main-100 text-white'
                         : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                     }`}
@@ -491,7 +446,7 @@ export const PatientAppointmentsPage: React.FC = () => {
                         src={calendarIcon} 
                         alt="Неделя" 
                         className={`w-4 h-4 transition-smooth ${
-                          viewType === 'weekly'
+                          (viewType as 'list' | 'monthly' | 'weekly') === 'weekly'
                             ? 'brightness-0 invert'
                             : 'group-hover:brightness-0 group-hover:invert'
                         }`} 

@@ -78,10 +78,18 @@ export const Header: React.FC = () => {
               onClick={() => setShowProfileMenu(!showProfileMenu)}
               className="flex items-center gap-3 hover:bg-bg-primary px-2 py-1 rounded-sm transition-smooth"
             >
-              <div className="w-10 h-10 bg-main-10 rounded-sm flex items-center justify-center">
-                <span className="text-sm text-main-100 font-medium">
-                  {user?.name?.charAt(0).toUpperCase()}
-                </span>
+              <div className="w-10 h-10 bg-main-10 rounded-full flex items-center justify-center overflow-hidden">
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-sm text-main-100 font-medium">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </span>
+                )}
               </div>
               <img src={arrowDownIcon} alt="Menu" className="w-6 h-6" />
             </button>

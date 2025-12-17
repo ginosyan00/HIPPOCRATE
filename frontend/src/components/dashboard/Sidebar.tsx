@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useUIStore } from '../../store/useUIStore';
 
@@ -19,6 +19,8 @@ import hippocratesLogo from '../../assets/icons/hippocrates-logo.png';
  */
 export const Sidebar: React.FC = () => {
   const user = useAuthStore(state => state.user);
+  const logout = useAuthStore(state => state.logout);
+  const navigate = useNavigate();
   const isSidebarOpen = useUIStore(state => state.isSidebarOpen);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -214,6 +216,32 @@ export const Sidebar: React.FC = () => {
             <p className="text-[10px] text-text-10 capitalize">{user?.role}</p>
           </div>
         </div>
+        
+        {/* Logout Button - доступен для всех ролей */}
+        <button
+          onClick={() => {
+            console.log('🔴 [SIDEBAR] Logout button clicked');
+            logout();
+            navigate('/', { replace: true });
+          }}
+          className="flex items-center gap-3 w-full px-2 py-2 text-sm text-text-50 hover:bg-bg-primary hover:text-text-100 transition-smooth rounded-sm"
+        >
+          <svg
+            className="w-5 h-5 text-main-100"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+            />
+          </svg>
+          <span>Выход</span>
+        </button>
       </div>
     </aside>
   );

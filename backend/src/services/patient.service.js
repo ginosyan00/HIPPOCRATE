@@ -442,6 +442,16 @@ export async function getPatientAppointments(email, options = {}) {
  * @returns {Promise<object>} Созданный пациент
  */
 export async function create(clinicId, data) {
+  const patientStatus = data.status || 'registered';
+  
+  console.log('🔵 [PATIENT SERVICE] Создание пациента:', {
+    clinicId,
+    name: data.name,
+    phone: data.phone,
+    email: data.email || null,
+    status: patientStatus,
+  });
+
   const patient = await prisma.patient.create({
     data: {
       clinicId, // ОБЯЗАТЕЛЬНО!
@@ -451,8 +461,15 @@ export async function create(clinicId, data) {
       dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : null,
       gender: data.gender || null,
       notes: data.notes || null,
-      status: data.status || 'registered', // Статус пациента: registered (по умолчанию) или guest
+      status: patientStatus, // Статус пациента: registered (по умолчанию) или guest
     },
+  });
+
+  console.log('✅ [PATIENT SERVICE] Пациент создан:', {
+    id: patient.id,
+    name: patient.name,
+    phone: patient.phone,
+    status: patient.status,
   });
 
   return patient;

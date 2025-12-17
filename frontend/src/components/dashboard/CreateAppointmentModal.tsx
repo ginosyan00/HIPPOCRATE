@@ -7,7 +7,7 @@ import { useCreateAppointment } from '../../hooks/useAppointments';
 import { userService } from '../../services/user.service';
 import { patientService } from '../../services/patient.service';
 import { appointmentService } from '../../services/appointment.service';
-import { User } from '../../types/api.types';
+import { User, Patient } from '../../types/api.types';
 import { PatientSearchInput } from './PatientSearchInput';
 
 interface CreateAppointmentModalProps {
@@ -148,16 +148,85 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
           throw new Error('Введите телефон гостя');
         }
 
-        // Создаём гостевого пациента
         const guestName = `${guestFirstName.trim()} ${guestLastName.trim()}`;
-        const guestPatient = await patientService.create({
+        const guestPhoneTrimmed = guestPhone.trim();
+
+        console.log('🔵 [CREATE APPOINTMENT MODAL] Создание гостя:', {
           name: guestName,
-          phone: guestPhone.trim(),
-          status: 'guest',
+          phone: guestPhoneTrimmed,
         });
 
+        // Сначала пытаемся найти существующего пациента по телефону
+        let existingPatient: Patient | null = null;
+        try {
+          const searchResult = await patientService.getAll({
+            search: guestPhoneTrimmed,
+            limit: 10,
+          });
+          
+          // Ищем точное совпадение по телефону
+          existingPatient = searchResult.data.find(
+            (p: Patient) => p.phone === guestPhoneTrimmed
+          ) || null;
+
+          if (existingPatient) {
+            console.log('✅ [CREATE APPOINTMENT MODAL] Найден существующий пациент:', existingPatient.id);
+          }
+        } catch (searchErr) {
+          console.warn('⚠️ [CREATE APPOINTMENT MODAL] Ошибка поиска пациента:', searchErr);
+          // Продолжаем создание нового пациента
+        }
+
+        let guestPatient: Patient;
+
+        if (existingPatient) {
+          // Используем существующего пациента
+          // Обновляем имя, если оно изменилось
+          if (existingPatient.name !== guestName) {
+            try {
+              guestPatient = await patientService.update(existingPatient.id, {
+                name: guestName,
+              });
+              console.log('✅ [CREATE APPOINTMENT MODAL] Имя пациента обновлено');
+            } catch (updateErr) {
+              console.warn('⚠️ [CREATE APPOINTMENT MODAL] Не удалось обновить имя, используем существующего пациента');
+              guestPatient = existingPatient;
+            }
+          } else {
+            guestPatient = existingPatient;
+          }
+        } else {
+          // Создаём нового гостевого пациента
+          try {
+            guestPatient = await patientService.create({
+              name: guestName,
+              phone: guestPhoneTrimmed,
+              status: 'guest',
+            });
+            console.log('✅ [CREATE APPOINTMENT MODAL] Гостевой пациент создан:', guestPatient.id, 'Статус:', guestPatient.status);
+          } catch (createErr: any) {
+            console.error('🔴 [CREATE APPOINTMENT MODAL] Ошибка создания гостя:', createErr);
+            // Если ошибка связана с дубликатом, пытаемся найти пациента еще раз
+            if (createErr.message?.includes('already exists') || createErr.message?.includes('duplicate')) {
+              const retrySearch = await patientService.getAll({
+                search: guestPhoneTrimmed,
+                limit: 10,
+              });
+              const found = retrySearch.data.find((p: Patient) => p.phone === guestPhoneTrimmed);
+              if (found) {
+                guestPatient = found;
+                console.log('✅ [CREATE APPOINTMENT MODAL] Использован найденный пациент после ошибки дубликата');
+              } else {
+                throw new Error('Не удалось создать или найти пациента. Попробуйте еще раз.');
+              }
+            } else {
+              throw createErr;
+            }
+          }
+        }
+
         finalPatientId = guestPatient.id;
-        console.log('✅ [CREATE APPOINTMENT MODAL] Гостевой пациент создан:', guestPatient.id);
+        console.log('✅ [CREATE APPOINTMENT MODAL] Финальный ID пациента для приёма:', finalPatientId);
       } else {
         // Проверяем, что выбран пациент
         if (!patientId) {

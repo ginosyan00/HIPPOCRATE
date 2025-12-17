@@ -11,8 +11,10 @@ import { CancelAppointmentModal } from '../../components/dashboard/CancelAppoint
 import { EditAmountModal } from '../../components/dashboard/EditAmountModal';
 import { AppointmentDetailModal } from '../../components/dashboard/AppointmentDetailModal';
 import { useAppointments, useUpdateAppointmentStatus, useUpdateAppointment } from '../../hooks/useAppointments';
+import { appointmentService } from '../../services/appointment.service';
 import { userService } from '../../services/user.service';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useQueryClient } from '@tanstack/react-query';
 import { User, Appointment } from '../../types/api.types';
 import { format } from 'date-fns';
 import { Filter, Calendar, Clock, Search, User as UserIcon, CalendarPlus } from 'lucide-react';
@@ -189,6 +191,7 @@ export const AppointmentsPage: React.FC = () => {
     week: weekFilter || undefined,
     category: categoryFilter || undefined,
   });
+  const queryClient = useQueryClient();
   const updateStatusMutation = useUpdateAppointmentStatus();
   const updateAppointmentMutation = useUpdateAppointment();
 
@@ -370,6 +373,71 @@ export const AppointmentsPage: React.FC = () => {
       console.error('❌ [APPOINTMENTS] Ошибка обновления суммы:', err);
       throw err;
     }
+  };
+
+  /**
+   * Обработчик удаления выбранных приёмов
+   * @param ids - Массив ID приёмов для удаления
+   */
+  const handleDeleteSelected = async (ids: string[]): Promise<void> => {
+    if (!ids || ids.length === 0) return;
+
+    // Проверяем, что пользователь имеет права ADMIN или CLINIC
+    if (user?.role !== 'ADMIN' && user?.role !== 'CLINIC') {
+      console.error('❌ [APPOINTMENTS] Попытка удаления без прав ADMIN или CLINIC');
+      throw new Error('У вас нет прав на удаление приёмов. Эта функция доступна только для администраторов и клиник.');
+    }
+
+    console.log(`🗑️ [APPOINTMENTS] Начало удаления ${ids.length} приёмов`);
+
+    // Удаляем все приёмы параллельно
+    // Используем Promise.allSettled, чтобы попытаться удалить все, даже если некоторые не удались
+    const results = await Promise.allSettled(
+      ids.map((id) => 
+        appointmentService.delete(id).catch(err => {
+          // Сохраняем ID приёма в ошибке для последующего отображения
+          const errorWithId = new Error(err?.message || 'Неизвестная ошибка');
+          (errorWithId as any).appointmentId = id;
+          throw errorWithId;
+        })
+      )
+    );
+
+    // Проверяем результаты
+    const failed = results.filter(result => result.status === 'rejected');
+    const succeeded = results.filter(result => result.status === 'fulfilled');
+
+    // Инвалидируем кеш один раз после всех удалений (независимо от результата)
+    queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    queryClient.invalidateQueries({ queryKey: ['patient-appointments'] });
+
+    if (failed.length > 0) {
+      const errorMessages = failed
+        .map((result) => {
+          if (result.status === 'rejected') {
+            const appointmentId = (result.reason as any)?.appointmentId || 'неизвестный';
+            return `Приём ${appointmentId}: ${result.reason?.message || 'Неизвестная ошибка'}`;
+          }
+          return null;
+        })
+        .filter(Boolean);
+
+      console.error(`❌ [APPOINTMENTS] Ошибки при удалении:`, errorMessages);
+      
+      // Если удалось удалить хотя бы один, показываем частичный успех
+      if (succeeded.length > 0) {
+        throw new Error(
+          `Удалено ${succeeded.length} из ${ids.length} приёмов. Ошибки: ${errorMessages.join('; ')}`
+        );
+      } else {
+        // Если ничего не удалось удалить
+        throw new Error(
+          `Не удалось удалить приёмы. Ошибки: ${errorMessages.join('; ')}`
+        );
+      }
+    }
+
+    console.log(`✅ [APPOINTMENTS] Успешно удалено ${succeeded.length} приёмов`);
   };
 
   // Показываем ошибку только если это первая загрузка и есть ошибка
@@ -755,6 +823,7 @@ export const AppointmentsPage: React.FC = () => {
             onStatusChange={handleStatusChange}
             onEditAmount={handleEditAmount}
             onUpdateAmount={handleUpdateAmount}
+            onDeleteSelected={(user?.role === 'ADMIN' || user?.role === 'CLINIC') ? handleDeleteSelected : undefined}
             loadingAppointments={loadingAppointments}
             errorMessages={errorMessages}
             isFetching={isFetching}

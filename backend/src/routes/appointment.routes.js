@@ -80,9 +80,9 @@ router.patch(
 /**
  * DELETE /api/v1/appointments/:id
  * Удалить приём
- * Доступ: только ADMIN
+ * Доступ: ADMIN, CLINIC
  */
-router.delete('/:id', authorize('ADMIN'), appointmentController.remove);
+router.delete('/:id', authorize('ADMIN', 'CLINIC'), appointmentController.remove);
 
 export default router;
 

@@ -223,7 +223,8 @@ export async function getBusySlots(req, res, next) {
 /**
  * DELETE /api/v1/appointments/:id
  * Удалить приём
- * Для врачей проверяет, что назначение принадлежит им (хотя удаление доступно только ADMIN)
+ * Доступ: ADMIN, CLINIC
+ * Для врачей проверяет, что назначение принадлежит им (на всякий случай, хотя удаление доступно только ADMIN и CLINIC)
  */
 export async function remove(req, res, next) {
   try {

@@ -6,6 +6,8 @@ import { formatAppointmentDateTime } from '../../utils/dateFormat';
 import { Pencil, Check, X } from 'lucide-react';
 import { StatusDropdown } from './StatusDropdown';
 import { AppointmentDetailModal } from './AppointmentDetailModal';
+import { DeleteAppointmentsConfirmModal } from './DeleteAppointmentsConfirmModal';
+import { toast } from 'react-hot-toast';
 
 // Import icons for card view
 import doctorIcon from '../../assets/icons/doctor.svg';
@@ -56,6 +58,7 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
   // Состояние для выбранных приёмов
   const [selectedAppointments, setSelectedAppointments] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // Состояние для модального окна с деталями приёма
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
@@ -183,27 +186,33 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
   };
 
   /**
-   * Обработка удаления выбранных приёмов
+   * Открывает модальное окно подтверждения удаления
    */
-  const handleDeleteSelected = async () => {
+  const handleDeleteClick = () => {
+    if (selectedAppointments.size === 0 || !onDeleteSelected) return;
+    setIsDeleteModalOpen(true);
+  };
+
+  /**
+   * Обработка удаления выбранных приёмов после подтверждения
+   */
+  const handleDeleteConfirmed = async () => {
     if (selectedAppointments.size === 0 || !onDeleteSelected) return;
 
     const selectedIds = Array.from(selectedAppointments);
     const count = selectedIds.length;
-    const confirmMessage = `Вы уверены, что хотите удалить ${count} ${count === 1 ? 'приём' : count < 5 ? 'приёма' : 'приёмов'}?`;
-
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
 
     setIsDeleting(true);
     try {
       await onDeleteSelected(selectedIds);
       setSelectedAppointments(new Set());
+      setIsDeleteModalOpen(false);
+      toast.success(`Успешно удалено ${count} ${count === 1 ? 'приём' : count < 5 ? 'приёма' : 'приёмов'}`);
       console.log(`✅ [APPOINTMENTS] Успешно удалено ${count} приёмов`);
     } catch (err: any) {
       console.error('❌ [APPOINTMENTS] Ошибка при массовом удалении:', err);
-      alert(`Ошибка при удалении: ${err.message || 'Неизвестная ошибка'}`);
+      toast.error(err.message || 'Ошибка при удалении приёмов. Попробуйте позже.');
+      // Модальное окно не закрываем при ошибке, чтобы пользователь мог попробовать снова
     } finally {
       setIsDeleting(false);
     }
@@ -223,24 +232,27 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
     const selectedCount = selectedAppointments.size;
     const isAllSelected = appointments.length > 0 && selectedAppointments.size === appointments.length;
     const isIndeterminate = selectedCount > 0 && selectedCount < appointments.length;
+    
+    // Удаление доступно для ADMIN и CLINIC
+    const canDelete = userRole === 'ADMIN' || userRole === 'CLINIC';
 
     return (
       <div className={`space-y-4 transition-opacity duration-500 ease-out will-change-opacity ${isFetching ? 'opacity-95' : 'opacity-100'}`}>
-        {/* Панель выбора */}
-        {selectedCount > 0 && (
+        {/* Панель выбора - показываем только для ADMIN */}
+        {canDelete && selectedCount > 0 && (
           <Card padding="sm" className="bg-bg-primary">
             <div className="flex items-center justify-between">
               <span className="text-sm text-text-50">
                 Выбрано {selectedCount} {selectedCount === 1 ? 'приём' : selectedCount < 5 ? 'приёма' : 'приёмов'}
               </span>
               <Button
-                onClick={handleDeleteSelected}
+                onClick={handleDeleteClick}
                 disabled={isDeleting || !onDeleteSelected}
                 variant="secondary"
                 size="sm"
                 className="bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isDeleting ? 'Удаление...' : 'Удалить выбранные'}
+                Удалить выбранные
               </Button>
             </div>
           </Card>
@@ -254,14 +266,26 @@ export const AppointmentsListView: React.FC<AppointmentsListViewProps> = ({
             onUpdateAmount={onUpdateAmount}
             loadingAppointments={loadingAppointments}
             errorMessages={errorMessages}
-            selectedAppointments={selectedAppointments}
-            onToggleSelect={handleToggleSelect}
-            onSelectAll={handleSelectAll}
-            isAllSelected={isAllSelected}
-            isIndeterminate={isIndeterminate}
+            selectedAppointments={canDelete ? selectedAppointments : new Set()}
+            onToggleSelect={canDelete ? handleToggleSelect : undefined}
+            onSelectAll={canDelete ? handleSelectAll : undefined}
+            isAllSelected={canDelete ? isAllSelected : false}
+            isIndeterminate={canDelete ? isIndeterminate : false}
             userRole={userRole}
           />
         </Card>
+
+        {/* Модальное окно подтверждения удаления */}
+        {canDelete && (
+          <DeleteAppointmentsConfirmModal
+            isOpen={isDeleteModalOpen}
+            onClose={() => setIsDeleteModalOpen(false)}
+            count={selectedCount}
+            appointments={appointments.filter(appointment => selectedAppointments.has(appointment.id))}
+            onConfirm={handleDeleteConfirmed}
+            isLoading={isDeleting}
+          />
+        )}
       </div>
     );
   }

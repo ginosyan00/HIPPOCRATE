@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Appointment } from '../../types/api.types';
 import { Button } from '../common';
 import { formatAppointmentDateTime } from '../../utils/dateFormat';
-import { Calendar, User, Building2, FileText, Wallet, Pencil, Check, X } from 'lucide-react';
+import { Calendar, User, Building2, FileText, Wallet, MoreVertical, Pencil, Check, X } from 'lucide-react';
 import { StatusDropdown } from './StatusDropdown';
 import { AppointmentDetailModal } from './AppointmentDetailModal';
 
@@ -348,8 +348,11 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
                 <SortIcon field="amount" />
               </div>
             </th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-              Действия
+            <th className="px-4 py-3 text-left text-xs font-semibold text-text-50">
+              <div className="flex items-center gap-2">
+                <MoreVertical className="w-5 h-5" />
+                Действия
+              </div>
             </th>
           </tr>
         </thead>

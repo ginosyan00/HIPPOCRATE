@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Appointment } from '../../types/api.types';
 import { Button, Spinner } from '../common';
 import { formatAppointmentDateTime } from '../../utils/dateFormat';
-import { Calendar, User, Building2, FileText, XCircle } from 'lucide-react';
+import { Calendar, User, Building2, FileText, MoreVertical, XCircle } from 'lucide-react';
 import { AppointmentDetailModal } from './AppointmentDetailModal';
 
 // Import icons
@@ -196,7 +196,12 @@ export const PatientAppointmentsTable: React.FC<PatientAppointmentsTableProps> =
               </div>
             </th>
             <th className="px-4 py-3 text-left text-xs font-semibold text-text-50">Статус</th>
-            <th className="px-4 py-3 text-left text-xs font-semibold text-text-50">Действия</th>
+            <th className="px-4 py-3 text-left text-xs font-semibold text-text-50">
+              <div className="flex items-center gap-2">
+                <MoreVertical className="w-5 h-5" />
+                Действия
+              </div>
+            </th>
           </tr>
         </thead>
         <tbody>

@@ -7,7 +7,7 @@ import userIcon from '../../assets/icons/user.svg';
 
 interface ProfilePictureUploadProps {
   currentAvatar?: string | null;
-  onUpload: (file: File) => Promise<void>;
+  onUpload: (avatar: string) => Promise<void>;
   isLoading?: boolean;
 }
 
@@ -24,7 +24,7 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -42,30 +42,31 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
 
     setSelectedFile(file);
 
-    // Создаем preview
+    // Создаем preview и сразу загружаем
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleUpload = async () => {
-    if (!selectedFile) return;
-
-    try {
-      // Конвертируем файл в base64 для отправки на сервер
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64String = reader.result as string;
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
+      setPreview(base64String);
+      
+      // Автоматически загружаем фото сразу после выбора файла
+      try {
         // Отправляем полную base64 строку (с префиксом data:image/...)
         await onUpload(base64String);
         setSelectedFile(null);
-      };
-      reader.readAsDataURL(selectedFile);
-    } catch (error) {
-      console.error('Ошибка при загрузке фото:', error);
-    }
+      } catch (error) {
+        console.error('Ошибка при загрузке фото:', error);
+        // В случае ошибки сбрасываем preview и selectedFile
+        setPreview(null);
+        setSelectedFile(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
+    };
+    reader.onerror = () => {
+      alert('Ошибка при чтении файла');
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleRemove = async () => {
@@ -143,22 +144,6 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
             </p>
           </div>
         </div>
-
-        {/* Upload button */}
-        {selectedFile && preview && (
-          <div className="pt-4 border-t border-stroke">
-            <Button
-              type="button"
-              variant="primary"
-              size="md"
-              onClick={handleUpload}
-              isLoading={isLoading}
-              disabled={isLoading}
-            >
-              Сохранить фото
-            </Button>
-          </div>
-        )}
       </div>
     </Card>
   );

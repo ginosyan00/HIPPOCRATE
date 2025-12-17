@@ -21,7 +21,7 @@ export const HeroImageUpload: React.FC<HeroImageUploadProps> = ({
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -39,30 +39,29 @@ export const HeroImageUpload: React.FC<HeroImageUploadProps> = ({
 
     setError(null);
 
-    // Читаем файл как base64
+    // Читаем файл как base64 и сразу загружаем
     const reader = new FileReader();
-    reader.onloadend = () => {
+    reader.onloadend = async () => {
       const base64String = reader.result as string;
       setPreview(base64String);
+      
+      // Автоматически загружаем изображение сразу после выбора файла
+      try {
+        await onUpload(base64String);
+        setError(null);
+      } catch (err: any) {
+        setError(err.message || 'Ошибка при загрузке изображения');
+        // В случае ошибки сбрасываем preview
+        setPreview(null);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
     };
     reader.onerror = () => {
       setError('Ошибка при чтении файла');
     };
     reader.readAsDataURL(file);
-  };
-
-  const handleUpload = async () => {
-    if (!preview) {
-      setError('Пожалуйста, выберите изображение');
-      return;
-    }
-
-    try {
-      await onUpload(preview);
-      setError(null);
-    } catch (err: any) {
-      setError(err.message || 'Ошибка при загрузке изображения');
-    }
   };
 
   const handleRemove = () => {
@@ -147,15 +146,6 @@ export const HeroImageUpload: React.FC<HeroImageUploadProps> = ({
 
           {preview && (
             <div className="flex gap-2">
-              <Button
-                variant="primary"
-                size="md"
-                onClick={handleUpload}
-                isLoading={isLoading}
-                disabled={isLoading}
-              >
-                Загрузить
-              </Button>
               <Button 
                 variant="secondary" 
                 size="md" 

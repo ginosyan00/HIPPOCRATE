@@ -100,9 +100,21 @@ export const WebPage: React.FC = () => {
   return (
     <NewDashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-text-100">Веб-информация</h1>
-          <p className="text-sm text-text-10 mt-1">Управление информацией о клинике для публичного сайта</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-text-100">Веб-информация</h1>
+            <p className="text-sm text-text-10 mt-1">Управление информацией о клинике для публичного сайта</p>
+          </div>
+          {/* Кнопка сохранения вверху страницы */}
+          <Button
+            variant="primary"
+            size="md"
+            onClick={handleSaveAll}
+            isLoading={updateClinicMutation.isPending}
+            disabled={updateClinicMutation.isPending}
+          >
+            Сохранить изменения
+          </Button>
         </div>
 
         {/* Логотип */}
@@ -138,19 +150,6 @@ export const WebPage: React.FC = () => {
           onUpdate={handleUpdateWorkingHours}
           isLoading={updateClinicMutation.isPending}
         />
-
-        {/* Общая кнопка сохранения */}
-        <div className="flex justify-end pt-4">
-          <Button
-            variant="primary"
-            size="md"
-            onClick={handleSaveAll}
-            isLoading={updateClinicMutation.isPending}
-            disabled={updateClinicMutation.isPending}
-          >
-            Сохранить изменения
-          </Button>
-        </div>
 
         {/* Сертификаты */}
         <CertificatesSection />

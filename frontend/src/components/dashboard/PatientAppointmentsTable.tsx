@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { Appointment } from '../../types/api.types';
 import { Button, Spinner } from '../common';
-import { formatAppointmentDate, formatAppointmentTime } from '../../utils/dateFormat';
-import { Calendar, Clock, User, Building2, FileText, XCircle } from 'lucide-react';
+import { formatAppointmentDateTime } from '../../utils/dateFormat';
+import { Calendar, User, Building2, FileText, XCircle } from 'lucide-react';
 import { AppointmentDetailModal } from './AppointmentDetailModal';
 
 // Import icons
@@ -19,7 +19,7 @@ interface PatientAppointmentsTableProps {
   errorMessages?: Record<string, string>;
 }
 
-type SortField = 'date' | 'time' | 'category' | 'doctor' | 'clinic';
+type SortField = 'date' | 'category' | 'doctor' | 'clinic';
 type SortDirection = 'asc' | 'desc';
 
 /**
@@ -69,10 +69,6 @@ export const PatientAppointmentsTable: React.FC<PatientAppointmentsTableProps> =
 
       switch (sortField) {
         case 'date':
-          aValue = new Date(a.appointmentDate).getTime();
-          bValue = new Date(b.appointmentDate).getTime();
-          break;
-        case 'time':
           aValue = new Date(a.appointmentDate).getTime();
           bValue = new Date(b.appointmentDate).getTime();
           break;
@@ -164,19 +160,9 @@ export const PatientAppointmentsTable: React.FC<PatientAppointmentsTableProps> =
               onClick={() => handleSort('date')}
             >
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Дата
+                <Calendar className="w-5 h-5" />
+                Дата и время
                 <SortIcon field="date" />
-              </div>
-            </th>
-            <th
-              className="px-4 py-3 text-left text-xs font-semibold text-text-50 cursor-pointer hover:bg-bg-secondary transition-colors"
-              onClick={() => handleSort('time')}
-            >
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                Время
-                <SortIcon field="time" />
               </div>
             </th>
             <th
@@ -222,12 +208,7 @@ export const PatientAppointmentsTable: React.FC<PatientAppointmentsTableProps> =
             >
               <td className="px-4 py-3">
                 <div className="text-sm font-medium text-text-50">
-                  {formatAppointmentDate(appointment.appointmentDate, 'short')}
-                </div>
-              </td>
-              <td className="px-4 py-3">
-                <div className="text-sm font-medium text-text-50">
-                  {formatAppointmentTime(appointment.appointmentDate)}
+                  {formatAppointmentDateTime(appointment.appointmentDate, { dateFormat: 'short' })}
                 </div>
               </td>
               <td className="px-4 py-3">

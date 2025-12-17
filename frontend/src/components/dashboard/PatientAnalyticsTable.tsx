@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Appointment } from '../../types/api.types';
-import { formatAppointmentDate, formatAppointmentTime } from '../../utils/dateFormat';
-import { Calendar, Clock, User, Building2, FileText, DollarSign } from 'lucide-react';
+import { formatAppointmentDateTime } from '../../utils/dateFormat';
+import { Calendar, User, Building2, FileText, DollarSign } from 'lucide-react';
 import { AppointmentDetailModal } from './AppointmentDetailModal';
 
 // Import icons
@@ -174,18 +174,8 @@ export const PatientAnalyticsTable: React.FC<PatientAnalyticsTableProps> = ({ ap
               onClick={() => handleSort('date')}
             >
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Дата
-                <SortIcon field="date" />
-              </div>
-            </th>
-            <th
-              className="px-4 py-3 text-left text-xs font-semibold text-text-50 cursor-pointer hover:bg-bg-secondary transition-colors"
-              onClick={() => handleSort('date')}
-            >
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                Время
+                <Calendar className="w-5 h-5" />
+                Дата и время
                 <SortIcon field="date" />
               </div>
             </th>
@@ -247,12 +237,7 @@ export const PatientAnalyticsTable: React.FC<PatientAnalyticsTableProps> = ({ ap
             >
               <td className="px-4 py-3">
                 <div className="text-sm font-medium text-text-50">
-                  {formatAppointmentDate(appointment.appointmentDate, 'short')}
-                </div>
-              </td>
-              <td className="px-4 py-3">
-                <div className="text-sm font-medium text-text-50">
-                  {formatAppointmentTime(appointment.appointmentDate)}
+                  {formatAppointmentDateTime(appointment.appointmentDate, { dateFormat: 'short' })}
                 </div>
               </td>
               <td className="px-4 py-3">

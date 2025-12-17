@@ -227,7 +227,7 @@ export const Sidebar: React.FC = () => {
           className="flex items-center gap-3 w-full px-2 py-2 text-sm text-text-50 hover:bg-bg-primary hover:text-text-100 transition-smooth rounded-sm"
         >
           <svg
-            className="w-5 h-5 text-main-100"
+            className="w-6 h-6 text-main-100"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"

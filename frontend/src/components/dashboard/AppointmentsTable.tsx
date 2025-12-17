@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Appointment } from '../../types/api.types';
 import { Button } from '../common';
-import { formatAppointmentDate, formatAppointmentTime } from '../../utils/dateFormat';
-import { Calendar, Clock, User, Building2, FileText, Pencil, Check, X } from 'lucide-react';
+import { formatAppointmentDateTime } from '../../utils/dateFormat';
+import { Calendar, User, Building2, FileText, Pencil, Check, X } from 'lucide-react';
 import { StatusDropdown } from './StatusDropdown';
 import { AppointmentDetailModal } from './AppointmentDetailModal';
 
@@ -29,7 +29,7 @@ interface AppointmentsTableProps {
   userRole?: 'DOCTOR' | 'CLINIC' | 'ADMIN'; // Роль пользователя для определения колонок
 }
 
-type SortField = 'date' | 'time' | 'doctor' | 'patient' | 'clinic' | 'category' | 'status';
+type SortField = 'date' | 'doctor' | 'patient' | 'clinic' | 'category' | 'status';
 type SortDirection = 'asc' | 'desc';
 
 /**
@@ -174,10 +174,6 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
           aValue = new Date(a.appointmentDate).getTime();
           bValue = new Date(b.appointmentDate).getTime();
           break;
-        case 'time':
-          aValue = new Date(a.appointmentDate).getTime();
-          bValue = new Date(b.appointmentDate).getTime();
-          break;
         case 'category':
           aValue = a.reason || '';
           bValue = b.reason || '';
@@ -289,19 +285,9 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
               onClick={() => handleSort('date')}
             >
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Дата
+                <Calendar className="w-5 h-5" />
+                Дата и время
                 <SortIcon field="date" />
-              </div>
-            </th>
-            <th
-              className="px-4 py-3 text-left text-xs font-semibold text-text-50 cursor-pointer hover:bg-bg-secondary transition-colors"
-              onClick={() => handleSort('time')}
-            >
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                Время
-                <SortIcon field="time" />
               </div>
             </th>
             {isClinic && (
@@ -379,12 +365,7 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
               )}
               <td className="px-4 py-3">
                 <div className="text-sm font-medium text-text-50">
-                  {formatAppointmentDate(appointment.appointmentDate, 'short')}
-                </div>
-              </td>
-              <td className="px-4 py-3">
-                <div className="text-sm font-medium text-text-50">
-                  {formatAppointmentTime(appointment.appointmentDate)}
+                  {formatAppointmentDateTime(appointment.appointmentDate, { dateFormat: 'short' })}
                 </div>
               </td>
               {isClinic && (

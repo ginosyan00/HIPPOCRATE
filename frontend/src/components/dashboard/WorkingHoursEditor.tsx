@@ -72,13 +72,6 @@ export const WorkingHoursEditor = forwardRef<WorkingHoursEditorRef, WorkingHours
     }));
   };
 
-  const handleCopyDay = (sourceDay: keyof WorkingHours, targetDay: keyof WorkingHours) => {
-    setSchedule(prev => ({
-      ...prev,
-      [targetDay]: { ...prev[sourceDay] },
-    }));
-  };
-
   const handleApplyToAll = (day: keyof WorkingHours) => {
     const daySchedule = schedule[day];
     const newSchedule: WorkingHours = { ...schedule };
@@ -156,14 +149,6 @@ export const WorkingHoursEditor = forwardRef<WorkingHoursEditorRef, WorkingHours
                 {/* Кнопки действий */}
                 {daySchedule.isOpen && (
                   <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleCopyDay(key, key === 'monday' ? 'tuesday' : 'monday')}
-                      className="text-xs text-main-100 hover:text-main-100/80 transition-smooth"
-                      title="Копировать на другой день"
-                    >
-                      Копировать
-                    </button>
                     <button
                       type="button"
                       onClick={() => handleApplyToAll(key)}

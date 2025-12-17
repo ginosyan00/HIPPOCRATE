@@ -171,7 +171,18 @@ export const Sidebar: React.FC = () => {
                 <span className="text-sm">Patient</span>
               </NavLink>
 
-              <NavLink to="/dashboard/doctors" className={navLinkClass}>
+              <NavLink 
+                to="/dashboard/doctors" 
+                className={navLinkClass}
+                onClick={(e) => {
+                  // Если мы уже на странице /dashboard/doctors, принудительно навигируем снова
+                  // чтобы сбросить выбранного врача
+                  if (window.location.pathname === '/dashboard/doctors') {
+                    e.preventDefault();
+                    navigate('/dashboard/doctors', { state: { resetSelection: true }, replace: true });
+                  }
+                }}
+              >
                 <img src={doctorIcon} alt="Doctors" className="w-6 h-6" />
                 <span className="text-sm">Doctors</span>
               </NavLink>

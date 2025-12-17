@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
 import { Button, Input, Card, Spinner, BackButton } from '../../components/common';
 import { useDoctors, useDoctorSchedule, useUser, useUpdateUser, useUpdateDoctorSchedule } from '../../hooks/useUsers';
@@ -28,6 +28,7 @@ import userIcon from '../../assets/icons/user.svg';
 export const DoctorsPage: React.FC = () => {
   const user = useAuthStore(state => state.user);
   const navigate = useNavigate();
+  const location = useLocation();
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
   const [search, setSearch] = useState('');
   const [specializationFilter, setSpecializationFilter] = useState<string>('');
@@ -60,6 +61,18 @@ export const DoctorsPage: React.FC = () => {
 
   // Проверка: только CLINIC может добавлять врачей
   const canAddDoctors = user?.role === 'CLINIC';
+
+  // Сброс выбранного врача при навигации на /dashboard/doctors через сайдбар
+  useEffect(() => {
+    // Проверяем, есть ли в location.state флаг для сброса выбора
+    const resetSelection = (location.state as any)?.resetSelection;
+    if (resetSelection) {
+      console.log('🔄 [DOCTORS PAGE] Сброс выбранного врача через сайдбар');
+      setSelectedDoctor(null);
+      // Очищаем state после использования, чтобы избежать повторных сбросов
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate, location.pathname]);
 
   // Обработчик клика на врача - показываем настройки и расписание
   const handleDoctorClick = (doctor: User) => {

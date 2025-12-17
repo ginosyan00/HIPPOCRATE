@@ -170,7 +170,7 @@ export const PatientAppointmentsTable: React.FC<PatientAppointmentsTableProps> =
               onClick={() => handleSort('doctor')}
             >
               <div className="flex items-center gap-2">
-                <User className="w-4 h-4" />
+                <User className="w-5 h-5" />
                 Врач
                 <SortIcon field="doctor" />
               </div>
@@ -180,7 +180,7 @@ export const PatientAppointmentsTable: React.FC<PatientAppointmentsTableProps> =
               onClick={() => handleSort('clinic')}
             >
               <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4" />
+                <Building2 className="w-5 h-5" />
                 Клиника
                 <SortIcon field="clinic" />
               </div>
@@ -190,7 +190,7 @@ export const PatientAppointmentsTable: React.FC<PatientAppointmentsTableProps> =
               onClick={() => handleSort('category')}
             >
               <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4" />
+                <FileText className="w-5 h-5" />
                 Процедура / Причина
                 <SortIcon field="category" />
               </div>

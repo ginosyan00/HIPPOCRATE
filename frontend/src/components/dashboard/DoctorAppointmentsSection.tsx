@@ -11,10 +11,9 @@ import { useAppointments, useUpdateAppointmentStatus, useUpdateAppointment } fro
 import { useAuthStore } from '../../store/useAuthStore';
 import { Appointment } from '../../types/api.types';
 import { format } from 'date-fns';
-import { Filter, Calendar, Clock, Search } from 'lucide-react';
+import { Filter, Calendar, Clock, Search, CalendarPlus } from 'lucide-react';
 
 // Import icons
-import plusIcon from '../../assets/icons/plus.svg';
 import refreshIcon from '../../assets/icons/refresh.svg';
 import analyticsIcon from '../../assets/icons/analytics.svg';
 import calendarIcon from '../../assets/icons/calendar.svg';
@@ -24,7 +23,15 @@ import calendarIcon from '../../assets/icons/calendar.svg';
  * Секция приёмов для страницы врача
  * Показывает все приёмы текущего врача с фильтрами и возможностью управления
  */
-export const DoctorAppointmentsSection: React.FC = () => {
+interface DoctorAppointmentsSectionProps {
+  onCreateAppointmentClick?: () => void;
+  onCreateAppointmentWithDate?: (date: string) => void;
+}
+
+export const DoctorAppointmentsSection: React.FC<DoctorAppointmentsSectionProps> = ({
+  onCreateAppointmentClick,
+  onCreateAppointmentWithDate,
+}) => {
   const user = useAuthStore(state => state.user);
   const doctorId = user?.id;
 
@@ -89,8 +96,10 @@ export const DoctorAppointmentsSection: React.FC = () => {
   };
 
   // Модальные окна
+  // Если обработчики переданы извне, используем их, иначе используем внутреннее состояние
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [createModalDefaultDate, setCreateModalDefaultDate] = useState<string | undefined>(undefined);
+  const isUsingExternalModal = !!onCreateAppointmentClick;
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [selectedAppointmentForComplete, setSelectedAppointmentForComplete] = useState<Appointment | null>(null);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
@@ -163,15 +172,6 @@ export const DoctorAppointmentsSection: React.FC = () => {
       setIsTransitioning(false);
     }
   }, [appointments]);
-
-  // Статистика по статусам
-  const stats = {
-    total: appointments.length,
-    pending: appointments.filter(a => a.status === 'pending').length,
-    confirmed: appointments.filter(a => a.status === 'confirmed').length,
-    completed: appointments.filter(a => a.status === 'completed').length,
-    cancelled: appointments.filter(a => a.status === 'cancelled').length,
-  };
 
   /**
    * Обработчик изменения статуса приёма
@@ -322,58 +322,6 @@ export const DoctorAppointmentsSection: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h2 className="text-xl font-semibold text-text-100">Все приёмы</h2>
-          <p className="text-text-10 text-sm mt-1">
-            Всего: {data?.meta.total || 0} назначений
-          </p>
-        </div>
-        <div className="flex gap-3 flex-wrap">
-          <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
-            <span className="flex items-center gap-2">
-              <img src={plusIcon} alt="Добавить" className="w-4 h-4" />
-              Создать приём
-            </span>
-          </Button>
-        </div>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className={`grid grid-cols-2 md:grid-cols-5 gap-4 transition-opacity duration-500 ease-out ${isFetching ? 'opacity-95' : 'opacity-100'}`}>
-        <Card padding="md" className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <div className="text-center">
-            <p className="text-xs text-blue-700 mb-1 font-medium">Всего</p>
-            <p className="text-2xl font-bold text-blue-600 transition-all duration-300">{stats.total}</p>
-          </div>
-        </Card>
-        <Card padding="md" className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
-          <div className="text-center">
-            <p className="text-xs text-yellow-700 mb-1 font-medium">Ожидают</p>
-            <p className="text-2xl font-bold text-yellow-600 transition-all duration-300">{stats.pending}</p>
-          </div>
-        </Card>
-        <Card padding="md" className="bg-gradient-to-br from-main-10 to-main-100/10 border-main-100/20">
-          <div className="text-center">
-            <p className="text-xs text-main-100 mb-1 font-medium">Подтверждены</p>
-            <p className="text-2xl font-bold text-main-100 transition-all duration-300">{stats.confirmed}</p>
-          </div>
-        </Card>
-        <Card padding="md" className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <div className="text-center">
-            <p className="text-xs text-green-700 mb-1 font-medium">Завершены</p>
-            <p className="text-2xl font-bold text-green-600 transition-all duration-300">{stats.completed}</p>
-          </div>
-        </Card>
-        <Card padding="md" className="bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200">
-          <div className="text-center">
-            <p className="text-xs text-gray-700 mb-1 font-medium">Отменены</p>
-            <p className="text-2xl font-bold text-gray-600 transition-all duration-300">{stats.cancelled}</p>
-          </div>
-        </Card>
-      </div>
-
       {/* Фильтры */}
       <Card padding="lg" className="border border-stroke shadow-md">
         <div className="flex items-center gap-2 mb-4">
@@ -488,8 +436,12 @@ export const DoctorAppointmentsSection: React.FC = () => {
           onDateClick={(date) => {
             // При клике на ячейку календаря - открываем модальное окно создания приёма с предзаполненной датой
             const dateStr = format(date, 'yyyy-MM-dd');
-            setCreateModalDefaultDate(dateStr);
-            setIsCreateModalOpen(true);
+            if (onCreateAppointmentWithDate) {
+              onCreateAppointmentWithDate(dateStr);
+            } else {
+              setCreateModalDefaultDate(dateStr);
+              setIsCreateModalOpen(true);
+            }
           }}
           onViewChange={handleViewTypeChange}
           currentView={viewType}
@@ -508,7 +460,11 @@ export const DoctorAppointmentsSection: React.FC = () => {
           }}
           onTimeSlotClick={() => {
             // При клике на временной слот - открываем модальное окно создания приёма
-            setIsCreateModalOpen(true);
+            if (onCreateAppointmentClick) {
+              onCreateAppointmentClick();
+            } else {
+              setIsCreateModalOpen(true);
+            }
           }}
           onViewChange={handleViewTypeChange}
           currentView={viewType}
@@ -604,21 +560,23 @@ export const DoctorAppointmentsSection: React.FC = () => {
         </div>
       )}
 
-      {/* Модальное окно создания приёма */}
-      <CreateAppointmentModal
-        isOpen={isCreateModalOpen}
-        onClose={() => {
-          setIsCreateModalOpen(false);
-          setCreateModalDefaultDate(undefined);
-        }}
-        onSuccess={() => {
-          // Обновление произойдет автоматически через React Query
-          console.log('✅ [DOCTOR APPOINTMENTS] Приём успешно создан');
-          setCreateModalDefaultDate(undefined);
-        }}
-        defaultDoctorId={doctorId} // Автоматически выбираем текущего врача
-        defaultDate={createModalDefaultDate}
-      />
+      {/* Модальное окно создания приёма - только если не используется внешний обработчик */}
+      {!isUsingExternalModal && (
+        <CreateAppointmentModal
+          isOpen={isCreateModalOpen}
+          onClose={() => {
+            setIsCreateModalOpen(false);
+            setCreateModalDefaultDate(undefined);
+          }}
+          onSuccess={() => {
+            // Обновление произойдет автоматически через React Query
+            console.log('✅ [DOCTOR APPOINTMENTS] Приём успешно создан');
+            setCreateModalDefaultDate(undefined);
+          }}
+          defaultDoctorId={doctorId} // Автоматически выбираем текущего врача
+          defaultDate={createModalDefaultDate}
+        />
+      )}
 
       {/* Модальное окно завершения приёма */}
       <CompleteAppointmentModal

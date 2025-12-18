@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../common/Button';
 import { Card } from '../common/Card';
+import { Modal } from '../common/Modal';
 import { Certificate } from '../../types/api.types';
 import { useCertificates, useDeleteCertificate } from '../../hooks/useCertificates';
 import { Spinner } from '../common/Spinner';
@@ -19,6 +20,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({ onUpda
   const { data: certificates, isLoading } = useCertificates();
   const deleteCertificateMutation = useDeleteCertificate();
   const [selectedCertificate, setSelectedCertificate] = useState<Certificate | null>(null);
+  const [certificateToDelete, setCertificateToDelete] = useState<Certificate | null>(null);
 
   // Навигация на страницу добавления сертификата
   const handleAddClick = () => {
@@ -30,14 +32,18 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({ onUpda
     setSelectedCertificate(certificate);
   };
 
-  // Удаление сертификата
-  const handleDelete = async (id: string) => {
-    if (!confirm('Вы уверены, что хотите удалить этот сертификат?')) {
-      return;
-    }
+  // Открытие модального окна подтверждения удаления
+  const handleDeleteClick = (certificate: Certificate) => {
+    setCertificateToDelete(certificate);
+  };
+
+  // Подтверждение и выполнение удаления
+  const handleConfirmDelete = async () => {
+    if (!certificateToDelete) return;
 
     try {
-      await deleteCertificateMutation.mutateAsync(id);
+      await deleteCertificateMutation.mutateAsync(certificateToDelete.id);
+      setCertificateToDelete(null);
       if (onUpdate) onUpdate();
     } catch (error: any) {
       console.error('Ошибка удаления сертификата:', error);
@@ -155,7 +161,7 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({ onUpda
                       type="button"
                       variant="danger"
                       size="sm"
-                      onClick={() => handleDelete(certificate.id)}
+                      onClick={() => handleDeleteClick(certificate)}
                       disabled={deleteCertificateMutation.isPending}
                     >
                       Удалить
@@ -236,6 +242,66 @@ export const CertificatesSection: React.FC<CertificatesSectionProps> = ({ onUpda
           </div>
         </div>
       )}
+
+      {/* Модальное окно подтверждения удаления */}
+      <Modal
+        isOpen={!!certificateToDelete}
+        onClose={() => setCertificateToDelete(null)}
+        title="Подтверждение удаления"
+        size="md"
+        footer={
+          <div className="flex justify-end gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setCertificateToDelete(null)}
+              disabled={deleteCertificateMutation.isPending}
+            >
+              Отмена
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              onClick={handleConfirmDelete}
+              isLoading={deleteCertificateMutation.isPending}
+              disabled={deleteCertificateMutation.isPending}
+            >
+              Удалить
+            </Button>
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <div className="flex items-center justify-center mb-4">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+          </div>
+          
+          <div className="text-center">
+            <p className="text-lg font-semibold text-text-100 mb-2">
+              Вы уверены, что хотите удалить этот сертификат?
+            </p>
+            {certificateToDelete && (
+              <div className="bg-bg-primary rounded-lg p-4 mt-4">
+                <p className="text-sm font-medium text-text-100 mb-1">
+                  {certificateToDelete.title}
+                </p>
+                {certificateToDelete.certificateNumber && (
+                  <p className="text-xs text-text-50">
+                    № {certificateToDelete.certificateNumber}
+                  </p>
+                )}
+              </div>
+            )}
+            <p className="text-sm text-text-50 mt-4">
+              Это действие нельзя отменить. Сертификат будет удалён навсегда.
+            </p>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 };

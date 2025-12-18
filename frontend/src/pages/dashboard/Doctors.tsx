@@ -8,6 +8,8 @@ import { useClinic } from '../../hooks/useClinic';
 import { User } from '../../types/api.types';
 import { DoctorScheduleEditor, DoctorScheduleEditorRef } from '../../components/dashboard/DoctorScheduleEditor';
 import { DoctorProfileSection, DoctorProfileSectionRef } from '../../components/dashboard/DoctorProfileSection';
+import { DoctorStatusQuickToggle } from '../../components/dashboard/DoctorStatusQuickToggle';
+import { DoctorStatusToggle } from '../../components/dashboard/DoctorStatusToggle';
 import { toast } from 'react-hot-toast';
 
 // Import icons
@@ -210,7 +212,7 @@ export const DoctorsPage: React.FC = () => {
     const labels = {
       ACTIVE: 'Активен',
       PENDING: 'Ожидает',
-      SUSPENDED: 'Приостановлен',
+      SUSPENDED: 'Неактивен', // Для врачей SUSPENDED означает отпуск/неактивен
       REJECTED: 'Отклонен',
     };
     return (
@@ -284,6 +286,14 @@ export const DoctorsPage: React.FC = () => {
                 isEditingSelf={false}
                 hideSubmitButton={true}
               />
+
+              {/* Статус врача */}
+              {doctor && (
+                <DoctorStatusToggle
+                  doctor={doctor}
+                  isEditingSelf={false}
+                />
+              )}
 
               {/* Расписание врача с возможностью редактирования */}
               <DoctorScheduleEditor
@@ -394,7 +404,7 @@ export const DoctorsPage: React.FC = () => {
               <option value="">Все статусы</option>
               <option value="ACTIVE">Активен</option>
               <option value="PENDING">Ожидает</option>
-              <option value="SUSPENDED">Приостановлен</option>
+              <option value="SUSPENDED">Неактивен</option>
               <option value="REJECTED">Отклонен</option>
             </select>
           </div>
@@ -490,19 +500,29 @@ export const DoctorsPage: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          {getStatusBadge(doctor.status)}
+                          {doctor ? (
+                            <DoctorStatusQuickToggle 
+                              doctor={doctor} 
+                              size="sm" 
+                              variant="badge"
+                            />
+                          ) : (
+                            <span className="text-xs text-text-10">-</span>
+                          )}
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDoctorClick(doctor);
-                            }}
-                          >
-                            Настройки
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDoctorClick(doctor);
+                              }}
+                            >
+                              Настройки
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -557,7 +577,13 @@ export const DoctorsPage: React.FC = () => {
                           <p className="text-xs text-main-100 font-medium truncate">
                             {doctor.specialization || 'Специализация не указана'}
                           </p>
-                          <div className="mt-2">{getStatusBadge(doctor.status)}</div>
+                          <div className="mt-2">
+                            <DoctorStatusQuickToggle 
+                              doctor={doctor} 
+                              size="sm" 
+                              variant="badge"
+                            />
+                          </div>
                         </div>
                       </div>
 
@@ -576,18 +602,25 @@ export const DoctorsPage: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="pt-2 border-t border-stroke">
-                        <Button
-                          size="sm"
-                          variant="primary"
-                          className="w-full"
-                          onClick={e => {
-                            e.stopPropagation();
-                            handleDoctorClick(doctor);
-                          }}
-                        >
-                          Настройки
-                        </Button>
+                      <div className="pt-2 border-t border-stroke space-y-2">
+                        <div className="flex gap-2">
+                          <DoctorStatusQuickToggle 
+                            doctor={doctor} 
+                            size="sm" 
+                            variant="button"
+                          />
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="flex-1"
+                            onClick={e => {
+                              e.stopPropagation();
+                              handleDoctorClick(doctor);
+                            }}
+                          >
+                            Настройки
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </Card>

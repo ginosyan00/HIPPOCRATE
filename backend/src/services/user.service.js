@@ -243,6 +243,7 @@ export async function remove(clinicId, userId) {
 
 /**
  * Получить всех врачей клиники
+ * Включает всех врачей (ACTIVE, SUSPENDED, PENDING), чтобы клиника могла видеть всех врачей и их статусы
  * @param {string} clinicId - ID клиники
  * @returns {Promise<array>} Список врачей
  */
@@ -251,7 +252,8 @@ export async function findDoctors(clinicId) {
     where: {
       clinicId,
       role: 'DOCTOR',
-      status: 'ACTIVE',
+      // Убираем фильтр по status, чтобы показывать всех врачей (ACTIVE, SUSPENDED, PENDING)
+      // Клиника должна видеть всех врачей и их статусы
     },
     select: {
       id: true,

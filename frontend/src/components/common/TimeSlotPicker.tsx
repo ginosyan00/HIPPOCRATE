@@ -114,12 +114,12 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
 
   return (
     <div className={`space-y-3 ${className}`}>
-      <label className="block text-sm font-normal text-text-10 mb-2">
+      <label className="block text-sm font-normal text-text-50 mb-3">
         Выберите время <span className="text-red-500">*</span>
       </label>
       
-      {/* Визуальная сетка слотов */}
-      <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2 max-h-64 overflow-y-auto p-3 border border-stroke rounded-lg bg-bg-white">
+      {/* Визуальная сетка слотов - чистый минималистичный дизайн */}
+      <div className="grid grid-cols-4 gap-2.5 max-h-80 overflow-y-auto">
         {slots.map((slot) => {
           const isSelected = selectedTime === slot.time;
           const isDisabled = slot.isBusy || slot.isPast;
@@ -131,17 +131,17 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
               onClick={() => handleSlotClick(slot)}
               disabled={isDisabled}
               className={`
-                px-3 py-2.5 text-sm font-medium rounded-lg
+                px-4 py-3 text-sm font-medium rounded-md
                 transition-all duration-200
-                border-2
+                border
                 ${
                   isSelected
-                    ? 'bg-main-100 text-white border-main-100 shadow-lg scale-105'
+                    ? 'bg-main-100 text-white border-main-100 shadow-sm'
                     : isDisabled
                     ? slot.isBusy
-                      ? 'bg-red-50 text-red-600 border-red-200 cursor-not-allowed opacity-75'
-                      : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-50'
-                    : 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100 hover:border-green-300 hover:shadow-md hover:scale-105'
+                      ? 'bg-white text-red-600 border-red-300 cursor-not-allowed'
+                      : 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed'
+                    : 'bg-white text-text-100 border-green-300 hover:border-green-400 hover:bg-green-50'
                 }
                 focus:outline-none focus:ring-2 focus:ring-main-100 focus:ring-offset-1
               `}
@@ -155,46 +155,11 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
                   : 'Доступно для записи'
               }
             >
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-xs font-semibold">{slot.time}</span>
-                {slot.isBusy && (
-                  <span className="text-xs">🚫</span>
-                )}
-                {!slot.isBusy && !slot.isPast && (
-                  <span className="text-xs">✓</span>
-                )}
-              </div>
+              {slot.time}
             </button>
           );
         })}
       </div>
-
-      {/* Легенда */}
-      <div className="flex flex-wrap items-center gap-4 text-xs text-text-10 pt-2 border-t border-stroke">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-green-50 border-2 border-green-200"></div>
-          <span>Доступно</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-red-50 border-2 border-red-200"></div>
-          <span>Занято</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-gray-100 border-2 border-gray-200"></div>
-          <span>Прошедшее</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-main-100 border-2 border-main-100"></div>
-          <span>Выбрано</span>
-        </div>
-      </div>
-
-      {/* Информация о занятых слотах */}
-      {busySlots.length > 0 && (
-        <p className="text-xs text-text-10 mt-1">
-          Занятые слоты отмечены красным цветом и недоступны для выбора
-        </p>
-      )}
     </div>
   );
 };

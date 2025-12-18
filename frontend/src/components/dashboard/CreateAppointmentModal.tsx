@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Input, Spinner, TimeSlotPicker } from '../common';
+import { Modal, Button, Input, Spinner, Calendar } from '../common';
 
 // Import icons
 import warningIcon from '../../assets/icons/warning.svg';
@@ -35,7 +35,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
   const [guestFirstName, setGuestFirstName] = useState('');
   const [guestLastName, setGuestLastName] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
-  const [appointmentDate, setAppointmentDate] = useState('');
+  const [appointmentDate, setAppointmentDate] = useState<Date | null>(null);
   const [appointmentTime, setAppointmentTime] = useState('');
   const [duration, setDuration] = useState('30');
   const [reason, setReason] = useState('');
@@ -81,7 +81,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
       setGuestFirstName('');
       setGuestLastName('');
       setGuestPhone('');
-      setAppointmentDate('');
+      setAppointmentDate(null);
       setAppointmentTime('');
       setDuration('30');
       setReason('');
@@ -94,7 +94,10 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
         setDoctorId(defaultDoctorId);
       }
       if (defaultDate) {
-        setAppointmentDate(defaultDate);
+        const date = new Date(defaultDate);
+        if (!isNaN(date.getTime())) {
+          setAppointmentDate(date);
+        }
       }
     }
   }, [isOpen, defaultDoctorId, defaultDate]);
@@ -109,7 +112,8 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
 
       try {
         setIsLoadingBusySlots(true);
-        const slots = await appointmentService.getBusySlots(doctorId, appointmentDate);
+        const dateStr = appointmentDate.toISOString().split('T')[0];
+        const slots = await appointmentService.getBusySlots(doctorId, dateStr);
         setBusySlots(slots);
         console.log('✅ [CREATE APPOINTMENT MODAL] Занятые слоты загружены:', slots);
       } catch (err) {
@@ -242,8 +246,9 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
       }
 
       // Объединяем дату и время
-      const dateTimeString = `${appointmentDate}T${appointmentTime}:00`;
-      const appointmentDateTime = new Date(dateTimeString);
+      const [hours, minutes] = appointmentTime.split(':').map(Number);
+      const appointmentDateTime = new Date(appointmentDate);
+      appointmentDateTime.setHours(hours, minutes, 0, 0);
 
       // Проверяем, что дата в будущем
       if (appointmentDateTime <= new Date()) {
@@ -279,13 +284,6 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
       setError('');
       onClose();
     }
-  };
-
-  // Получаем минимальную дату (сегодня)
-  const getMinDate = () => {
-    const today = new Date();
-    today.setDate(today.getDate() + 1); // Завтра как минимум
-    return today.toISOString().split('T')[0];
   };
 
 
@@ -427,26 +425,8 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
           </div>
         )}
 
-        {/* Дата */}
-        <div>
-          <label className="block text-sm font-normal text-text-10 mb-2">
-            Дата <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="date"
-            value={appointmentDate}
-            onChange={e => {
-              setAppointmentDate(e.target.value);
-              setAppointmentTime(''); // Сбрасываем время при смене даты
-            }}
-            min={getMinDate()}
-            className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
-            required
-          />
-        </div>
-
-        {/* Визуальный выбор времени */}
-        {appointmentDate && doctorId && (
+        {/* Календарь с выбором даты и времени */}
+        {doctorId ? (
           <div>
             {isLoadingBusySlots ? (
               <div className="flex items-center justify-center py-8">
@@ -454,26 +434,26 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                 <span className="ml-2 text-sm text-text-10">Загрузка доступных слотов...</span>
               </div>
             ) : (
-              <TimeSlotPicker
+              <Calendar
+                selectedDate={appointmentDate}
+                onDateSelect={(date) => {
+                  setAppointmentDate(date);
+                  setAppointmentTime(''); // Сбрасываем время при смене даты
+                }}
                 selectedTime={appointmentTime}
                 onTimeSelect={setAppointmentTime}
+                minDate={new Date(new Date().setDate(new Date().getDate() + 1))} // Завтра как минимум
                 busySlots={busySlots}
                 appointmentDuration={parseInt(duration)}
-                selectedDate={appointmentDate}
-                startHour={8}
-                endHour={20}
-                slotInterval={30}
               />
             )}
           </div>
-        )}
-
-        {appointmentDate && !doctorId && (
+        ) : (
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800">
               <span className="flex items-center gap-1">
                 <img src={warningIcon} alt="Предупреждение" className="w-4 h-4" />
-                Выберите врача, чтобы увидеть доступные временные слоты
+                Выберите врача, чтобы увидеть календарь и доступные временные слоты
               </span>
             </p>
           </div>

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Modal, Button, Input, Spinner } from '../common';
+import { Modal, Button, Input, Spinner, Calendar } from '../common';
 import { useClinics, useClinicDoctors, useCreatePublicAppointment } from '../../hooks/usePublic';
 import { useAuthStore } from '../../store/useAuthStore';
+import { publicService } from '../../services/public.service';
 import { Clinic, User } from '../../types/api.types';
-import { Calendar, Clock } from 'lucide-react';
 
 // Import icons
 import warningIcon from '../../assets/icons/warning.svg';
@@ -32,11 +32,13 @@ export const PublicBookNowModal: React.FC<PublicBookNowModalProps> = ({
   const [selectedClinicId, setSelectedClinicId] = useState<string>('');
   const [selectedClinicSlug, setSelectedClinicSlug] = useState<string>('');
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [reason, setReason] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [busySlots, setBusySlots] = useState<Array<{ start: string; end: string; appointmentId: string }>>([]);
+  const [isLoadingBusySlots, setIsLoadingBusySlots] = useState(false);
 
   // Данные для неавторизованных пользователей
   const [patientName, setPatientName] = useState<string>('');
@@ -85,7 +87,33 @@ export const PublicBookNowModal: React.FC<PublicBookNowModalProps> = ({
   // Сброс врача при смене клиники
   useEffect(() => {
     setSelectedDoctorId('');
+    setBusySlots([]);
   }, [selectedClinicId]);
+
+  // Загрузка занятых слотов при изменении врача, клиники или даты
+  useEffect(() => {
+    const loadBusySlots = async () => {
+      if (!selectedClinicSlug || !selectedDoctorId || !selectedDate) {
+        setBusySlots([]);
+        return;
+      }
+
+      try {
+        setIsLoadingBusySlots(true);
+        const dateStr = selectedDate.toISOString().split('T')[0];
+        const slots = await publicService.getBusySlots(selectedClinicSlug, selectedDoctorId, dateStr);
+        setBusySlots(slots);
+        console.log('✅ [PUBLIC BOOK NOW MODAL] Занятые слоты загружены:', slots);
+      } catch (err) {
+        console.error('🔴 [PUBLIC BOOK NOW MODAL] Ошибка загрузки занятых слотов:', err);
+        setBusySlots([]);
+      } finally {
+        setIsLoadingBusySlots(false);
+      }
+    };
+
+    loadBusySlots();
+  }, [selectedClinicSlug, selectedDoctorId, selectedDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,7 +163,9 @@ export const PublicBookNowModal: React.FC<PublicBookNowModalProps> = ({
     }
 
     // Создаем объект даты и времени
-    const appointmentDateTime = new Date(`${selectedDate}T${selectedTime}`);
+    const [hours, minutes] = selectedTime.split(':').map(Number);
+    const appointmentDateTime = new Date(selectedDate);
+    appointmentDateTime.setHours(hours, minutes, 0, 0);
     
     // Проверяем, что дата в будущем
     if (appointmentDateTime <= new Date()) {
@@ -188,22 +218,6 @@ export const PublicBookNowModal: React.FC<PublicBookNowModalProps> = ({
     }
   };
 
-  // Генерируем доступные временные слоты (каждые 30 минут)
-  const generateTimeSlots = (): string[] => {
-    const slots: string[] = [];
-    for (let hour = 8; hour < 20; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-        slots.push(timeStr);
-      }
-    }
-    return slots;
-  };
-
-  const timeSlots = generateTimeSlots();
-
-  // Минимальная дата - сегодня
-  const minDate = new Date().toISOString().split('T')[0];
 
   return (
     <Modal
@@ -357,42 +371,37 @@ export const PublicBookNowModal: React.FC<PublicBookNowModalProps> = ({
           />
         )}
 
-        {/* Выбор даты */}
-        <div>
-          <label className="block text-sm font-medium text-text-50 mb-2">
-            <Calendar className="w-4 h-4 inline mr-2" />
-            Дата <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            min={minDate}
-            className="w-full px-4 py-2.5 border border-stroke rounded-lg bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all"
-            required
-          />
-        </div>
-
-        {/* Выбор времени */}
-        {selectedDate && (
+        {/* Календарь с выбором даты и времени */}
+        {selectedDoctorId && selectedClinicSlug ? (
           <div>
-            <label className="block text-sm font-medium text-text-50 mb-2">
-              <Clock className="w-4 h-4 inline mr-2" />
-              Время <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={selectedTime}
-              onChange={(e) => setSelectedTime(e.target.value)}
-              className="w-full px-4 py-2.5 border border-stroke rounded-lg bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all"
-              required
-            >
-              <option value="">Выберите время</option>
-              {timeSlots.map((time) => (
-                <option key={time} value={time}>
-                  {time}
-                </option>
-              ))}
-            </select>
+            {isLoadingBusySlots ? (
+              <div className="flex items-center justify-center py-8">
+                <Spinner size="sm" />
+                <span className="ml-2 text-sm text-text-10">Загрузка доступных слотов...</span>
+              </div>
+            ) : (
+              <Calendar
+                selectedDate={selectedDate}
+                onDateSelect={(date) => {
+                  setSelectedDate(date);
+                  setSelectedTime(''); // Сбрасываем время при смене даты
+                }}
+                selectedTime={selectedTime}
+                onTimeSelect={setSelectedTime}
+                minDate={new Date()}
+                busySlots={busySlots}
+                appointmentDuration={30}
+              />
+            )}
+          </div>
+        ) : (
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-sm text-yellow-800">
+              <span className="flex items-center gap-1">
+                <img src={warningIcon} alt="Предупреждение" className="w-4 h-4" />
+                Выберите клинику и врача, чтобы увидеть календарь и доступные временные слоты
+              </span>
+            </p>
           </div>
         )}
 

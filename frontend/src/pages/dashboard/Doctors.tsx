@@ -22,6 +22,8 @@ import mailIcon from '../../assets/icons/mail.svg';
 import fileTextIcon from '../../assets/icons/file-text.svg';
 import briefcaseIcon from '../../assets/icons/briefcase.svg';
 import userIcon from '../../assets/icons/user.svg';
+import settingsIcon from '../../assets/icons/settings.svg';
+import checkIcon from '../../assets/icons/check.svg';
 
 /**
  * Doctors Page
@@ -367,7 +369,16 @@ export const DoctorsPage: React.FC = () => {
             {canAddDoctors && (
               <Button onClick={() => navigate('/dashboard/doctors/add')} variant="primary">
                 <span className="flex items-center gap-2">
-                  <img src={plusIcon} alt="Добавить" className="w-4 h-4" />
+                  <div className="relative">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-white rounded-full flex items-center justify-center">
+                      <svg className="w-2 h-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
                   Добавить врача
                 </span>
               </Button>
@@ -434,22 +445,40 @@ export const DoctorsPage: React.FC = () => {
                   <thead className="bg-bg-primary border-b border-stroke">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-                        Врач
+                        <div className="flex items-center gap-2">
+                          <img src={doctorIcon} alt="Врач" className="w-4 h-4 brightness-75" />
+                          Врач
+                        </div>
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-                        Телефон
+                        <div className="flex items-center gap-2">
+                          <img src={phoneIcon} alt="Телефон" className="w-4 h-4 opacity-60" />
+                          Телефон
+                        </div>
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-                        Email
+                        <div className="flex items-center gap-2">
+                          <img src={mailIcon} alt="Email" className="w-4 h-4 opacity-60" />
+                          Email
+                        </div>
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-                        Специальность
+                        <div className="flex items-center gap-2">
+                          <img src={fileTextIcon} alt="Специальность" className="w-4 h-4 opacity-60" />
+                          Специальность
+                        </div>
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-                        Статус
+                        <div className="flex items-center gap-2">
+                          <img src={checkIcon} alt="Статус" className="w-4 h-4 opacity-60" />
+                          Статус
+                        </div>
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-text-50 uppercase tracking-wider">
-                        Действия
+                        <div className="flex items-center gap-2">
+                          <img src={settingsIcon} alt="Действия" className="w-4 h-4 brightness-75" />
+                          Действия
+                        </div>
                       </th>
                     </tr>
                   </thead>
@@ -485,18 +514,33 @@ export const DoctorsPage: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-sm text-text-50">
-                            {doctor.phone || '-'}
+                          <div className="flex items-center gap-2 text-sm text-text-50">
+                            {doctor.phone ? (
+                              <>
+                                <img src={phoneIcon} alt="Телефон" className="w-4 h-4 flex-shrink-0" />
+                                <span>{doctor.phone}</span>
+                              </>
+                            ) : (
+                              <span>-</span>
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-sm text-text-50 truncate max-w-xs">
-                            {doctor.email}
+                          <div className="flex items-center gap-2 text-sm text-text-50">
+                            <img src={mailIcon} alt="Email" className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate max-w-xs">{doctor.email}</span>
                           </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-sm text-text-100 font-medium">
-                            {doctor.specialization || '-'}
+                          <div className="flex items-center gap-2 text-sm text-text-100 font-medium">
+                            {doctor.specialization ? (
+                              <>
+                                <img src={fileTextIcon} alt="Специальность" className="w-4 h-4 flex-shrink-0 opacity-60" />
+                                <span>{doctor.specialization}</span>
+                              </>
+                            ) : (
+                              <span>-</span>
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">

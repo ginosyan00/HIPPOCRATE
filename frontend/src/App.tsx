@@ -32,6 +32,7 @@ import { NotificationsPage } from './pages/dashboard/NotificationsPage';
 import { HomePage } from './pages/public/Home';
 import { ClinicsPage } from './pages/public/Clinics';
 import { ClinicPage } from './pages/public/ClinicPage';
+import { ClinicLandingPage } from './pages/public/ClinicLandingPage';
 import { DoctorPage } from './pages/public/DoctorPage';
 import { DashboardLayout } from './components/dashboard/DashboardLayout';
 import { NewDashboardLayout } from './components/dashboard/NewDashboardLayout';
@@ -50,7 +51,7 @@ function App() {
         {/* Public Website */}
         <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
         <Route path="/clinics" element={<PublicLayout><ClinicsPage /></PublicLayout>} />
-        <Route path="/clinic/:slug" element={<PublicLayout><ClinicPage /></PublicLayout>} />
+        <Route path="/clinic/:slug" element={<PublicLayout><ClinicLandingPage /></PublicLayout>} />
         <Route path="/clinic/:slug/doctor/:doctorId" element={<PublicLayout><DoctorPage /></PublicLayout>} />
 
         {/* Auth Routes */}

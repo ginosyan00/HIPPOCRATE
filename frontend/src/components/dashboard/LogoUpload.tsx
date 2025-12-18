@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Button } from '../common/Button';
 
 interface LogoUploadProps {
@@ -7,16 +7,34 @@ interface LogoUploadProps {
   isLoading?: boolean;
 }
 
+export interface LogoUploadRef {
+  getValue: () => string | null;
+}
+
 /**
  * LogoUpload Component
  * Компонент для загрузки логотипа клиники
  */
-export const LogoUpload: React.FC<LogoUploadProps> = ({ currentLogo, onUpload, isLoading = false }) => {
+export const LogoUpload = forwardRef<LogoUploadRef, LogoUploadProps>(({ 
+  currentLogo, 
+  onUpload, 
+  isLoading = false 
+}, ref) => {
   const [preview, setPreview] = useState<string | null>(currentLogo || null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Синхронізуємо preview з currentLogo при зміні
+  useEffect(() => {
+    setPreview(currentLogo || null);
+  }, [currentLogo]);
+
+  // Експортуємо метод для отримання поточного значення
+  useImperativeHandle(ref, () => ({
+    getValue: () => preview,
+  }));
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -34,24 +52,11 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({ currentLogo, onUpload, i
 
     setError(null);
 
-    // Читаем файл как base64 и сразу загружаем
+    // Читаем файл как base64 и зберігаємо локально (не завантажуємо одразу)
     const reader = new FileReader();
-    reader.onloadend = async () => {
+    reader.onloadend = () => {
       const base64String = reader.result as string;
       setPreview(base64String);
-      
-      // Автоматически загружаем логотип сразу после выбора файла
-      try {
-        await onUpload(base64String);
-        setError(null);
-      } catch (err: any) {
-        setError(err.message || 'Ошибка при загрузке логотипа');
-        // В случае ошибки сбрасываем preview
-        setPreview(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-      }
     };
     reader.onerror = () => {
       setError('Ошибка при чтении файла');
@@ -60,7 +65,9 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({ currentLogo, onUpload, i
   };
 
   const handleRemove = () => {
+    // Просто очищаємо preview (не завантажуємо одразу)
     setPreview(null);
+    setError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -141,5 +148,7 @@ export const LogoUpload: React.FC<LogoUploadProps> = ({ currentLogo, onUpload, i
       </div>
     </div>
   );
-};
+});
+
+LogoUpload.displayName = 'LogoUpload';
 

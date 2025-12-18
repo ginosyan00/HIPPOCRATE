@@ -58,11 +58,10 @@ export async function uploadLogo(req, res, next) {
 
     const { logo } = req.body;
 
-    if (!logo) {
-      return errorResponse(res, 'Logo is required', 400);
-    }
+    // Дозволяємо порожній рядок або null для видалення логотипу
+    const logoToSave = logo && logo.trim() !== '' ? logo : null;
 
-    const clinic = await clinicService.updateClinicLogo(clinicId, logo);
+    const clinic = await clinicService.updateClinicLogo(clinicId, logoToSave);
     successResponse(res, clinic);
   } catch (error) {
     next(error);
@@ -83,11 +82,10 @@ export async function uploadHeroImage(req, res, next) {
 
     const { heroImage } = req.body;
 
-    if (!heroImage) {
-      return errorResponse(res, 'Hero image is required', 400);
-    }
+    // Дозволяємо порожній рядок або null для видалення hero image
+    const heroImageToSave = heroImage && heroImage.trim() !== '' ? heroImage : null;
 
-    const clinic = await clinicService.updateClinicHeroImage(clinicId, heroImage);
+    const clinic = await clinicService.updateClinicHeroImage(clinicId, heroImageToSave);
     successResponse(res, clinic);
   } catch (error) {
     next(error);

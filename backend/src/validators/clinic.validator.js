@@ -136,19 +136,49 @@ export const updateClinicSchema = Joi.object({
 
 /**
  * Загрузка логотипа
+ * Дозволяє: порожній рядок (для видалення), base64 data URI, або звичайний URL
  */
 export const uploadLogoSchema = Joi.object({
-  logo: Joi.string().uri().optional().messages({
-    'string.uri': 'Logo must be a valid URL or base64 data URI',
+  logo: Joi.string().allow('', null).optional().custom((value, helpers) => {
+    // Якщо порожній рядок або null - дозволяємо (для видалення)
+    if (!value || value.trim() === '') {
+      return value;
+    }
+    // Перевіряємо, чи це base64 data URI або звичайний URL
+    const isBase64DataUri = value.startsWith('data:image/');
+    const isUrl = /^https?:\/\//.test(value);
+    
+    if (isBase64DataUri || isUrl) {
+      return value;
+    }
+    
+    return helpers.error('string.invalid');
+  }).messages({
+    'string.invalid': 'Logo must be a valid URL, base64 data URI, or empty string to delete',
   }),
 });
 
 /**
  * Загрузка главного изображения
+ * Дозволяє: порожній рядок (для видалення), base64 data URI, або звичайний URL
  */
 export const uploadHeroImageSchema = Joi.object({
-  heroImage: Joi.string().uri().optional().messages({
-    'string.uri': 'Hero image must be a valid URL or base64 data URI',
+  heroImage: Joi.string().allow('', null).optional().custom((value, helpers) => {
+    // Якщо порожній рядок або null - дозволяємо (для видалення)
+    if (!value || value.trim() === '') {
+      return value;
+    }
+    // Перевіряємо, чи це base64 data URI або звичайний URL
+    const isBase64DataUri = value.startsWith('data:image/');
+    const isUrl = /^https?:\/\//.test(value);
+    
+    if (isBase64DataUri || isUrl) {
+      return value;
+    }
+    
+    return helpers.error('string.invalid');
+  }).messages({
+    'string.invalid': 'Hero image must be a valid URL, base64 data URI, or empty string to delete',
   }),
 });
 

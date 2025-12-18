@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Button } from '../common/Button';
 
 interface HeroImageUploadProps {
@@ -7,21 +7,35 @@ interface HeroImageUploadProps {
   isLoading?: boolean;
 }
 
+export interface HeroImageUploadRef {
+  getValue: () => string | null;
+}
+
 /**
  * HeroImageUpload Component
  * Компонент для загрузки главного изображения клиники
  * Отображается на странице клиники для пациентов
  */
-export const HeroImageUpload: React.FC<HeroImageUploadProps> = ({ 
+export const HeroImageUpload = forwardRef<HeroImageUploadRef, HeroImageUploadProps>(({ 
   currentHeroImage, 
   onUpload, 
   isLoading = false 
-}) => {
+}, ref) => {
   const [preview, setPreview] = useState<string | null>(currentHeroImage || null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Синхронізуємо preview з currentHeroImage при зміні
+  useEffect(() => {
+    setPreview(currentHeroImage || null);
+  }, [currentHeroImage]);
+
+  // Експортуємо метод для отримання поточного значення
+  useImperativeHandle(ref, () => ({
+    getValue: () => preview,
+  }));
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -39,24 +53,11 @@ export const HeroImageUpload: React.FC<HeroImageUploadProps> = ({
 
     setError(null);
 
-    // Читаем файл как base64 и сразу загружаем
+    // Читаем файл как base64 и зберігаємо локально (не завантажуємо одразу)
     const reader = new FileReader();
-    reader.onloadend = async () => {
+    reader.onloadend = () => {
       const base64String = reader.result as string;
       setPreview(base64String);
-      
-      // Автоматически загружаем изображение сразу после выбора файла
-      try {
-        await onUpload(base64String);
-        setError(null);
-      } catch (err: any) {
-        setError(err.message || 'Ошибка при загрузке изображения');
-        // В случае ошибки сбрасываем preview
-        setPreview(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-      }
     };
     reader.onerror = () => {
       setError('Ошибка при чтении файла');
@@ -65,7 +66,9 @@ export const HeroImageUpload: React.FC<HeroImageUploadProps> = ({
   };
 
   const handleRemove = () => {
+    // Просто очищаємо preview (не завантажуємо одразу)
     setPreview(null);
+    setError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -166,5 +169,7 @@ export const HeroImageUpload: React.FC<HeroImageUploadProps> = ({
       </div>
     </div>
   );
-};
+});
+
+HeroImageUpload.displayName = 'HeroImageUpload';
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Input, Spinner, TimeSlotPicker } from '../common';
+import { Modal, Button, Input, Spinner, Calendar } from '../common';
 
 // Import icons
 import warningIcon from '../../assets/icons/warning.svg';
@@ -7,7 +7,6 @@ import { useClinics, useClinicDoctors, useCreatePublicAppointment } from '../../
 import { useAuthStore } from '../../store/useAuthStore';
 import { publicService } from '../../services/public.service';
 import { Clinic, User } from '../../types/api.types';
-import { Calendar } from 'lucide-react';
 
 interface BookNowModalProps {
   isOpen: boolean;
@@ -30,7 +29,7 @@ export const BookNowModal: React.FC<BookNowModalProps> = ({
   const [selectedClinicId, setSelectedClinicId] = useState<string>('');
   const [selectedClinicSlug, setSelectedClinicSlug] = useState<string>('');
   const [selectedDoctorId, setSelectedDoctorId] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [reason, setReason] = useState<string>('');
   const [error, setError] = useState<string>('');
@@ -63,7 +62,10 @@ export const BookNowModal: React.FC<BookNowModalProps> = ({
   // Установка даты по умолчанию при открытии модального окна
   useEffect(() => {
     if (isOpen && defaultDate) {
-      setSelectedDate(defaultDate);
+      const date = new Date(defaultDate);
+      if (!isNaN(date.getTime())) {
+        setSelectedDate(date);
+      }
     }
   }, [isOpen, defaultDate]);
 
@@ -83,7 +85,8 @@ export const BookNowModal: React.FC<BookNowModalProps> = ({
 
       try {
         setIsLoadingBusySlots(true);
-        const slots = await publicService.getBusySlots(selectedClinicSlug, selectedDoctorId, selectedDate);
+        const dateStr = selectedDate.toISOString().split('T')[0];
+        const slots = await publicService.getBusySlots(selectedClinicSlug, selectedDoctorId, dateStr);
         setBusySlots(slots);
         console.log('✅ [BOOK NOW MODAL] Занятые слоты загружены:', slots);
       } catch (err) {
@@ -122,7 +125,9 @@ export const BookNowModal: React.FC<BookNowModalProps> = ({
     }
 
     // Создаем объект даты и времени
-    const appointmentDateTime = new Date(`${selectedDate}T${selectedTime}`);
+    const [hours, minutes] = selectedTime.split(':').map(Number);
+    const appointmentDateTime = new Date(selectedDate);
+    appointmentDateTime.setHours(hours, minutes, 0, 0);
     
     // Проверяем, что дата в будущем
     if (appointmentDateTime <= new Date()) {
@@ -170,9 +175,6 @@ export const BookNowModal: React.FC<BookNowModalProps> = ({
     }
   };
 
-
-  // Минимальная дата - сегодня
-  const minDate = new Date().toISOString().split('T')[0];
 
   return (
     <Modal
@@ -251,27 +253,8 @@ export const BookNowModal: React.FC<BookNowModalProps> = ({
           </div>
         )}
 
-        {/* Выбор даты */}
-        <div>
-          <label className="block text-sm font-medium text-text-50 mb-2">
-            <Calendar className="w-4 h-4 inline mr-2" />
-            Дата <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => {
-              setSelectedDate(e.target.value);
-              setSelectedTime(''); // Сбрасываем время при смене даты
-            }}
-            min={minDate}
-            className="w-full px-4 py-2.5 border border-stroke rounded-lg bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all"
-            required
-          />
-        </div>
-
-        {/* Визуальный выбор времени */}
-        {selectedDate && selectedDoctorId && selectedClinicSlug && (
+        {/* Календарь с выбором даты и времени */}
+        {selectedDoctorId && selectedClinicSlug ? (
           <div>
             {isLoadingBusySlots ? (
               <div className="flex items-center justify-center py-8">
@@ -279,26 +262,26 @@ export const BookNowModal: React.FC<BookNowModalProps> = ({
                 <span className="ml-2 text-sm text-text-10">Загрузка доступных слотов...</span>
               </div>
             ) : (
-              <TimeSlotPicker
+              <Calendar
+                selectedDate={selectedDate}
+                onDateSelect={(date) => {
+                  setSelectedDate(date);
+                  setSelectedTime(''); // Сбрасываем время при смене даты
+                }}
                 selectedTime={selectedTime}
                 onTimeSelect={setSelectedTime}
+                minDate={new Date()}
                 busySlots={busySlots}
                 appointmentDuration={30}
-                selectedDate={selectedDate}
-                startHour={8}
-                endHour={20}
-                slotInterval={30}
               />
             )}
           </div>
-        )}
-
-        {selectedDate && (!selectedDoctorId || !selectedClinicSlug) && (
+        ) : (
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800">
               <span className="flex items-center gap-1">
                 <img src={warningIcon} alt="Предупреждение" className="w-4 h-4" />
-                Выберите клинику и врача, чтобы увидеть доступные временные слоты
+                Выберите клинику и врача, чтобы увидеть календарь и доступные временные слоты
               </span>
             </p>
           </div>

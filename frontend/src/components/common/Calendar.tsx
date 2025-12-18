@@ -137,7 +137,7 @@ export const Calendar: React.FC<CalendarProps> = ({
                       : isSelected
                       ? 'bg-main-100 text-white font-medium'
                       : isToday
-                      ? 'bg-main-10 text-main-100 font-medium'
+                      ? 'ring-2 ring-main-100 text-text-100 bg-bg-white font-medium'
                       : 'text-text-100 bg-bg-white'
                   }
                   ${index % 7 === 6 ? 'border-r-0' : ''}

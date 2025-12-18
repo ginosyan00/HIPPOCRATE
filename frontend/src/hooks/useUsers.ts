@@ -202,4 +202,35 @@ export function useUpdateDoctorSchedule(doctorId: string) {
   });
 }
 
+/**
+ * Обновить статус врача (ACTIVE/SUSPENDED) (для клиники)
+ */
+export function useUpdateDoctorStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ doctorId, status }: { doctorId: string; status: 'ACTIVE' | 'SUSPENDED' }) =>
+      userService.update(doctorId, { status }),
+    onSuccess: (updatedUser) => {
+      console.log('🔄 [USE USERS] Инвалидация кэша после обновления статуса врача:', updatedUser.id);
+
+      // Инвалидируем кэш списка врачей
+      queryClient.invalidateQueries({ queryKey: ['users', 'doctors'] });
+      
+      // Инвалидируем кэш конкретного пользователя
+      queryClient.invalidateQueries({ queryKey: ['users', updatedUser.id] });
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      
+      // Инвалидируем кэш профиля врача
+      queryClient.invalidateQueries({ queryKey: ['doctor', 'profile', updatedUser.id] });
+      queryClient.invalidateQueries({ queryKey: ['doctor', 'profile'] });
+      
+      toast.success(`Статус врача успешно изменен на ${updatedUser.status === 'ACTIVE' ? 'Активен' : 'Неактивен'}`);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Ошибка при изменении статуса врача');
+    },
+  });
+}
+
 

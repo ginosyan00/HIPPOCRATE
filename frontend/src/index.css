@@ -144,6 +144,20 @@ body {
     }
   }
   
+  /* Shimmer animation for buttons */
+  @keyframes shimmer-button {
+    0% {
+      transform: translateX(-100%) skewX(-12deg);
+    }
+    100% {
+      transform: translateX(200%) skewX(-12deg);
+    }
+  }
+  
+  .animate-shimmer {
+    animation: shimmer-button 3s ease-in-out infinite;
+  }
+  
   /* Bounce animation for typing indicator */
   @keyframes bounce {
     0%, 100% {

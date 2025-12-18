@@ -98,7 +98,7 @@ export const HomePage: React.FC = () => {
           </div>
 
           {/* Stats - Glassmorphism Style */}
-          <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
+          <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto mb-16">
             <div className="bg-bg-white/80 backdrop-blur-sm border border-stroke rounded-lg p-6 text-center hover:shadow-lg hover:scale-105 transition-all duration-300 group">
               <div className="text-3xl font-semibold text-main-100 mb-1 group-hover:scale-110 transition-transform">1000+</div>
               <div className="text-sm text-text-10">Пациентов</div>

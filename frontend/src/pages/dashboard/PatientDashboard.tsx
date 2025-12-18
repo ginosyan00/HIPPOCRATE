@@ -4,6 +4,7 @@ import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayou
 import { Card, Button, Spinner } from '../../components/common';
 import { PatientAppointmentsStats } from '../../components/dashboard/PatientAppointmentsStats';
 import { PatientMiniChart } from '../../components/dashboard/PatientMiniChart';
+import { DailyTipCard } from '../../components/public/DailyTipCard';
 import { useAuthStore } from '../../store/useAuthStore';
 import { usePatientAppointments } from '../../hooks/usePatientAppointments';
 import { useUnreadNotificationsCount, useMarkAllNotificationsAsRead } from '../../hooks/useNotifications';
@@ -11,7 +12,6 @@ import { formatAppointmentDate, formatAppointmentTime } from '../../utils/dateFo
 
 // Import icons
 import userIcon from '../../assets/icons/user.svg';
-import lightbulbIcon from '../../assets/icons/lightbulb.svg';
 import notificationIcon from '../../assets/icons/notification.svg';
 import plusIcon from '../../assets/icons/plus.svg';
 import calendarIcon from '../../assets/icons/calendar.svg';
@@ -62,54 +62,6 @@ export const PatientDashboard: React.FC = () => {
     return formatAppointmentTime(dateString, 'short');
   };
 
-  // Функция для получения совета дня (разный каждый день)
-  const getDailyTip = (): string => {
-    // Массив советов для здоровья зубов
-    const tips = [
-      "Пейте не менее 8 стаканов воды в день для поддержания здоровья и хорошего самочувствия!",
-      "Чистите зубы дважды в день утром и вечером по 2 минуты для идеальной гигиены полости рта.",
-      "Используйте зубную нить ежедневно для удаления остатков пищи между зубами.",
-      "Ограничьте потребление сладких напитков и продуктов, они могут повредить эмаль зубов.",
-      "Регулярно посещайте стоматолога для профилактических осмотров каждые 6 месяцев.",
-      "Используйте фторсодержащую зубную пасту для укрепления эмали и предотвращения кариеса.",
-      "Избегайте курения и употребления табака - они вредят здоровью зубов и десен.",
-      "Ешьте больше свежих овощей и фруктов - они помогают естественному очищению зубов.",
-      "Заменяйте зубную щетку каждые 3 месяца или когда щетинки изнашиваются.",
-      "Используйте ополаскиватель для рта после чистки зубов для дополнительной защиты.",
-      "Ограничьте перекусы между основными приемами пищи для снижения риска кариеса.",
-      "Пейте зеленый чай - он содержит антиоксиданты, полезные для здоровья десен.",
-      "Избегайте слишком горячих или холодных напитков, они могут повредить эмаль.",
-      "Жуйте жевательную резинку без сахара после еды для стимуляции слюноотделения.",
-      "Используйте мягкую зубную щетку, чтобы не повредить десны при чистке.",
-      "Массируйте десны мягкими круговыми движениями во время чистки зубов.",
-      "Ограничьте потребление кислых продуктов, они могут разъедать эмаль зубов.",
-      "Пейте молоко и ешьте молочные продукты - они богаты кальцием для крепких зубов.",
-      "Избегайте использования зубов как инструмента для открывания упаковок.",
-      "Практикуйте правильную технику чистки зубов - движения должны быть мягкими и круговыми.",
-      "Используйте зубную пасту с фтором, одобренную стоматологической ассоциацией.",
-      "Ограничьте потребление кофе и чая, они могут окрашивать зубы.",
-      "Пейте воду после каждого приема пищи для естественного очищения полости рта.",
-      "Избегайте стресса - он может привести к скрежетанию зубами во сне.",
-      "Ешьте продукты, богатые витамином C, для здоровья десен.",
-      "Используйте электрическую зубную щетку для более эффективной чистки.",
-      "Ограничьте потребление алкоголя - он может сушить рот и способствовать кариесу.",
-      "Практикуйте дыхание через нос, а не через рот, для поддержания здоровья полости рта.",
-      "Регулярно проверяйте десны на наличие признаков воспаления или кровотечения.",
-      "Пейте зеленый чай без сахара - он помогает бороться с бактериями во рту.",
-      "Используйте зубную пасту с натуральными ингредиентами, если у вас чувствительные зубы.",
-    ];
-
-    // Получаем текущую дату и используем её как seed для выбора совета
-    const today = new Date();
-    const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
-    
-    // Используем день года для выбора совета (гарантирует одинаковый совет в течение дня)
-    const tipIndex = dayOfYear % tips.length;
-    
-    return tips[tipIndex];
-  };
-
-  const dailyTip = getDailyTip();
 
   return (
     <NewDashboardLayout>
@@ -153,24 +105,7 @@ export const PatientDashboard: React.FC = () => {
         </Card>
 
         {/* Совет дня */}
-        <Card padding="lg" className="border-stroke">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-main-10 rounded-lg flex items-center justify-center flex-shrink-0">
-              <img src={lightbulbIcon} alt="Совет" className="w-6 h-6" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-3">
-                <h3 className="text-lg font-medium text-text-50">Совет дня</h3>
-                <span className="px-2 py-1 bg-main-100 text-white text-xs font-medium rounded">
-                  {new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}
-                </span>
-              </div>
-              <p className="text-sm text-text-10 leading-relaxed">
-                {dailyTip}
-              </p>
-            </div>
-          </div>
-        </Card>
+        <DailyTipCard />
 
         {/* Расширенная статистика */}
         <PatientAppointmentsStats

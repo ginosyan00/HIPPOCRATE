@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '../common';
 import { PublicBookNowModal } from './PublicBookNowModal';
+import { HippocratesClockCompact } from './HippocratesClockCompact';
 import hippocratesLogo from '../../assets/icons/hippocrates-logo.png';
 import calendarIcon from '../../assets/icons/calendar.svg';
 import userIcon from '../../assets/icons/user.svg';
@@ -58,8 +59,13 @@ export const PublicHeader: React.FC = () => {
               </Link>
             </nav>
 
-            {/* Правая часть: иконка входа и кнопка Book */}
+            {/* Правая часть: часы, иконка входа и кнопка Book */}
             <div className="flex items-center gap-3 lg:gap-4">
+              {/* Компактные часы */}
+              <div className="hidden md:block">
+                <HippocratesClockCompact />
+              </div>
+
               {/* Иконка Login/Register с текстом */}
               <Link 
                 to="/login"

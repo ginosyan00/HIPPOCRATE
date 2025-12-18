@@ -164,3 +164,4 @@ export const DeleteAppointmentsConfirmModal: React.FC<DeleteAppointmentsConfirmM
     </Modal>
   );
 };
+

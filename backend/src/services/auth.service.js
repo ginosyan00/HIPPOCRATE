@@ -249,7 +249,9 @@ export async function loginUser(email, password) {
   }
 
   // 2. Проверить status пользователя
-  if (user.status === 'SUSPENDED') {
+  // Для врачей (DOCTOR) статус SUSPENDED означает отпуск, они могут входить в систему
+  // Для других ролей SUSPENDED блокирует доступ
+  if (user.status === 'SUSPENDED' && user.role !== 'DOCTOR') {
     console.log('🔴 [AUTH SERVICE] Аккаунт приостановлен:', email);
     throw new Error('Your account has been suspended. Please contact support.');
   }
@@ -262,6 +264,11 @@ export async function loginUser(email, password) {
   if (user.status === 'PENDING') {
     console.log('⏳ [AUTH SERVICE] Аккаунт ожидает одобрения:', email);
     throw new Error('Your account is pending approval. You will be notified once approved.');
+  }
+  
+  // Для врачей с SUSPENDED статусом (отпуск) разрешаем вход
+  if (user.status === 'SUSPENDED' && user.role === 'DOCTOR') {
+    console.log('⚠️ [AUTH SERVICE] Врач входит с статусом SUSPENDED (отпуск):', email);
   }
 
   // 3. Проверить пароль

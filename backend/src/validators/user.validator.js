@@ -160,6 +160,7 @@ export const updateDoctorProfileSchema = Joi.object({
   }),
   gender: Joi.string().valid('male', 'female', 'other').optional(),
   avatar: Joi.string().allow('').optional(), // Base64 строка для изображения
+  status: Joi.string().valid('ACTIVE', 'SUSPENDED').optional(), // Врач может менять свой статус
 }).min(1); // Хотя бы одно поле обязательно
 
 /**

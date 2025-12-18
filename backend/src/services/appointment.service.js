@@ -721,10 +721,24 @@ export async function updateStatus(
  * @returns {Promise<Array>} Массив занятых интервалов [{ start: Date, end: Date, appointmentId: string }]
  */
 export async function getBusyTimeSlots(clinicId, doctorId, date) {
+  // Проверяем что врач существует и активен
+  const doctor = await prisma.user.findFirst({
+    where: {
+      id: doctorId,
+      clinicId,
+      role: 'DOCTOR',
+      status: 'ACTIVE',
+    },
+  });
+
+  if (!doctor) {
+    throw new Error('Doctor not found or inactive');
+  }
+
   // Создаем начало и конец дня
   const startOfDay = new Date(date);
   startOfDay.setHours(0, 0, 0, 0);
-  
+
   const endOfDay = new Date(date);
   endOfDay.setHours(23, 59, 59, 999);
 

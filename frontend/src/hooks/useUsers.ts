@@ -207,6 +207,7 @@ export function useUpdateDoctorSchedule(doctorId: string) {
  */
 export function useUpdateDoctorStatus() {
   const queryClient = useQueryClient();
+  const currentUser = useAuthStore(state => state.user);
 
   return useMutation({
     mutationFn: ({ doctorId, status }: { doctorId: string; status: 'ACTIVE' | 'SUSPENDED' }) =>
@@ -224,6 +225,14 @@ export function useUpdateDoctorStatus() {
       // Инвалидируем кэш профиля врача
       queryClient.invalidateQueries({ queryKey: ['doctor', 'profile', updatedUser.id] });
       queryClient.invalidateQueries({ queryKey: ['doctor', 'profile'] });
+      
+      // Если обновлен текущий пользователь (врач меняет свой статус или клиника меняет статус врача, который сейчас залогинен)
+      // Обновляем store, чтобы врач оставался в системе
+      if (currentUser && currentUser.id === updatedUser.id) {
+        console.log('🔄 [USE USERS] Обновление store для текущего пользователя (врач остается в системе)');
+        useAuthStore.setState({ user: updatedUser });
+        useAuthStore.getState().updateUser(updatedUser);
+      }
       
       toast.success(`Статус врача успешно изменен на ${updatedUser.status === 'ACTIVE' ? 'Активен' : 'Неактивен'}`);
     },

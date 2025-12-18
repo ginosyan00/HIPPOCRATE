@@ -43,8 +43,9 @@ export function useUpdateDoctorProfile() {
       queryClient.invalidateQueries({ queryKey: ['users', updatedDoctor.id] });
       queryClient.invalidateQueries({ queryKey: ['users'] });
       
-      // Обновляем данные пользователя в store
+      // Обновляем данные пользователя в store (важно для сохранения сессии при изменении статуса)
       useAuthStore.setState({ user: updatedDoctor });
+      useAuthStore.getState().updateUser(updatedDoctor);
       
       toast.success('Профиль успешно обновлен');
     },

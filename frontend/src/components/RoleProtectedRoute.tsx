@@ -72,14 +72,22 @@ export const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
   }
 
   // Шаг 3: Проверка статуса (если требуется ACTIVE)
+  // Для врачей (DOCTOR) статус SUSPENDED означает отпуск, они могут работать в системе
+  // Для других ролей SUSPENDED блокирует доступ
   if (requireActive && user.status !== 'ACTIVE') {
-    console.log('⏳ [ROLE PROTECTED ROUTE] Статус не ACTIVE:', user.status);
-    const redirectPath = getRoleRedirectPath({
-      role: user.role,
-      status: user.status,
-      clinicId: user.clinicId,
-    });
-    return <Navigate to={redirectPath} replace />;
+    // Разрешаем доступ врачам с SUSPENDED статусом (отпуск)
+    if (user.status === 'SUSPENDED' && user.role === 'DOCTOR') {
+      console.log('⚠️ [ROLE PROTECTED ROUTE] Врач с SUSPENDED статусом (отпуск) -> разрешен доступ');
+      // Продолжаем проверку дальше, не редиректим
+    } else {
+      console.log('⏳ [ROLE PROTECTED ROUTE] Статус не ACTIVE:', user.status);
+      const redirectPath = getRoleRedirectPath({
+        role: user.role,
+        status: user.status,
+        clinicId: user.clinicId,
+      });
+      return <Navigate to={redirectPath} replace />;
+    }
   }
 
   // Шаг 4: Проверка роли

@@ -32,9 +32,21 @@ export const getRoleRedirectPath = (config: RedirectConfig): string => {
     return '/pending-approval';
   }
 
-  if (status === 'SUSPENDED' || status === 'REJECTED') {
-    console.log('🚫 [ROLE REDIRECT] Статус заблокирован -> /login');
+  // Для врачей (DOCTOR) статус SUSPENDED означает отпуск, они могут работать в системе
+  // Для других ролей SUSPENDED блокирует доступ
+  if (status === 'SUSPENDED' && role !== 'DOCTOR') {
+    console.log('🚫 [ROLE REDIRECT] Статус SUSPENDED (не врач) -> /login');
     return '/login';
+  }
+
+  if (status === 'REJECTED') {
+    console.log('🚫 [ROLE REDIRECT] Статус REJECTED -> /login');
+    return '/login';
+  }
+  
+  // Для врачей с SUSPENDED статусом разрешаем доступ к dashboard
+  if (status === 'SUSPENDED' && role === 'DOCTOR') {
+    console.log('⚠️ [ROLE REDIRECT] Врач с SUSPENDED статусом (отпуск) -> разрешен доступ к dashboard');
   }
 
   // Приоритет 2: Редирект на основе роли

@@ -527,6 +527,7 @@ export async function updateDoctorProfile(userId, data) {
       ...(data.dateOfBirth !== undefined && { dateOfBirth: data.dateOfBirth || null }),
       ...(data.gender !== undefined && { gender: data.gender || null }),
       ...(data.avatar !== undefined && { avatar: data.avatar || null }),
+      ...(data.status !== undefined && { status: data.status }), // Врач может менять свой статус
     },
     select: {
       id: true,

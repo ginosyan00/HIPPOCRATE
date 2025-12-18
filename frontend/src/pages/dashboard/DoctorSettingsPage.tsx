@@ -4,6 +4,7 @@ import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayou
 import { DoctorProfileSection } from '../../components/dashboard/DoctorProfileSection';
 import { PasswordSection } from '../../components/dashboard/PasswordSection';
 import { DoctorScheduleEditor } from '../../components/dashboard/DoctorScheduleEditor';
+import { DoctorStatusToggle } from '../../components/dashboard/DoctorStatusToggle';
 import { useUser, useUpdateUser, useDeleteMyAccount } from '../../hooks/useUsers';
 import { useDoctorProfile, useUpdateDoctorProfile, useUploadDoctorAvatar, useDoctorSchedule, useUpdateDoctorSchedule } from '../../hooks/useDoctor';
 import { useUpdatePassword } from '../../hooks/useAuth';
@@ -168,6 +169,12 @@ export const DoctorSettingsPage: React.FC = () => {
           onAvatarUpload={handleAvatarUpload}
           isLoading={isEditingSelf ? updateDoctorProfileMutation.isPending : updateUserMutation.isPending}
           isAvatarLoading={isEditingSelf ? uploadDoctorAvatarMutation.isPending : updateUserMutation.isPending}
+          isEditingSelf={isEditingSelf}
+        />
+
+        {/* Статус врача (доступен и для врача, и для клиники) */}
+        <DoctorStatusToggle
+          doctor={doctor}
           isEditingSelf={isEditingSelf}
         />
 

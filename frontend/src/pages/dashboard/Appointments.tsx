@@ -17,7 +17,7 @@ import { useAuthStore } from '../../store/useAuthStore';
 import { useQueryClient } from '@tanstack/react-query';
 import { User, Appointment } from '../../types/api.types';
 import { format } from 'date-fns';
-import { Filter, Calendar, Clock, Search, User as UserIcon, CalendarPlus } from 'lucide-react';
+import { Filter, Calendar, Clock, Search, User as UserIcon } from 'lucide-react';
 
 // Import icons
 import analyticsIcon from '../../assets/icons/analytics.svg';
@@ -549,15 +549,6 @@ export const AppointmentsPage: React.FC = () => {
               </button>
             </div>
             )}
-            
-            <Button 
-              variant="primary" 
-              onClick={() => setIsCreateModalOpen(true)} 
-              className="flex items-center gap-3 px-12 py-5 text-xl font-bold shadow-lg hover:shadow-xl transition-all min-w-[220px]"
-            >
-              <CalendarPlus className="w-7 h-7" />
-              Создать приём
-            </Button>
           </div>
         </div>
 

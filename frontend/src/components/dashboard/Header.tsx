@@ -6,6 +6,9 @@ import { NotificationDropdown } from './NotificationDropdown';
 import { PatientChat } from '../chat/PatientChat';
 import { ClinicChat } from '../chat/ClinicChat';
 import { useUnreadCount } from '../../hooks/useChat';
+import { CreateAppointmentModal } from './CreateAppointmentModal';
+import { Button } from '../common';
+import { CalendarPlus } from 'lucide-react';
 
 // Import icons
 import arrowDownIcon from '../../assets/icons/arrow-down.svg';
@@ -21,13 +24,17 @@ export const Header: React.FC = () => {
   const toggleSidebar = useUIStore(state => state.toggleSidebar);
   const [showProfileMenu, setShowProfileMenu] = React.useState(false);
   const [isChatOpen, setIsChatOpen] = React.useState(false);
+  const [isCreateAppointmentModalOpen, setIsCreateAppointmentModalOpen] = React.useState(false);
   const { unreadCount } = useUnreadCount();
+
+  // Определяем, может ли пользователь создавать приёмы
+  const canCreateAppointments = user?.role === 'CLINIC' || user?.role === 'DOCTOR' || user?.role === 'ADMIN';
 
   return (
     <header className="bg-bg-white border-b border-stroke px-8 py-6 sticky top-0 z-40">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between relative">
         {/* Left: Page Title + Mobile Menu */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-1">
           <button
             onClick={toggleSidebar}
             className="md:hidden p-2 rounded-sm hover:bg-bg-primary transition-smooth"
@@ -36,11 +43,25 @@ export const Header: React.FC = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h1 className="text-2xl font-semibold text-text-100">Dashboard</h1>
         </div>
 
+        {/* Center: Create Appointment Button */}
+        {canCreateAppointments && (
+          <div className="absolute left-1/2 transform -translate-x-1/2 z-10">
+            <Button 
+              variant="primary" 
+              onClick={() => setIsCreateAppointmentModalOpen(true)} 
+              className="flex items-center gap-3 sm:gap-4 px-6 sm:px-10 py-3 sm:py-4 text-base sm:text-xl font-bold rounded-lg shadow-xl hover:shadow-2xl hover:scale-105 active:scale-100 transition-all duration-300 whitespace-nowrap bg-main-100 text-white hover:bg-main-100/90 border-0"
+            >
+              <CalendarPlus className="w-6 h-6 sm:w-7 sm:h-7" />
+              <span className="hidden sm:inline">Создать приём</span>
+              <span className="sm:hidden">Создать</span>
+            </Button>
+          </div>
+        )}
+
         {/* Right: Icons & Profile */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-1 justify-end">
           {/* Chat Button - для CLINIC, DOCTOR и PATIENT */}
           {(user?.role === 'CLINIC' || user?.role === 'DOCTOR' || user?.role === 'PATIENT') && (
             <button
@@ -134,6 +155,18 @@ export const Header: React.FC = () => {
           width="450px"
         />
       ) : null}
+
+      {/* Create Appointment Modal */}
+      {canCreateAppointments && (
+        <CreateAppointmentModal
+          isOpen={isCreateAppointmentModalOpen}
+          onClose={() => setIsCreateAppointmentModalOpen(false)}
+          onSuccess={() => {
+            setIsCreateAppointmentModalOpen(false);
+            // Данные автоматически обновятся через query invalidation в useCreateAppointment
+          }}
+        />
+      )}
     </header>
   );
 };

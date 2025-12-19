@@ -1,17 +1,18 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
-import { DoctorProfileSection } from '../../components/dashboard/DoctorProfileSection';
+import { DoctorProfileSection, DoctorProfileSectionRef } from '../../components/dashboard/DoctorProfileSection';
 import { PasswordSection } from '../../components/dashboard/PasswordSection';
-import { DoctorScheduleEditor } from '../../components/dashboard/DoctorScheduleEditor';
+import { DoctorScheduleEditor, DoctorScheduleEditorRef } from '../../components/dashboard/DoctorScheduleEditor';
 import { DoctorStatusToggle } from '../../components/dashboard/DoctorStatusToggle';
-import { DoctorCategoriesSection } from '../../components/dashboard/DoctorCategoriesSection';
+import { DoctorCategoriesSection, DoctorCategoriesSectionRef } from '../../components/dashboard/DoctorCategoriesSection';
 import { useUser, useUpdateUser, useDeleteMyAccount } from '../../hooks/useUsers';
 import { useDoctorProfile, useUpdateDoctorProfile, useUploadDoctorAvatar, useDoctorSchedule, useUpdateDoctorSchedule } from '../../hooks/useDoctor';
 import { useUpdatePassword } from '../../hooks/useAuth';
 import { useAuthStore } from '../../store/useAuthStore';
-import { Spinner, BackButton, DeleteAccountSection } from '../../components/common';
+import { Spinner, BackButton, DeleteAccountSection, Button } from '../../components/common';
 import { toast } from 'react-hot-toast';
+import checkIcon from '../../assets/icons/check.svg';
 
 /**
  * DoctorSettingsPage - Universal Page
@@ -46,6 +47,12 @@ export const DoctorSettingsPage: React.FC = () => {
   // Hooks для расписания (только для врача, редактирующего себя)
   const { data: schedule, isLoading: isLoadingSchedule } = useDoctorSchedule();
   const updateScheduleMutation = useUpdateDoctorSchedule();
+
+  // Refs для компонентов
+  const profileSectionRef = useRef<DoctorProfileSectionRef>(null);
+  const scheduleEditorRef = useRef<DoctorScheduleEditorRef>(null);
+  const categoriesSectionRef = useRef<DoctorCategoriesSectionRef>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
   const handleUpdateProfile = async (data: any) => {
     try {
@@ -119,6 +126,37 @@ export const DoctorSettingsPage: React.FC = () => {
       throw error;
     }
   };
+
+  // Обработчик сохранения всех изменений (кроме пароля и удаления аккаунта)
+  const handleSaveAll = async () => {
+    if (!doctor) return;
+
+    setIsSaving(true);
+    try {
+      // Сохраняем профиль
+      const profileSaved = await profileSectionRef.current?.save();
+      
+      if (profileSaved === false) {
+        // Валидация не прошла, не сохраняем остальное
+        setIsSaving(false);
+        return;
+      }
+      
+      // Сохраняем категории
+      await categoriesSectionRef.current?.save();
+      
+      // Сохраняем расписание (только если врач редактирует себя)
+      if (isEditingSelf) {
+        await scheduleEditorRef.current?.save();
+      }
+
+      toast.success('Все изменения успешно сохранены');
+    } catch (error: any) {
+      toast.error(error.message || 'Ошибка при сохранении изменений');
+    } finally {
+      setIsSaving(false);
+    }
+  };
   
   if (isLoading) {
     return (
@@ -151,26 +189,48 @@ export const DoctorSettingsPage: React.FC = () => {
   return (
     <NewDashboardLayout>
       <div className="space-y-6">
-        {/* Back Button */}
-        <div className="mb-4">
-          <BackButton fallback="/dashboard/doctors" />
-        </div>
-
-        {isEditingSelf && (
-          <div>
-            <h1 className="text-2xl font-bold text-text-100">Мой профиль</h1>
-            <p className="text-sm text-text-10 mt-1">Управление профилем и настройками</p>
+        {/* Header с кнопкой назад и кнопкой сохранения */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <BackButton fallback="/dashboard/doctors" />
+            {isEditingSelf && (
+              <div>
+                <h1 className="text-2xl font-bold text-text-100">Мой профиль</h1>
+                <p className="text-sm text-text-10 mt-1">Управление профилем и настройками</p>
+              </div>
+            )}
+            {!isEditingSelf && (
+              <div>
+                <h1 className="text-2xl font-bold text-text-100">Настройки врача</h1>
+                <p className="text-sm text-text-10 mt-1">{doctor.name} • {doctor.specialization || 'Специализация не указана'}</p>
+              </div>
+            )}
           </div>
-        )}
+          {/* Кнопка сохранения всех изменений */}
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={handleSaveAll}
+            isLoading={isSaving || (isEditingSelf ? updateDoctorProfileMutation.isPending : updateUserMutation.isPending) || updateScheduleMutation.isPending}
+            disabled={isSaving || (isEditingSelf ? updateDoctorProfileMutation.isPending : updateUserMutation.isPending) || updateScheduleMutation.isPending}
+          >
+            <span className="flex items-center gap-2">
+              <img src={checkIcon} alt="Сохранить" className="w-5 h-5" />
+              Сохранить все изменения
+            </span>
+          </Button>
+        </div>
         
         {/* Профиль врача */}
         <DoctorProfileSection
+          ref={profileSectionRef}
           doctor={doctor}
           onUpdate={handleUpdateProfile}
           onAvatarUpload={handleAvatarUpload}
           isLoading={isEditingSelf ? updateDoctorProfileMutation.isPending : updateUserMutation.isPending}
           isAvatarLoading={isEditingSelf ? uploadDoctorAvatarMutation.isPending : updateUserMutation.isPending}
           isEditingSelf={isEditingSelf}
+          hideSubmitButton={true}
         />
 
         {/* Статус врача (доступен и для врача, и для клиники) */}
@@ -181,6 +241,7 @@ export const DoctorSettingsPage: React.FC = () => {
 
         {/* Категории лечения */}
         <DoctorCategoriesSection
+          ref={categoriesSectionRef}
           doctorId={doctor.id}
           isEditingSelf={isEditingSelf}
         />
@@ -188,9 +249,11 @@ export const DoctorSettingsPage: React.FC = () => {
         {/* Рабочее расписание (только если врач редактирует себя) */}
         {isEditingSelf && (
           <DoctorScheduleEditor
+            ref={scheduleEditorRef}
             schedule={schedule}
             onUpdate={handleUpdateSchedule}
             isLoading={updateScheduleMutation.isPending || isLoadingSchedule}
+            hideSubmitButton={true}
           />
         )}
 

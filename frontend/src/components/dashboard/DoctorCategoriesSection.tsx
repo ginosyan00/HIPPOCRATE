@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef, useCallback } from 'react';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { Spinner } from '../common/Spinner';
@@ -22,10 +22,15 @@ interface DoctorCategoriesSectionProps {
   isEditingSelf?: boolean;
 }
 
-export const DoctorCategoriesSection: React.FC<DoctorCategoriesSectionProps> = ({
+export interface DoctorCategoriesSectionRef {
+  save: () => Promise<void>;
+  getSelectedCategoryIds: () => string[];
+}
+
+export const DoctorCategoriesSection = forwardRef<DoctorCategoriesSectionRef, DoctorCategoriesSectionProps>(({
   doctorId,
   isEditingSelf = false,
-}) => {
+}, ref) => {
   // Получаем все доступные категории клиники
   const { data: allCategories = [], isLoading: isLoadingAllCategories } = useTreatmentCategories();
   
@@ -54,17 +59,9 @@ export const DoctorCategoriesSection: React.FC<DoctorCategoriesSectionProps> = (
     setIsFormVisible(!isFormVisible);
   };
 
-  // Сохраняем изменения категорий
-  const handleSaveCategories = async () => {
-    try {
-      console.log('🔵 [DOCTOR CATEGORIES] Сохранение категорий врача:', selectedCategoryIds);
-      await updateCategoriesMutation.mutateAsync(selectedCategoryIds);
-      toast.success('Категории успешно обновлены');
-      setIsFormVisible(false);
-    } catch (error: any) {
-      console.error('🔴 [DOCTOR CATEGORIES] Ошибка сохранения:', error);
-      // Ошибка уже обработана в хуке
-    }
+  // Сохраняем изменения категорий (только закрываем форму, не сохраняем)
+  const handleSaveCategories = () => {
+    setIsFormVisible(false);
   };
 
   // Отменяем изменения
@@ -73,21 +70,33 @@ export const DoctorCategoriesSection: React.FC<DoctorCategoriesSectionProps> = (
     setIsFormVisible(false);
   };
 
-  // Удаляем категорию из списка врача
-  const handleRemoveCategory = async (categoryId: string) => {
-    try {
-      const newCategoryIds = doctorCategories
-        .map(cat => cat.id)
-        .filter(id => id !== categoryId);
-      
-      console.log('🔵 [DOCTOR CATEGORIES] Удаление категории:', categoryId);
-      await updateCategoriesMutation.mutateAsync(newCategoryIds);
-      toast.success('Категория успешно удалена');
-    } catch (error: any) {
-      console.error('🔴 [DOCTOR CATEGORIES] Ошибка удаления:', error);
-      // Ошибка уже обработана в хуке
-    }
+  // Удаляем категорию из выбранных (только локально, не сохраняем)
+  const handleRemoveCategory = (categoryId: string) => {
+    setSelectedCategoryIds(selectedCategoryIds.filter(id => id !== categoryId));
   };
+
+  // Функция сохранения категорий (вызывается через ref)
+  const saveCategories = useCallback(async () => {
+    try {
+      console.log('🔵 [DOCTOR CATEGORIES] Сохранение категорий врача:', selectedCategoryIds);
+      await updateCategoriesMutation.mutateAsync(selectedCategoryIds);
+      console.log('✅ [DOCTOR CATEGORIES] Категории успешно сохранены');
+    } catch (error: any) {
+      console.error('🔴 [DOCTOR CATEGORIES] Ошибка сохранения:', error);
+      throw error; // Пробрасываем ошибку для обработки в родительском компоненте
+    }
+  }, [selectedCategoryIds, updateCategoriesMutation]);
+
+  // Получаем выбранные категории (для использования в родительском компоненте)
+  const getSelectedCategoryIds = useCallback(() => {
+    return selectedCategoryIds;
+  }, [selectedCategoryIds]);
+
+  // Expose save function to parent via ref
+  useImperativeHandle(ref, () => ({
+    save: saveCategories,
+    getSelectedCategoryIds,
+  }), [saveCategories, getSelectedCategoryIds]);
 
   // Переключаем выбор категории
   const handleToggleCategory = (categoryId: string) => {
@@ -198,7 +207,6 @@ export const DoctorCategoriesSection: React.FC<DoctorCategoriesSectionProps> = (
                   type="button"
                   variant="secondary"
                   onClick={handleCancelForm}
-                  disabled={updateCategoriesMutation.isPending}
                   size="sm"
                 >
                   Отмена
@@ -207,11 +215,9 @@ export const DoctorCategoriesSection: React.FC<DoctorCategoriesSectionProps> = (
                   type="button"
                   variant="primary"
                   onClick={handleSaveCategories}
-                  isLoading={updateCategoriesMutation.isPending}
-                  disabled={updateCategoriesMutation.isPending}
                   size="sm"
                 >
-                  Сохранить
+                  Готово
                 </Button>
               </div>
             </div>
@@ -275,7 +281,6 @@ export const DoctorCategoriesSection: React.FC<DoctorCategoriesSectionProps> = (
                       variant="danger"
                       size="sm"
                       onClick={() => handleRemoveCategory(category.id)}
-                      disabled={updateCategoriesMutation.isPending}
                     >
                       Удалить
                     </Button>
@@ -288,4 +293,6 @@ export const DoctorCategoriesSection: React.FC<DoctorCategoriesSectionProps> = (
       </Card>
     </>
   );
-};
+});
+
+DoctorCategoriesSection.displayName = 'DoctorCategoriesSection';

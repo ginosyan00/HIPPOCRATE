@@ -10,7 +10,7 @@ import { DoctorScheduleEditor, DoctorScheduleEditorRef } from '../../components/
 import { DoctorProfileSection, DoctorProfileSectionRef } from '../../components/dashboard/DoctorProfileSection';
 import { DoctorStatusQuickToggle } from '../../components/dashboard/DoctorStatusQuickToggle';
 import { DoctorStatusToggle } from '../../components/dashboard/DoctorStatusToggle';
-import { DoctorCategoriesSection } from '../../components/dashboard/DoctorCategoriesSection';
+import { DoctorCategoriesSection, DoctorCategoriesSectionRef } from '../../components/dashboard/DoctorCategoriesSection';
 import { toast } from 'react-hot-toast';
 
 // Import icons
@@ -45,6 +45,7 @@ export const DoctorsPage: React.FC = () => {
   // Refs для компонентов
   const profileSectionRef = useRef<DoctorProfileSectionRef>(null);
   const scheduleEditorRef = useRef<DoctorScheduleEditorRef>(null);
+  const categoriesSectionRef = useRef<DoctorCategoriesSectionRef>(null);
 
   // Загружаем врачей и клинику
   const { data: doctorsData, isLoading } = useDoctors();
@@ -182,10 +183,13 @@ export const DoctorsPage: React.FC = () => {
       const profileSaved = await profileSectionRef.current?.save();
       
       if (profileSaved === false) {
-        // Валидация не прошла, не сохраняем расписание
+        // Валидация не прошла, не сохраняем остальное
         setIsSaving(false);
         return;
       }
+      
+      // Сохраняем категории
+      await categoriesSectionRef.current?.save();
       
       // Сохраняем расписание
       await scheduleEditorRef.current?.save();
@@ -271,36 +275,51 @@ export const DoctorsPage: React.FC = () => {
     return (
       <NewDashboardLayout>
         <div className="space-y-6">
-          {/* Header с кнопкой назад */}
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleCloseSchedule}
-              className="inline-flex items-center gap-2 text-sm font-normal text-text-50 hover:text-main-100 transition-smooth focus:outline-none"
-              aria-label="Вернуться к списку"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
+          {/* Header с кнопкой назад и кнопкой сохранения */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleCloseSchedule}
+                className="inline-flex items-center gap-2 text-sm font-normal text-text-50 hover:text-main-100 transition-smooth focus:outline-none"
+                aria-label="Вернуться к списку"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
-              <span>Назад</span>
-            </button>
-            <div>
-              <h1 className="text-2xl font-semibold text-text-100">
-                Настройки врача
-              </h1>
-              <p className="text-text-10 text-sm mt-1">
-                {doctor.name} • {doctor.specialization || 'Специализация не указана'}
-              </p>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                  />
+                </svg>
+                <span>Назад</span>
+              </button>
+              <div>
+                <h1 className="text-2xl font-semibold text-text-100">
+                  Настройки врача
+                </h1>
+                <p className="text-text-10 text-sm mt-1">
+                  {doctor.name} • {doctor.specialization || 'Специализация не указана'}
+                </p>
+              </div>
             </div>
+            {/* Кнопка сохранения всех изменений */}
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={handleSaveAll}
+              isLoading={isSaving || updateUserMutation.isPending || updateScheduleMutation.isPending}
+              disabled={isSaving || updateUserMutation.isPending || updateScheduleMutation.isPending}
+            >
+              <span className="flex items-center gap-2">
+                <img src={checkIcon} alt="Сохранить" className="w-5 h-5" />
+                Сохранить все изменения
+              </span>
+            </Button>
           </div>
 
           {/* Loading */}
@@ -334,6 +353,7 @@ export const DoctorsPage: React.FC = () => {
 
               {/* Категории лечения */}
               <DoctorCategoriesSection
+                ref={categoriesSectionRef}
                 doctorId={doctor.id}
                 isEditingSelf={false}
               />
@@ -346,19 +366,6 @@ export const DoctorsPage: React.FC = () => {
                 isLoading={updateScheduleMutation.isPending || isLoadingSchedule}
                 hideSubmitButton={true}
               />
-
-              {/* Общая кнопка сохранения */}
-              <div className="flex justify-end pt-4 border-t border-stroke">
-                <Button
-                  variant="primary"
-                  size="md"
-                  onClick={handleSaveAll}
-                  isLoading={isSaving || updateUserMutation.isPending || updateScheduleMutation.isPending}
-                  disabled={isSaving || updateUserMutation.isPending || updateScheduleMutation.isPending}
-                >
-                  Сохранить все изменения
-                </Button>
-              </div>
             </>
           )}
         </div>

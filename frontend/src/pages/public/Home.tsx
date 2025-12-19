@@ -339,8 +339,7 @@ export const HomePage: React.FC = () => {
               <Link to="/register">
                 <Button 
                   size="lg" 
-                  variant="secondary" 
-                  className="border-2 border-white bg-transparent text-white hover:bg-white/20 hover:scale-105 text-sm font-normal px-8 py-3 transition-all duration-300"
+                  className="bg-white text-main-100 hover:bg-bg-primary hover:scale-105 text-sm font-normal px-8 py-3 shadow-xl transition-all duration-300"
                 >
                   Узнать больше
                 </Button>

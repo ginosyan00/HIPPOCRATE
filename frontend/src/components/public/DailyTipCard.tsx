@@ -77,3 +77,6 @@ export const DailyTipCard: React.FC = () => {
     </div>
   );
 };
+
+
+

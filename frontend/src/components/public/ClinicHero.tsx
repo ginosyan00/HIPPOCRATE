@@ -114,3 +114,6 @@ export const ClinicHero: React.FC<ClinicHeroProps> = ({ clinic, onBookAppointmen
   );
 };
 
+
+
+

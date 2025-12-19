@@ -202,25 +202,25 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
           {onViewChange && (
             <div className="flex items-center gap-2 border border-stroke rounded-sm overflow-hidden">
               <button
-                onClick={() => onViewChange('list')}
+                onClick={() => onViewChange('weekly')}
                 className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
-                  currentView === 'list'
+                  currentView === 'weekly'
                     ? 'bg-main-100 text-white'
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                 }`}
-                title="Таблица"
+                title="Недельный вид"
               >
                 <span className="flex items-center gap-2">
                   <img 
-                    src={analyticsIcon} 
-                    alt="Таблица" 
+                    src={calendarIcon} 
+                    alt="Неделя" 
                     className={`w-4 h-4 transition-smooth ${
-                      currentView === 'list'
+                      currentView === 'weekly'
                         ? 'brightness-0 invert'
                         : 'group-hover:brightness-0 group-hover:invert'
                     }`} 
                   />
-                  Таблица
+                  Неделя
                 </span>
               </button>
               <button
@@ -246,25 +246,25 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                 </span>
               </button>
               <button
-                onClick={() => onViewChange('weekly')}
+                onClick={() => onViewChange('list')}
                 className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
-                  currentView === 'weekly'
+                  currentView === 'list'
                     ? 'bg-main-100 text-white'
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                 }`}
-                title="Недельный вид"
+                title="Таблица"
               >
                 <span className="flex items-center gap-2">
                   <img 
-                    src={calendarIcon} 
-                    alt="Неделя" 
+                    src={analyticsIcon} 
+                    alt="Таблица" 
                     className={`w-4 h-4 transition-smooth ${
-                      currentView === 'weekly'
+                      currentView === 'list'
                         ? 'brightness-0 invert'
                         : 'group-hover:brightness-0 group-hover:invert'
                     }`} 
                   />
-                  Неделя
+                  Таблица
                 </span>
               </button>
             </div>

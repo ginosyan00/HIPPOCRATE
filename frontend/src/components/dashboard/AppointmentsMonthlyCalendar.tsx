@@ -227,10 +227,10 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  onViewChange('list');
+                  onViewChange('weekly');
                 }}
                 className={`group text-base font-medium transition-colors duration-150 flex-shrink-0 relative ${
-                  currentView === 'list'
+                  currentView === 'weekly'
                     ? 'bg-main-100 text-white'
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                 }`}
@@ -245,22 +245,22 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}
-                title="Таблица"
+                title="Недельный вид"
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
               >
                 <span className="flex items-center gap-2" style={{ pointerEvents: 'none' }}>
                   <img 
-                    src={analyticsIcon} 
-                    alt="Таблица" 
+                    src={calendarIcon} 
+                    alt="Неделя" 
                     className={`w-4 h-4 flex-shrink-0 transition-smooth ${
-                      currentView === 'list'
+                      currentView === 'weekly'
                         ? 'brightness-0 invert'
                         : 'group-hover:brightness-0 group-hover:invert'
                     }`} 
                     style={{ display: 'block' }} 
                   />
-                  <span style={{ whiteSpace: 'nowrap' }}>Таблица</span>
+                  <span style={{ whiteSpace: 'nowrap' }}>Неделя</span>
                 </span>
               </button>
               <button
@@ -307,10 +307,10 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  onViewChange('weekly');
+                  onViewChange('list');
                 }}
                 className={`group text-base font-medium transition-colors duration-150 flex-shrink-0 relative ${
-                  currentView === 'weekly'
+                  currentView === 'list'
                     ? 'bg-main-100 text-white'
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                 }`}
@@ -325,22 +325,22 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                   alignItems: 'center',
                   justifyContent: 'center'
                 }}
-                title="Недельный вид"
+                title="Таблица"
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
               >
                 <span className="flex items-center gap-2" style={{ pointerEvents: 'none' }}>
                   <img 
-                    src={calendarIcon} 
-                    alt="Неделя" 
+                    src={analyticsIcon} 
+                    alt="Таблица" 
                     className={`w-4 h-4 flex-shrink-0 transition-smooth ${
-                      currentView === 'weekly'
+                      currentView === 'list'
                         ? 'brightness-0 invert'
                         : 'group-hover:brightness-0 group-hover:invert'
                     }`} 
                     style={{ display: 'block' }} 
                   />
-                  <span style={{ whiteSpace: 'nowrap' }}>Неделя</span>
+                  <span style={{ whiteSpace: 'nowrap' }}>Таблица</span>
                 </span>
               </button>
             </div>

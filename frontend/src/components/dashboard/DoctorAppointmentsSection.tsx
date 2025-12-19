@@ -477,25 +477,25 @@ export const DoctorAppointmentsSection: React.FC<DoctorAppointmentsSectionProps>
             <div className="flex items-center justify-center">
               <div className="flex border border-stroke rounded-sm overflow-hidden">
                 <button
-                  onClick={() => handleViewTypeChange('list')}
+                  onClick={() => handleViewTypeChange('weekly')}
                   className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
-                    viewType === 'list'
+                    viewType === 'weekly'
                       ? 'bg-main-100 text-white'
                       : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                   }`}
-                  title="Таблица"
+                  title="Недельный вид"
                 >
                   <span className="flex items-center gap-2">
                     <img 
-                      src={analyticsIcon} 
-                      alt="Таблица" 
+                      src={calendarIcon} 
+                      alt="Неделя" 
                       className={`w-4 h-4 transition-smooth ${
-                        viewType === 'list'
+                        viewType === 'weekly'
                           ? 'brightness-0 invert'
                           : 'group-hover:brightness-0 group-hover:invert'
                       }`} 
                     />
-                    Таблица
+                    Неделя
                   </span>
                 </button>
                 <button
@@ -521,25 +521,25 @@ export const DoctorAppointmentsSection: React.FC<DoctorAppointmentsSectionProps>
                   </span>
                 </button>
                 <button
-                  onClick={() => handleViewTypeChange('weekly')}
+                  onClick={() => handleViewTypeChange('list')}
                   className={`group px-5 py-2.5 text-base font-medium transition-smooth ${
-                    viewType === 'weekly'
+                    viewType === 'list'
                       ? 'bg-main-100 text-white'
                       : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                   }`}
-                  title="Недельный вид"
+                  title="Таблица"
                 >
                   <span className="flex items-center gap-2">
                     <img 
-                      src={calendarIcon} 
-                      alt="Неделя" 
+                      src={analyticsIcon} 
+                      alt="Таблица" 
                       className={`w-4 h-4 transition-smooth ${
-                        viewType === 'weekly'
+                        viewType === 'list'
                           ? 'brightness-0 invert'
                           : 'group-hover:brightness-0 group-hover:invert'
                       }`} 
                     />
-                    Неделя
+                    Таблица
                   </span>
                 </button>
               </div>

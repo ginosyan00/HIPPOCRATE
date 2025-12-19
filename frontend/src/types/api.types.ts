@@ -342,4 +342,42 @@ export interface Certificate {
   updatedAt: Date | string;
 }
 
+/**
+ * Категория лечения клиники
+ */
+export interface TreatmentCategory {
+  id: string;
+  clinicId: string;
+  name: string;
+  defaultDuration: number; // Длительность процедуры по умолчанию (минуты)
+  description?: string;
+  createdAt: Date | string;
+  updatedAt: Date | string;
+}
+
+/**
+ * Запрос на создание категории лечения
+ */
+export interface CreateTreatmentCategoryRequest {
+  name: string;
+  defaultDuration: number;
+  description?: string;
+}
+
+/**
+ * Запрос на обновление категории лечения
+ */
+export interface UpdateTreatmentCategoryRequest {
+  name?: string;
+  defaultDuration?: number;
+  description?: string;
+}
+
+/**
+ * Запрос на обновление категорий врача
+ */
+export interface UpdateDoctorCategoriesRequest {
+  categoryIds: string[];
+}
+
 

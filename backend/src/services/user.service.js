@@ -477,6 +477,21 @@ export async function createDoctorByClinic(clinicId, data) {
     }
   }
 
+  // Если переданы categoryIds, создаем связи с категориями лечения
+  if (data.categoryIds && Array.isArray(data.categoryIds) && data.categoryIds.length > 0) {
+    console.log('🔵 [USER SERVICE] Создание связей с категориями лечения для врача:', doctor.id);
+    try {
+      // Импортируем сервис категорий динамически, чтобы избежать циклических зависимостей
+      const { updateDoctorCategories } = await import('./treatment-category.service.js');
+      await updateDoctorCategories(doctor.id, data.categoryIds);
+      console.log('✅ [USER SERVICE] Связи с категориями лечения успешно созданы');
+    } catch (categoryError) {
+      console.error('🔴 [USER SERVICE] Ошибка при создании связей с категориями:', categoryError.message);
+      // Не прерываем создание врача, если категории не удалось создать
+      // Можно будет создать их позже
+    }
+  }
+
   return doctor;
 }
 

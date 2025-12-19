@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Modal, Button, Input, Card } from '../common';
+import { Modal, Button, Input, Card, Spinner } from '../common';
 import { userService } from '../../services/user.service';
 import { clinicService } from '../../services/clinic.service';
+import { useTreatmentCategories } from '../../hooks/useTreatmentCategories';
 
 // Import icons
 import plusIcon from '../../assets/icons/plus.svg';
@@ -22,6 +23,7 @@ interface AddDoctorModalProps {
 
 export const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const navigate = useNavigate();
+  const { data: categories, isLoading: categoriesLoading } = useTreatmentCategories();
   
   // Form state
   const [name, setName] = useState('');
@@ -33,6 +35,7 @@ export const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ isOpen, onClose,
   const [phone, setPhone] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [gender, setGender] = useState<'male' | 'female' | 'other'>('male');
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
 
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -55,6 +58,7 @@ export const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ isOpen, onClose,
         phone: phone || undefined,
         dateOfBirth: dateOfBirth || undefined,
         gender,
+        categoryIds: selectedCategoryIds.length > 0 ? selectedCategoryIds : undefined,
       });
 
       console.log('✅ [ADD DOCTOR MODAL] Врач успешно создан:', createdDoctor.id);
@@ -73,6 +77,7 @@ export const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ isOpen, onClose,
       setPhone('');
       setDateOfBirth('');
       setGender('male');
+      setSelectedCategoryIds([]);
 
       // Notify parent
       onSuccess();
@@ -195,6 +200,56 @@ export const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ isOpen, onClose,
               />
             </div>
           </div>
+        </div>
+
+        {/* Категории лечения */}
+        <div>
+          <h3 className="text-sm font-semibold text-text-50 mb-3">Категории лечения</h3>
+          {categoriesLoading ? (
+            <div className="flex justify-center py-4">
+              <Spinner size="sm" />
+            </div>
+          ) : categories && categories.length > 0 ? (
+            <div className="space-y-2 border border-stroke rounded-lg p-4 bg-bg-white">
+              {categories.map((category) => (
+                <label
+                  key={category.id}
+                  className="flex items-start gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded transition-colors"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedCategoryIds.includes(category.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedCategoryIds([...selectedCategoryIds, category.id]);
+                      } else {
+                        setSelectedCategoryIds(
+                          selectedCategoryIds.filter((id) => id !== category.id)
+                        );
+                      }
+                    }}
+                    className="mt-1 w-4 h-4 text-main-100 border-stroke rounded focus:ring-main-100"
+                  />
+                  <div className="flex-1">
+                    <div className="text-text-100 font-medium text-sm">{category.name}</div>
+                    {category.description && (
+                      <div className="text-text-10 text-xs mt-1">{category.description}</div>
+                    )}
+                    <div className="text-text-50 text-xs mt-1">
+                      Длительность: {category.defaultDuration} мин
+                    </div>
+                  </div>
+                </label>
+              ))}
+            </div>
+          ) : (
+            <div className="border border-stroke rounded-lg p-4 bg-yellow-50">
+              <p className="text-yellow-800 text-sm">
+                Нет доступных категорий лечения. Добавьте категории в разделе{' '}
+                <strong>Clinic → Web → Категории лечения</strong>.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Info Card */}

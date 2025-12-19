@@ -121,6 +121,10 @@ export const createDoctorByClinicSchema = Joi.object({
       'array.base': 'schedule must be an array',
       'array.max': 'schedule must contain at most 7 days',
     }),
+  categoryIds: Joi.array().items(Joi.string().uuid()).optional().messages({
+    'array.base': 'categoryIds must be an array',
+    'string.guid': 'Each category ID must be a valid UUID',
+  }),
 }).custom((value, helpers) => {
   // Если schedule передан, проверяем что все дни недели уникальны
   if (value.schedule && Array.isArray(value.schedule)) {

@@ -10,6 +10,7 @@ import {
   updateSettingsSchema,
   updatePasswordSchema,
 } from '../validators/clinic.validator.js';
+import treatmentCategoryRoutes from './treatment-category.routes.js';
 
 const router = express.Router();
 
@@ -65,6 +66,12 @@ router.put('/settings', validate(updateSettingsSchema), clinicController.updateS
  * Доступ: ADMIN с clinicId
  */
 router.put('/password', validate(updatePasswordSchema), clinicController.updatePassword);
+
+/**
+ * Treatment Categories Routes
+ * Маршруты для управления категориями лечения
+ */
+router.use('/treatment-categories', treatmentCategoryRoutes);
 
 export default router;
 

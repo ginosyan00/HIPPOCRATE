@@ -112,6 +112,7 @@ export const userService = {
       endTime: string | null;
       isWorking: boolean;
     }>;
+    categoryIds?: string[];
   }): Promise<User> {
     console.log('🔵 [USER SERVICE] Создание врача для клиники');
     const { data } = await api.post<ApiResponse<User>>('/users/doctors', doctor);

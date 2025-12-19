@@ -11,6 +11,8 @@ import {
   updateMyPasswordSchema
 } from '../validators/user.validator.js';
 import { updateScheduleSchema } from '../validators/doctorSchedule.validator.js';
+import { updateDoctorCategoriesSchema } from '../validators/treatment-category.validator.js';
+import * as treatmentCategoryController from '../controllers/treatment-category.controller.js';
 
 const router = express.Router();
 
@@ -139,6 +141,29 @@ router.put(
   authorize('ADMIN', 'CLINIC'),
   validate(updateScheduleSchema),
   userController.updateDoctorSchedule
+);
+
+/**
+ * GET /api/v1/users/:id/treatment-categories
+ * Получить категории лечения врача
+ * Доступ: ADMIN, CLINIC (клиника может получать категории своих врачей)
+ */
+router.get(
+  '/:id/treatment-categories',
+  authorize('ADMIN', 'CLINIC'),
+  treatmentCategoryController.getDoctorCategories
+);
+
+/**
+ * PUT /api/v1/users/:id/treatment-categories
+ * Обновить категории лечения врача
+ * Доступ: ADMIN, CLINIC (клиника может обновлять категории своих врачей)
+ */
+router.put(
+  '/:id/treatment-categories',
+  authorize('ADMIN', 'CLINIC'),
+  validate(updateDoctorCategoriesSchema),
+  treatmentCategoryController.updateDoctorCategories
 );
 
 export default router;

@@ -5,6 +5,7 @@ import { LogoUpload, LogoUploadRef } from '../../components/dashboard/LogoUpload
 import { HeroImageUpload, HeroImageUploadRef } from '../../components/dashboard/HeroImageUpload';
 import { WorkingHoursEditor, WorkingHoursEditorRef } from '../../components/dashboard/WorkingHoursEditor';
 import { CertificatesSection } from '../../components/dashboard/CertificatesSection';
+import { TreatmentCategoriesSection } from '../../components/dashboard/TreatmentCategoriesSection';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { useClinic, useUpdateClinic, useUploadLogo, useUploadHeroImage } from '../../hooks/useClinic';
@@ -271,6 +272,9 @@ export const WebPage: React.FC = () => {
           onUpdate={handleUpdateWorkingHours}
           isLoading={updateClinicMutation.isPending}
         />
+
+        {/* Категории лечения */}
+        <TreatmentCategoriesSection />
 
         {/* Сертификаты */}
         <CertificatesSection />

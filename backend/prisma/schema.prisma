@@ -37,6 +37,7 @@ model Clinic {
   settings      ClinicSettings?
   certificates  Certificate[]
   conversations Conversation[]
+  treatmentCategories TreatmentCategory[]
 
   @@map("clinics")
 }
@@ -85,6 +86,7 @@ model User {
   notifications  Notification[]
   conversations  Conversation[]
   schedule       DoctorSchedule[] // Расписание работы врача
+  treatmentCategories DoctorTreatmentCategory[] // Категории лечения врача
 
   @@index([clinicId])
   @@index([email])
@@ -320,5 +322,48 @@ model DoctorSchedule {
   @@index([doctorId])
   @@index([dayOfWeek])
   @@map("doctor_schedules")
+}
+
+// ============================================
+// TREATMENT CATEGORY (Категория лечения)
+// ============================================
+
+model TreatmentCategory {
+  id              String    @id @default(uuid())
+  clinicId        String    // ID клиники, которой принадлежит категория
+  name            String    // Название категории (например, "Терапевтическая стоматология")
+  defaultDuration Int       @default(30) // Длительность процедуры по умолчанию (минуты)
+  description     String?   // Описание категории (опционально)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  clinic          Clinic    @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  doctors         DoctorTreatmentCategory[]
+
+  @@index([clinicId])
+  @@map("treatment_categories")
+}
+
+// ============================================
+// DOCTOR TREATMENT CATEGORY (Связь врач-категория)
+// ============================================
+
+model DoctorTreatmentCategory {
+  id                  String    @id @default(uuid())
+  doctorId            String    // ID врача (User с role=DOCTOR)
+  treatmentCategoryId String   // ID категории лечения
+  
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  // Relations
+  doctor              User      @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  treatmentCategory   TreatmentCategory @relation(fields: [treatmentCategoryId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, treatmentCategoryId]) // Один врач может иметь одну категорию только один раз
+  @@index([doctorId])
+  @@index([treatmentCategoryId])
+  @@map("doctor_treatment_categories")
 }
 

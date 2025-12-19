@@ -23,7 +23,7 @@ export const TreatmentCategoriesSection: React.FC = () => {
   const updateMutation = useUpdateTreatmentCategory();
   const deleteMutation = useDeleteTreatmentCategory();
 
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAddFormVisible, setIsAddFormVisible] = useState(false);
   const [editingCategory, setEditingCategory] = useState<TreatmentCategory | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<TreatmentCategory | null>(null);
 
@@ -36,7 +36,8 @@ export const TreatmentCategoriesSection: React.FC = () => {
 
   const handleAddClick = () => {
     setFormData({ name: '', defaultDuration: 30, description: '' });
-    setIsAddModalOpen(true);
+    setIsAddFormVisible(!isAddFormVisible);
+    setEditingCategory(null);
   };
 
   const handleEditClick = (category: TreatmentCategory) => {
@@ -46,7 +47,7 @@ export const TreatmentCategoriesSection: React.FC = () => {
       description: category.description || '',
     });
     setEditingCategory(category);
-    setIsAddModalOpen(true);
+    setIsAddFormVisible(true);
   };
 
   const handleDeleteClick = (category: TreatmentCategory) => {
@@ -67,7 +68,7 @@ export const TreatmentCategoriesSection: React.FC = () => {
         await createMutation.mutateAsync(formData);
         toast.success('Категория успешно создана');
       }
-      setIsAddModalOpen(false);
+      setIsAddFormVisible(false);
       setEditingCategory(null);
       setFormData({ name: '', defaultDuration: 30, description: '' });
     } catch (error: any) {
@@ -87,8 +88,8 @@ export const TreatmentCategoriesSection: React.FC = () => {
     }
   };
 
-  const handleCloseModal = () => {
-    setIsAddModalOpen(false);
+  const handleCancelForm = () => {
+    setIsAddFormVisible(false);
     setEditingCategory(null);
     setFormData({ name: '', defaultDuration: 30, description: '' });
   };
@@ -124,6 +125,83 @@ export const TreatmentCategoriesSection: React.FC = () => {
               + Добавить категорию
             </Button>
           </div>
+
+          {/* Inline форма добавления/редактирования */}
+          {isAddFormVisible && (
+            <div className="border border-stroke rounded-sm bg-bg-white p-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Горизонтальное расположение полей согласно дизайну */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-text-50 mb-2">
+                      Название категории *
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Например: Терапевтическая стоматология"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                      className="w-full px-4 py-3 border border-stroke rounded-lg bg-bg-white text-sm text-text-100 focus:outline-none focus:ring-2 focus:ring-main-100 focus:border-main-100 transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-text-50 mb-2">
+                      Длительность (мин) *
+                    </label>
+                    <input
+                      type="number"
+                      min="5"
+                      max="480"
+                      placeholder="30"
+                      value={formData.defaultDuration.toString()}
+                      onChange={(e) =>
+                        setFormData({ ...formData, defaultDuration: parseInt(e.target.value) || 30 })
+                      }
+                      required
+                      className="w-full px-4 py-3 border border-stroke rounded-lg bg-bg-white text-sm text-text-100 focus:outline-none focus:ring-2 focus:ring-main-100 focus:border-main-100 transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Описание (опционально, менее заметное) */}
+                <div>
+                  <label className="block text-sm font-medium text-text-10 mb-2">
+                    Описание (опционально)
+                  </label>
+                  <textarea
+                    className="w-full px-4 py-3 border border-stroke rounded-lg bg-bg-white text-sm text-text-100 focus:outline-none focus:ring-2 focus:ring-main-100 focus:border-main-100 resize-none transition-colors"
+                    rows={2}
+                    placeholder="Краткое описание категории..."
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
+                </div>
+
+                {/* Кнопки действий */}
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={handleCancelForm}
+                    disabled={createMutation.isPending || updateMutation.isPending}
+                    size="sm"
+                  >
+                    Отмена
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    isLoading={createMutation.isPending || updateMutation.isPending}
+                    size="sm"
+                  >
+                    {editingCategory ? 'Сохранить' : 'Добавить'}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          )}
 
           {/* Список категорий */}
           {categoriesList.length === 0 ? (
@@ -190,69 +268,6 @@ export const TreatmentCategoriesSection: React.FC = () => {
           )}
         </div>
       </Card>
-
-      {/* Модальное окно добавления/редактирования */}
-      <Modal
-        isOpen={isAddModalOpen}
-        onClose={handleCloseModal}
-        title={editingCategory ? 'Редактировать категорию' : 'Добавить категорию'}
-      >
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Название категории *"
-            placeholder="Например: Терапевтическая стоматология"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            required
-          />
-
-          <Input
-            label="Длительность по умолчанию (минуты) *"
-            type="number"
-            min="5"
-            max="480"
-            value={formData.defaultDuration.toString()}
-            onChange={(e) =>
-              setFormData({ ...formData, defaultDuration: parseInt(e.target.value) || 30 })
-            }
-            required
-            helperText="Минимум 5 минут, максимум 480 минут (8 часов)"
-          />
-
-          <div>
-            <label className="block text-sm font-medium text-text-50 mb-2">
-              Описание (опционально)
-            </label>
-            <textarea
-              className="w-full px-4 py-3 border border-stroke rounded-lg focus:outline-none focus:ring-2 focus:ring-main-100 text-sm resize-none"
-              rows={3}
-              placeholder="Краткое описание категории..."
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleCloseModal}
-              disabled={createMutation.isPending || updateMutation.isPending}
-              className="flex-1"
-            >
-              Отмена
-            </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              isLoading={createMutation.isPending || updateMutation.isPending}
-              className="flex-1"
-            >
-              {editingCategory ? 'Сохранить' : 'Добавить'}
-            </Button>
-          </div>
-        </form>
-      </Modal>
 
       {/* Модальное окно подтверждения удаления */}
       <Modal

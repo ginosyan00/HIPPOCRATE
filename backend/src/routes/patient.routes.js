@@ -54,11 +54,12 @@ router.get('/:id', patientController.getById);
 /**
  * POST /api/v1/patients
  * Создать нового пациента
- * Доступ: ADMIN, DOCTOR
+ * Доступ: ADMIN, CLINIC, DOCTOR
+ * CLINIC - администратор клиники, имеет те же права что и DOCTOR
  */
 router.post(
   '/',
-  authorize('ADMIN', 'DOCTOR'),
+  authorize('ADMIN', 'CLINIC', 'DOCTOR'),
   validate(createPatientSchema),
   patientController.create
 );

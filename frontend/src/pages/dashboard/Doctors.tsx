@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
 import { Button, Input, Card, Spinner, BackButton } from '../../components/common';
 import { useDoctors, useDoctorSchedule, useUser, useUpdateUser, useUpdateDoctorSchedule } from '../../hooks/useUsers';
@@ -33,6 +33,7 @@ export const DoctorsPage: React.FC = () => {
   const user = useAuthStore(state => state.user);
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('table');
   const [search, setSearch] = useState('');
   const [specializationFilter, setSpecializationFilter] = useState<string>('');
@@ -66,6 +67,31 @@ export const DoctorsPage: React.FC = () => {
   // Проверка: только CLINIC может добавлять врачей
   const canAddDoctors = user?.role === 'CLINIC';
 
+  // Загрузка выбранного врача из URL при монтировании или изменении query параметра
+  useEffect(() => {
+    const doctorIdFromUrl = searchParams.get('doctorId');
+    
+    // Если есть doctorId в URL
+    if (doctorIdFromUrl) {
+      const doctor = doctors.find(d => d.id === doctorIdFromUrl);
+      if (doctor) {
+        // Если выбран другой врач или врач не выбран - обновляем выбор
+        if (!selectedDoctor || selectedDoctor.id !== doctorIdFromUrl) {
+          console.log('✅ [DOCTORS PAGE] Загрузка врача из URL:', doctorIdFromUrl);
+          setSelectedDoctor(doctor);
+        }
+      } else if (doctors.length > 0 && selectedDoctor?.id === doctorIdFromUrl) {
+        // Если врач не найден в списке (после загрузки), но он был выбран - очищаем query параметр
+        console.log('⚠️ [DOCTORS PAGE] Врач не найден в списке, очищаем URL');
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.delete('doctorId');
+        setSearchParams(newSearchParams, { replace: true });
+        setSelectedDoctor(null);
+      }
+    }
+    // Не очищаем selectedDoctor, если нет doctorId в URL - это может быть сделано вручную через handleCloseSchedule
+  }, [searchParams, doctors, selectedDoctor, setSearchParams]);
+
   // Сброс выбранного врача при навигации на /dashboard/doctors через сайдбар
   useEffect(() => {
     // Проверяем, есть ли в location.state флаг для сброса выбора
@@ -73,19 +99,27 @@ export const DoctorsPage: React.FC = () => {
     if (resetSelection) {
       console.log('🔄 [DOCTORS PAGE] Сброс выбранного врача через сайдбар');
       setSelectedDoctor(null);
+      searchParams.delete('doctorId');
+      setSearchParams(searchParams, { replace: true });
       // Очищаем state после использования, чтобы избежать повторных сбросов
       navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location.state, navigate, location.pathname]);
+  }, [location.state, navigate, location.pathname, searchParams, setSearchParams]);
 
   // Обработчик клика на врача - показываем настройки и расписание
   const handleDoctorClick = (doctor: User) => {
     setSelectedDoctor(doctor);
+    // Обновляем URL с query параметром
+    searchParams.set('doctorId', doctor.id);
+    setSearchParams(searchParams, { replace: true });
   };
 
   // Обработчик закрытия
   const handleCloseSchedule = () => {
     setSelectedDoctor(null);
+    // Удаляем query параметр из URL
+    searchParams.delete('doctorId');
+    setSearchParams(searchParams, { replace: true });
   };
 
   // Обработчик обновления профиля врача

@@ -345,7 +345,16 @@ export const ClinicPage: React.FC = () => {
               {doctors.map(doctor => (
                 <Card key={doctor.id} padding="md">
                   <div className="text-center space-y-4">
-                    <div className="w-20 h-20 rounded-full overflow-hidden mx-auto border-2 border-stroke bg-main-10 flex items-center justify-center">
+                    <div className="w-20 h-20 rounded-full overflow-hidden mx-auto border-2 border-stroke bg-main-10 flex items-center justify-center cursor-pointer hover:border-main-100 transition-smooth"
+                      onClick={() => {
+                        const isDashboard = location.pathname.startsWith('/dashboard');
+                        if (isDashboard) {
+                          navigate(`/dashboard/patient/clinic/${slug}/doctor/${doctor.id}`);
+                        } else {
+                          navigate(`/clinic/${slug}/doctor/${doctor.id}`);
+                        }
+                      }}
+                    >
                       {doctor.avatar ? (
                         <img 
                           src={doctor.avatar} 
@@ -357,16 +366,44 @@ export const ClinicPage: React.FC = () => {
                       )}
                     </div>
                     <div>
-                      <h3 className="text-base font-medium text-text-100">{doctor.name}</h3>
+                      <h3 
+                        className="text-base font-medium text-text-100 cursor-pointer hover:text-main-100 transition-smooth"
+                        onClick={() => {
+                          const isDashboard = location.pathname.startsWith('/dashboard');
+                          if (isDashboard) {
+                            navigate(`/dashboard/patient/clinic/${slug}/doctor/${doctor.id}`);
+                          } else {
+                            navigate(`/clinic/${slug}/doctor/${doctor.id}`);
+                          }
+                        }}
+                      >
+                        {doctor.name}
+                      </h3>
                       <p className="text-sm text-text-50 mt-1">{doctor.specialization}</p>
                     </div>
-                    <Button
-                      className="w-full text-sm font-normal bg-main-10 text-main-100 hover:bg-main-100 hover:text-white"
-                      onClick={() => handleOpenModal(doctor.id)}
-                      size="md"
-                    >
-                      Записаться
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1 text-sm font-normal bg-main-10 text-main-100 hover:bg-main-100 hover:text-white"
+                        onClick={() => handleOpenModal(doctor.id)}
+                        size="md"
+                      >
+                        Записаться
+                      </Button>
+                      <Button
+                        className="flex-1 text-sm font-normal bg-bg-white text-text-100 hover:bg-main-10 border border-stroke"
+                        onClick={() => {
+                          const isDashboard = location.pathname.startsWith('/dashboard');
+                          if (isDashboard) {
+                            navigate(`/dashboard/patient/clinic/${slug}/doctor/${doctor.id}`);
+                          } else {
+                            navigate(`/clinic/${slug}/doctor/${doctor.id}`);
+                          }
+                        }}
+                        size="md"
+                      >
+                        Профиль
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))}

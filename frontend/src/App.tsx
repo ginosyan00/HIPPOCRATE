@@ -103,6 +103,16 @@ function App() {
           }
         />
         <Route
+          path="/dashboard/patient/clinic/:slug/doctor/:doctorId"
+          element={
+            <RoleProtectedRoute allowedRoles={[UserRole.PATIENT]}>
+              <NewDashboardLayout>
+                <DoctorPage />
+              </NewDashboardLayout>
+            </RoleProtectedRoute>
+          }
+        />
+        <Route
           path="/dashboard/patient/analytics"
           element={
             <RoleProtectedRoute allowedRoles={[UserRole.PATIENT]}>

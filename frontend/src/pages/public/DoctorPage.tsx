@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button, Card, Spinner, BackButton, Input, Modal, Calendar } from '../../components/common';
 import { AvatarUpload } from '../../components/dashboard/AvatarUpload';
 import { useClinicDoctor, useCreatePublicAppointment } from '../../hooks/usePublic';
@@ -18,6 +18,7 @@ import lightbulbIcon from '../../assets/icons/lightbulb.svg';
  */
 export const DoctorPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { slug, doctorId } = useParams<{ slug: string; doctorId: string }>();
   const currentUser = useAuthStore(state => state.user);
   const updateUserMutation = useUpdateUser();
@@ -245,7 +246,11 @@ export const DoctorPage: React.FC = () => {
       <main className="container mx-auto px-8 py-12">
         {/* Back Button */}
         <div className="mb-6">
-          <BackButton fallback={`/clinic/${slug}`} />
+          <BackButton 
+            fallback={location.pathname.startsWith('/dashboard') 
+              ? `/dashboard/patient/clinic/${slug}` 
+              : `/clinic/${slug}`} 
+          />
         </div>
 
         {/* Doctor Info Card */}

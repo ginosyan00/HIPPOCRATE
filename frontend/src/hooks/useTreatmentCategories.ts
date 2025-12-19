@@ -17,6 +17,26 @@ export function useTreatmentCategories() {
 }
 
 /**
+ * React Query Hook для получения категорий лечения конкретного врача
+ * @param doctorId - ID врача (опционально, если не указан - запрос не выполняется)
+ */
+export function useDoctorTreatmentCategories(doctorId: string | null | undefined) {
+  return useQuery<TreatmentCategory[]>({
+    queryKey: ['doctor-treatment-categories', doctorId],
+    queryFn: () => {
+      if (!doctorId) {
+        throw new Error('Doctor ID is required');
+      }
+      return treatmentCategoryService.getDoctorCategories(doctorId);
+    },
+    enabled: !!doctorId, // Запрос выполняется только если doctorId указан
+    staleTime: 300000, // 5 минут - категории не меняются часто
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+  });
+}
+
+/**
  * Hook для создания категории лечения
  */
 export function useCreateTreatmentCategory() {

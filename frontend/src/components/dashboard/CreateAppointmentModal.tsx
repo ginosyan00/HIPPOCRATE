@@ -9,7 +9,7 @@ import { patientService } from '../../services/patient.service';
 import { appointmentService } from '../../services/appointment.service';
 import { User, Patient } from '../../types/api.types';
 import { PatientSearchInput } from './PatientSearchInput';
-import { useTreatmentCategories } from '../../hooks/useTreatmentCategories';
+import { useDoctorTreatmentCategories } from '../../hooks/useTreatmentCategories';
 
 interface CreateAppointmentModalProps {
   isOpen: boolean;
@@ -47,8 +47,8 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
   const [isDoctorsLoading, setIsDoctorsLoading] = useState(true);
   const createMutation = useCreateAppointment();
   
-  // Загружаем категории лечения клиники
-  const { data: categories = [], isLoading: isLoadingCategories } = useTreatmentCategories();
+  // Загружаем категории лечения выбранного врача
+  const { data: categories = [], isLoading: isLoadingCategories } = useDoctorTreatmentCategories(doctorId || null);
 
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -314,7 +314,12 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
           ) : (
             <select
               value={doctorId}
-              onChange={e => setDoctorId(e.target.value)}
+              onChange={e => {
+                setDoctorId(e.target.value);
+                // Сбрасываем выбранную категорию при смене врача
+                setSelectedCategoryId('');
+                setReason('');
+              }}
               className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
               required
               disabled={!!defaultDoctorId} // Блокируем выбор, если передан defaultDoctorId
@@ -489,7 +494,13 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
           <label className="block text-sm font-normal text-text-10 mb-2">
             Категория лечения / Причина визита
           </label>
-          {isLoadingCategories ? (
+          {!doctorId ? (
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-sm">
+              <p className="text-sm text-yellow-800">
+                Выберите врача, чтобы увидеть доступные категории лечения
+              </p>
+            </div>
+          ) : isLoadingCategories ? (
             <div className="flex items-center gap-2 py-2">
               <Spinner size="sm" />
               <span className="text-xs text-text-10">Загрузка категорий...</span>
@@ -561,8 +572,8 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
                 onChange={e => setReason(e.target.value)}
               />
               <p className="text-xs text-text-10">
-                Категории лечения не настроены. Добавьте их в разделе{' '}
-                <strong>Clinic → Web → Категории лечения</strong>
+                У выбранного врача нет назначенных категорий лечения. Вы можете ввести причину визита вручную или назначить категории врачу в разделе{' '}
+                <strong>Users → Врачи → Редактировать врача</strong>
               </p>
             </div>
           )}

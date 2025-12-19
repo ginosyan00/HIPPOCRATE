@@ -61,6 +61,9 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
   
   // Состояние для управления открытым dropdown
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  
+  // Состояние для отслеживания ошибок загрузки изображений
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set());
 
   // Состояние для модального окна с деталями приёма
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
@@ -260,6 +263,32 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
   const isDoctor = userRole === 'DOCTOR';
   const isClinic = userRole === 'CLINIC' || userRole === 'ADMIN';
 
+  /**
+   * Получить URL для аватара
+   * @param avatar - Путь к аватару или base64 строка
+   * @returns URL для отображения или null
+   */
+  const getAvatarUrl = (avatar: string | undefined): string | null => {
+    if (!avatar) return null;
+    // Если это base64 строка или полный URL, возвращаем как есть
+    if (avatar.startsWith('data:image/') || avatar.startsWith('http')) {
+      return avatar;
+    }
+    // Если это путь к файлу, формируем полный URL
+    const getApiBaseURL = () => {
+      if (import.meta.env.VITE_API_URL) {
+        return import.meta.env.VITE_API_URL.replace('/api/v1', '');
+      }
+      const host = window.location.hostname;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        return 'http://localhost:5000';
+      }
+      return `http://${host}:5000`;
+    };
+    const baseURL = getApiBaseURL();
+    return `${baseURL}/uploads/${avatar}`;
+  };
+
 
 
   if (appointments.length === 0) {
@@ -394,10 +423,21 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
               {isClinic && (
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-main-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-medium text-main-100">
-                        {appointment.doctor?.name?.charAt(0).toUpperCase() || '?'}
-                      </span>
+                    <div className="w-8 h-8 bg-main-10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                      {appointment.doctor?.avatar && !imageErrors.has(`doctor-${appointment.id}`) ? (
+                        <img
+                          src={getAvatarUrl(appointment.doctor.avatar) || ''}
+                          alt={appointment.doctor.name || 'Врач'}
+                          className="w-full h-full object-cover"
+                          onError={() => {
+                            setImageErrors(prev => new Set(prev).add(`doctor-${appointment.id}`));
+                          }}
+                        />
+                      ) : (
+                        <span className="text-xs font-medium text-main-100">
+                          {appointment.doctor?.name?.charAt(0).toUpperCase() || '?'}
+                        </span>
+                      )}
                     </div>
                     <div>
                       <div className="text-sm font-medium text-text-50">
@@ -412,10 +452,21 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
               )}
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-main-10 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-medium text-main-100">
-                      {appointment.patient?.name?.charAt(0).toUpperCase() || '?'}
-                    </span>
+                  <div className="w-8 h-8 bg-main-10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    {appointment.patient?.avatar && !imageErrors.has(`patient-${appointment.id}`) ? (
+                      <img
+                        src={getAvatarUrl(appointment.patient.avatar) || ''}
+                        alt={appointment.patient.name || 'Пациент'}
+                        className="w-full h-full object-cover"
+                        onError={() => {
+                          setImageErrors(prev => new Set(prev).add(`patient-${appointment.id}`));
+                        }}
+                      />
+                    ) : (
+                      <span className="text-xs font-medium text-main-100">
+                        {appointment.patient?.name?.charAt(0).toUpperCase() || '?'}
+                      </span>
+                    )}
                   </div>
                   <div>
                     <div className="text-sm font-medium text-text-50">

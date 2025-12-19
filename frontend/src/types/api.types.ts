@@ -231,12 +231,14 @@ export interface Appointment {
     id: string;
     name: string;
     specialization?: string;
+    avatar?: string;
   };
   patient?: {
     id: string;
     name: string;
     phone: string;
     email?: string;
+    avatar?: string;
   };
   clinic?: {
     id: string;

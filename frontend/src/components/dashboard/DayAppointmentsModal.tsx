@@ -5,6 +5,8 @@ import { Modal, Card } from '../common';
 import { Appointment } from '../../types/api.types';
 import { formatAppointmentDateTime, formatAppointmentTime } from '../../utils/dateFormat';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useTreatmentCategories } from '../../hooks/useTreatmentCategories';
+import { getCategoryColor, getStatusColor } from '../../utils/appointmentColors';
 
 // Import icons
 import doctorIcon from '../../assets/icons/doctor.svg';
@@ -32,6 +34,9 @@ export const DayAppointmentsModal: React.FC<DayAppointmentsModalProps> = ({
   onAppointmentClick,
 }) => {
   const user = useAuthStore(state => state.user);
+  // Загружаем категории для получения цветов
+  const { data: categories = [] } = useTreatmentCategories();
+  
   if (!date) return null;
 
   // Сортируем приёмы по времени
@@ -41,8 +46,8 @@ export const DayAppointmentsModal: React.FC<DayAppointmentsModalProps> = ({
     return dateA.getTime() - dateB.getTime();
   });
 
-  // Получаем цвет статуса
-  const getStatusColor = (status: string): string => {
+  // Получаем классы цвета статуса для бейджа (для обратной совместимости)
+  const getStatusColorClass = (status: string): string => {
     switch (status) {
       case 'pending':
         return 'bg-yellow-50 text-yellow-700 border-yellow-200';
@@ -73,21 +78,6 @@ export const DayAppointmentsModal: React.FC<DayAppointmentsModalProps> = ({
     }
   };
 
-  // Получаем цвет фона для карточки приёма
-  const getAppointmentBgColor = (status: string): string => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-500';
-      case 'confirmed':
-        return 'bg-main-100';
-      case 'completed':
-        return 'bg-green-500';
-      case 'cancelled':
-        return 'bg-gray-400';
-      default:
-        return 'bg-gray-300';
-    }
-  };
 
   const formattedDate = format(date, 'd MMMM yyyy', { locale: ru });
   const dayName = format(date, 'EEEE', { locale: ru });
@@ -121,11 +111,19 @@ export const DayAppointmentsModal: React.FC<DayAppointmentsModalProps> = ({
                   : (appointment.patient?.name || 'Пациент');
                 const patientInitial = patientName.charAt(0).toUpperCase();
 
+                // Получаем цвета для карточки
+                const categoryColor = getCategoryColor(appointment, categories);
+                const statusColorValue = getStatusColor(appointment.status);
+                
                 return (
                   <Card
                     key={appointment.id}
                     padding="md"
-                    className="hover:shadow-md transition-all duration-200 cursor-pointer"
+                    className="hover:shadow-md transition-all duration-200 cursor-pointer relative"
+                    style={{
+                      backgroundColor: categoryColor,
+                      borderLeft: `4px solid ${statusColorValue}`,
+                    }}
                     onClick={() => {
                       onAppointmentClick?.(appointment);
                       onClose();
@@ -134,14 +132,14 @@ export const DayAppointmentsModal: React.FC<DayAppointmentsModalProps> = ({
                     <div className="flex items-start gap-4">
                       {/* Время и статус */}
                       <div className="flex-shrink-0">
-                        <div className={`${getAppointmentBgColor(appointment.status)} text-white px-3 py-2 rounded-sm text-center min-w-[80px]`}>
+                        <div className="text-white px-3 py-2 rounded-sm text-center min-w-[80px] bg-black/20">
                           <div className="text-sm font-semibold">{appointmentTime}</div>
                           {appointment.duration && (
                             <div className="text-xs opacity-90 mt-0.5">{appointment.duration} мин</div>
                           )}
                         </div>
                         <div className="mt-2">
-                          <span className={`inline-block px-2 py-1 rounded-sm text-xs font-normal border ${getStatusColor(appointment.status)}`}>
+                          <span className={`inline-block px-2 py-1 rounded-sm text-xs font-normal border ${getStatusColorClass(appointment.status)}`}>
                             {getStatusLabel(appointment.status)}
                           </span>
                         </div>
@@ -151,24 +149,24 @@ export const DayAppointmentsModal: React.FC<DayAppointmentsModalProps> = ({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start gap-3 mb-3">
                           {/* Avatar */}
-                          <div className="flex-shrink-0 w-12 h-12 bg-main-10 rounded-sm flex items-center justify-center">
-                            <span className="text-lg text-main-100 font-medium">
+                          <div className="flex-shrink-0 w-12 h-12 bg-white/20 rounded-sm flex items-center justify-center">
+                            <span className="text-lg text-white font-medium">
                               {patientInitial}
                             </span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-base font-semibold text-text-100 mb-1">
+                            <h4 className="text-base font-semibold text-white mb-1">
                               {patientName}
                             </h4>
                             {appointment.patient?.phone && (
-                              <p className="text-xs text-text-50 flex items-center gap-1">
-                                <img src={phoneIcon} alt="Телефон" className="w-3 h-3" />
+                              <p className="text-xs text-white/90 flex items-center gap-1">
+                                <img src={phoneIcon} alt="Телефон" className="w-3 h-3 brightness-0 invert" />
                                 {appointment.patient.phone}
                               </p>
                             )}
                             {appointment.patient?.email && (
-                              <p className="text-xs text-text-50 flex items-center gap-1">
-                                <img src={mailIcon} alt="Email" className="w-3 h-3" />
+                              <p className="text-xs text-white/90 flex items-center gap-1">
+                                <img src={mailIcon} alt="Email" className="w-3 h-3 brightness-0 invert" />
                                 {appointment.patient.email}
                               </p>
                             )}
@@ -178,13 +176,13 @@ export const DayAppointmentsModal: React.FC<DayAppointmentsModalProps> = ({
                         {/* Информация о враче */}
                         {appointment.doctor?.name && (
                           <div className="mb-3 text-sm">
-                            <span className="text-text-10 flex items-center gap-1">
-                              <img src={doctorIcon} alt="Врач" className="w-3 h-3" />
+                            <span className="text-white/80 flex items-center gap-1">
+                              <img src={doctorIcon} alt="Врач" className="w-3 h-3 brightness-0 invert" />
                               Врач: 
                             </span>
-                            <span className="text-text-100 font-medium">{appointment.doctor.name}</span>
+                            <span className="text-white font-medium">{appointment.doctor.name}</span>
                             {appointment.doctor.specialization && (
-                              <span className="text-text-50 ml-1">({appointment.doctor.specialization})</span>
+                              <span className="text-white/80 ml-1">({appointment.doctor.specialization})</span>
                             )}
                           </div>
                         )}
@@ -192,27 +190,27 @@ export const DayAppointmentsModal: React.FC<DayAppointmentsModalProps> = ({
                         {/* Причина визита */}
                         {appointment.reason && (
                           <div className="mb-3 text-sm">
-                            <span className="text-text-10">Причина визита: </span>
-                            <span className="text-text-100">{appointment.reason}</span>
+                            <span className="text-white/80">Причина визита: </span>
+                            <span className="text-white">{appointment.reason}</span>
                           </div>
                         )}
 
                         {/* Заметки */}
                         {appointment.notes && (
                           <div className="text-sm">
-                            <span className="text-text-10">Заметки: </span>
-                            <span className="text-text-50">{appointment.notes}</span>
+                            <span className="text-white/80">Заметки: </span>
+                            <span className="text-white/90">{appointment.notes}</span>
                           </div>
                         )}
 
                         {/* Сумма */}
                         {appointment.amount && (
-                          <div className="mt-3 pt-3 border-t border-stroke text-sm">
-                            <span className="text-text-10 flex items-center gap-1">
-                              <img src={walletIcon} alt="Сумма" className="w-3 h-3" />
+                          <div className="mt-3 pt-3 border-t border-white/20 text-sm">
+                            <span className="text-white/80 flex items-center gap-1">
+                              <img src={walletIcon} alt="Сумма" className="w-3 h-3 brightness-0 invert" />
                               Сумма: 
                             </span>
-                            <span className="text-text-100 font-semibold">
+                            <span className="text-white font-semibold">
                               {appointment.amount.toLocaleString('ru-RU')} ֏
                             </span>
                           </div>

@@ -6,6 +6,8 @@ import { Appointment } from '../../types/api.types';
 import { formatAppointmentDateTime } from '../../utils/dateFormat';
 import { DayAppointmentsModal } from './DayAppointmentsModal';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useTreatmentCategories } from '../../hooks/useTreatmentCategories';
+import { getCategoryColor, getStatusColor } from '../../utils/appointmentColors';
 
 // Import icons
 import analyticsIcon from '../../assets/icons/analytics.svg';
@@ -42,6 +44,9 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
   const [showYearPicker, setShowYearPicker] = useState(false);
   // Состояние для модального окна с приёмами дня
   const [selectedDayForModal, setSelectedDayForModal] = useState<Date | null>(null);
+  
+  // Загружаем категории для получения цветов
+  const { data: categories = [] } = useTreatmentCategories();
 
   // Группируем приёмы по датам для быстрого доступа
   const appointmentsByDate = useMemo(() => {
@@ -122,8 +127,8 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
     return getAppointmentsForDate(selectedDayForModal);
   };
 
-  // Получаем цвет статуса
-  const getStatusColor = (status: string): string => {
+  // Получаем цвет статуса (для обратной совместимости с className)
+  const getStatusColorClass = (status: string): string => {
     switch (status) {
       case 'pending':
         return 'bg-yellow-500';
@@ -491,6 +496,10 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                           const patientInitial = patientName.charAt(0).toUpperCase();
                           const appointmentTime = format(parseISO(appointment.appointmentDate.toString()), 'HH:mm');
                           
+                          // Получаем цвета для карточки
+                          const categoryColor = getCategoryColor(appointment, categories);
+                          const statusColorValue = getStatusColor(appointment.status);
+                          
                           return (
                             <button
                               key={appointment.id}
@@ -499,12 +508,11 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                                 e.stopPropagation();
                                 onAppointmentClick?.(appointment);
                               }}
-                              className={`
-                                w-full text-left px-2 py-1.5 rounded-sm text-xs
-                                ${getStatusColor(appointment.status)} text-white
-                                hover:opacity-90 hover:shadow-md transition-all duration-200
-                                border-l-4 border-white/30
-                              `}
+                              className="w-full text-left px-2 py-1.5 rounded-sm text-xs text-white hover:opacity-90 hover:shadow-md transition-all duration-200"
+                              style={{
+                                backgroundColor: categoryColor,
+                                borderLeft: `4px solid ${statusColorValue}`,
+                              }}
                               title={`${patientName} - ${formatAppointmentDateTime(appointment.appointmentDate)}`}
                             >
                               <div className="flex items-center gap-2">

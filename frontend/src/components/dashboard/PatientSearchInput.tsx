@@ -5,6 +5,124 @@ import { Spinner } from '../common';
 import { PatientDetailsModal } from './PatientDetailsModal';
 import searchIcon from '../../assets/icons/search.svg';
 
+/**
+ * PatientListItem Component
+ * Отдельный компонент для элемента списка пациентов
+ * Используется для правильной работы с состоянием изображений
+ */
+const PatientListItem: React.FC<{
+  patient: Patient;
+  isSelected: boolean;
+  onPatientClick: (patient: Patient) => void;
+}> = ({ patient, isSelected, onPatientClick }) => {
+  const [imageError, setImageError] = useState(false);
+
+  // Формируем URL для avatar
+  const getAvatarUrl = (avatarPath: string | undefined) => {
+    if (!avatarPath) return null;
+    if (avatarPath.startsWith('http')) return avatarPath;
+    
+    // Получаем base URL для API
+    const getApiBaseURL = () => {
+      if (import.meta.env.VITE_API_URL) {
+        return import.meta.env.VITE_API_URL.replace('/api/v1', '');
+      }
+      const host = window.location.hostname;
+      const protocol = window.location.protocol;
+      if (host === 'localhost' || host === '127.0.0.1') {
+        return 'http://localhost:5000';
+      }
+      return `http://${host}:5000`;
+    };
+    
+    const baseURL = getApiBaseURL();
+    return `${baseURL}/uploads/${avatarPath}`;
+  };
+  
+  const avatarUrl = getAvatarUrl(patient.avatar);
+  
+  // Получаем инициалы для fallback
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  const initials = getInitials(patient.name);
+
+  // Сбрасываем ошибку при изменении пациента
+  useEffect(() => {
+    setImageError(false);
+  }, [patient.id]);
+
+  return (
+    <button
+      type="button"
+      onClick={() => onPatientClick(patient)}
+      className={`
+        w-full text-left px-4 py-3 text-sm
+        hover:bg-bg-primary transition-smooth
+        flex items-center gap-3
+        ${isSelected ? 'bg-main-10 text-main-100' : 'text-text-50'}
+      `}
+    >
+      {/* Avatar */}
+      <div className="flex-shrink-0">
+        {avatarUrl && !imageError ? (
+          <img
+            src={avatarUrl}
+            alt={patient.name}
+            className="w-10 h-10 rounded-full object-cover border border-stroke"
+            onError={() => {
+              setImageError(true);
+            }}
+          />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-main-100 text-white flex items-center justify-center text-xs font-medium border border-stroke">
+            {initials}
+          </div>
+        )}
+      </div>
+
+      {/* Patient Info */}
+      <div className="flex-1 min-w-0">
+        <div className="font-medium text-text-100 truncate">{patient.name}</div>
+        <div className="flex items-center gap-2 mt-0.5">
+          {patient.phone && (
+            <div className="text-xs text-text-10 flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+              <span className="truncate">{patient.phone}</span>
+            </div>
+          )}
+          {patient.email && (
+            <div className="text-xs text-text-10 flex items-center gap-1">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <span className="truncate">{patient.email}</span>
+            </div>
+          )}
+        </div>
+        {patient.status && (
+          <div className="mt-1">
+            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${
+              patient.status === 'registered' 
+                ? 'bg-green-100 text-green-700' 
+                : 'bg-gray-100 text-gray-700'
+            }`}>
+              {patient.status === 'registered' ? 'Зарегистрирован' : 'Гость'}
+            </span>
+          </div>
+        )}
+      </div>
+    </button>
+  );
+};
+
 interface PatientSearchInputProps {
   value: string; // ID выбранного пациента
   onChange: (patientId: string) => void;
@@ -244,116 +362,14 @@ export const PatientSearchInput: React.FC<PatientSearchInputProps> = ({
             </div>
           ) : (
             <div className="py-1">
-              {patients.map((patient: Patient) => {
-                // Формируем URL для avatar
-                const getAvatarUrl = (avatarPath: string | undefined) => {
-                  if (!avatarPath) return null;
-                  if (avatarPath.startsWith('http')) return avatarPath;
-                  
-                  // Получаем base URL для API
-                  const getApiBaseURL = () => {
-                    if (import.meta.env.VITE_API_URL) {
-                      return import.meta.env.VITE_API_URL.replace('/api/v1', '');
-                    }
-                    const host = window.location.hostname;
-                    const protocol = window.location.protocol;
-                    if (host === 'localhost' || host === '127.0.0.1') {
-                      return 'http://localhost:5000';
-                    }
-                    return `http://${host}:5000`;
-                  };
-                  
-                  const baseURL = getApiBaseURL();
-                  return `${baseURL}/uploads/${avatarPath}`;
-                };
-                
-                const avatarUrl = getAvatarUrl(patient.avatar);
-                
-                // Получаем инициалы для fallback
-                const getInitials = (name: string) => {
-                  const parts = name.trim().split(' ');
-                  if (parts.length >= 2) {
-                    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-                  }
-                  return name.substring(0, 2).toUpperCase();
-                };
-
-                return (
-                  <button
-                    key={patient.id}
-                    type="button"
-                    onClick={() => handlePatientClick(patient)}
-                    className={`
-                      w-full text-left px-4 py-3 text-sm
-                      hover:bg-bg-primary transition-smooth
-                      flex items-center gap-3
-                      ${selectedPatient?.id === patient.id ? 'bg-main-10 text-main-100' : 'text-text-50'}
-                    `}
-                  >
-                    {/* Avatar */}
-                    <div className="flex-shrink-0">
-                      {avatarUrl ? (
-                        <img
-                          src={avatarUrl}
-                          alt={patient.name}
-                          className="w-10 h-10 rounded-full object-cover border border-stroke"
-                          onError={(e) => {
-                            // Fallback на инициалы если изображение не загрузилось
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const parent = target.parentElement;
-                            if (parent) {
-                              parent.innerHTML = `
-                                <div class="w-10 h-10 rounded-full bg-main-100 text-white flex items-center justify-center text-xs font-medium border border-stroke">
-                                  ${getInitials(patient.name)}
-                                </div>
-                              `;
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-main-100 text-white flex items-center justify-center text-xs font-medium border border-stroke">
-                          {getInitials(patient.name)}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Patient Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-text-100 truncate">{patient.name}</div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {patient.phone && (
-                          <div className="text-xs text-text-10 flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                            </svg>
-                            <span className="truncate">{patient.phone}</span>
-                          </div>
-                        )}
-                        {patient.email && (
-                          <div className="text-xs text-text-10 flex items-center gap-1">
-                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                            <span className="truncate">{patient.email}</span>
-                          </div>
-                        )}
-                      </div>
-                      {patient.status && (
-                        <div className="mt-1">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${
-                            patient.status === 'registered' 
-                              ? 'bg-green-100 text-green-700' 
-                              : 'bg-gray-100 text-gray-700'
-                          }`}>
-                            {patient.status === 'registered' ? 'Зарегистрирован' : 'Гость'}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                );
-              })}
+              {patients.map((patient: Patient) => (
+                <PatientListItem
+                  key={patient.id}
+                  patient={patient}
+                  isSelected={selectedPatient?.id === patient.id}
+                  onPatientClick={handlePatientClick}
+                />
+              ))}
             </div>
           )}
         </div>
@@ -362,17 +378,19 @@ export const PatientSearchInput: React.FC<PatientSearchInputProps> = ({
       {errorMessage && <p className="mt-1.5 text-xs text-red-600">{errorMessage}</p>}
 
       {/* Patient Details Modal */}
-      <PatientDetailsModal
-        isOpen={isDetailsModalOpen}
-        onClose={() => {
-          setIsDetailsModalOpen(false);
-          setPatientForDetails(null);
-          handleCancelSelection();
-        }}
-        patient={patientForDetails}
-        onConfirm={handleConfirmPatient}
-        onCancel={handleCancelSelection}
-      />
+      {patientForDetails && (
+        <PatientDetailsModal
+          isOpen={isDetailsModalOpen}
+          onClose={() => {
+            setIsDetailsModalOpen(false);
+            setPatientForDetails(null);
+            handleCancelSelection();
+          }}
+          patient={patientForDetails}
+          onConfirm={handleConfirmPatient}
+          onCancel={handleCancelSelection}
+        />
+      )}
     </div>
   );
 };

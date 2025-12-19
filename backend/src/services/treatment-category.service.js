@@ -82,10 +82,11 @@ export async function createTreatmentCategory(clinicId, data) {
       name: data.name,
       defaultDuration: data.defaultDuration || 30,
       description: data.description || null,
+      color: data.color || null, // Сохраняем цвет, если он передан
     },
   });
 
-  console.log('✅ [TREATMENT CATEGORY SERVICE] Категория создана:', category.id);
+  console.log('✅ [TREATMENT CATEGORY SERVICE] Категория создана:', category.id, 'Цвет:', category.color);
   return category;
 }
 
@@ -98,6 +99,7 @@ export async function createTreatmentCategory(clinicId, data) {
  */
 export async function updateTreatmentCategory(clinicId, categoryId, data) {
   console.log('🔵 [TREATMENT CATEGORY SERVICE] Обновление категории:', clinicId, categoryId, data);
+  console.log('🔵 [TREATMENT CATEGORY SERVICE] Данные для обновления:', JSON.stringify(data, null, 2));
 
   // Проверка существования и принадлежности категории
   const existing = await prisma.treatmentCategory.findFirst({
@@ -126,16 +128,33 @@ export async function updateTreatmentCategory(clinicId, categoryId, data) {
     }
   }
 
+  // Подготавливаем данные для обновления - обновляем только переданные поля
+  const updateData = {};
+  
+  if (data.name !== undefined) updateData.name = data.name;
+  if (data.defaultDuration !== undefined) updateData.defaultDuration = data.defaultDuration;
+  if (data.description !== undefined) updateData.description = data.description || null;
+  
+  // Для цвета: обрабатываем только если поле передано явно
+  // Если color === null - удаляем цвет, если color === строка - сохраняем
+  if ('color' in data) {
+    updateData.color = data.color || null;
+    console.log('🎨 [TREATMENT CATEGORY SERVICE] Обновление цвета:', data.color, '→', updateData.color);
+  }
+
+  console.log('🔵 [TREATMENT CATEGORY SERVICE] Данные для Prisma update:', JSON.stringify(updateData, null, 2));
+
+  // Проверяем, что есть хотя бы одно поле для обновления
+  if (Object.keys(updateData).length === 0) {
+    throw new Error('No fields to update');
+  }
+
   const category = await prisma.treatmentCategory.update({
     where: { id: categoryId },
-    data: {
-      name: data.name,
-      defaultDuration: data.defaultDuration,
-      description: data.description,
-    },
+    data: updateData,
   });
 
-  console.log('✅ [TREATMENT CATEGORY SERVICE] Категория обновлена:', category.id);
+  console.log('✅ [TREATMENT CATEGORY SERVICE] Категория обновлена:', category.id, 'Цвет:', category.color);
   return category;
 }
 

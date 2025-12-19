@@ -22,6 +22,9 @@ export const createTreatmentCategorySchema = Joi.object({
   description: Joi.string().max(500).allow('').optional().messages({
     'string.max': 'Описание не должно превышать 500 символов',
   }),
+  color: Joi.string().pattern(/^#[0-9A-Fa-f]{6}$/).optional().allow(null, '').messages({
+    'string.pattern.base': 'Цвет должен быть в формате HEX (например, #8B5CF6)',
+  }),
 });
 
 /**
@@ -39,6 +42,9 @@ export const updateTreatmentCategorySchema = Joi.object({
   }),
   description: Joi.string().max(500).allow('').optional().messages({
     'string.max': 'Описание не должно превышать 500 символов',
+  }),
+  color: Joi.string().pattern(/^#[0-9A-Fa-f]{6}$/).optional().allow(null, '').messages({
+    'string.pattern.base': 'Цвет должен быть в формате HEX (например, #8B5CF6)',
   }),
 }).min(1); // Хотя бы одно поле обязательно
 

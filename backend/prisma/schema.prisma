@@ -334,6 +334,7 @@ model TreatmentCategory {
   name            String    // Название категории (например, "Терапевтическая стоматология")
   defaultDuration Int       @default(30) // Длительность процедуры по умолчанию (минуты)
   description     String?   // Описание категории (опционально)
+  color           String?   // Цвет категории в формате HEX (например, "#8B5CF6" для фиолетового)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

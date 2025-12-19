@@ -23,7 +23,10 @@ export const PatientDetailsModal: React.FC<PatientDetailsModalProps> = ({
   onConfirm,
   onCancel,
 }) => {
-  if (!patient) return null;
+  // Если нет пациента, не показываем модальное окно
+  if (!patient) {
+    return null;
+  }
 
   // Формируем URL для avatar
   const getAvatarUrl = (avatarPath: string | undefined) => {

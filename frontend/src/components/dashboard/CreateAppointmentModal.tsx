@@ -9,6 +9,7 @@ import { patientService } from '../../services/patient.service';
 import { appointmentService } from '../../services/appointment.service';
 import { User, Patient } from '../../types/api.types';
 import { PatientSearchInput } from './PatientSearchInput';
+import { useTreatmentCategories } from '../../hooks/useTreatmentCategories';
 
 interface CreateAppointmentModalProps {
   isOpen: boolean;
@@ -38,12 +39,16 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
   const [appointmentDate, setAppointmentDate] = useState<Date | null>(null);
   const [appointmentTime, setAppointmentTime] = useState('');
   const [duration, setDuration] = useState('30');
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
 
   const [doctors, setDoctors] = useState<User[]>([]);
   const [isDoctorsLoading, setIsDoctorsLoading] = useState(true);
   const createMutation = useCreateAppointment();
+  
+  // Загружаем категории лечения клиники
+  const { data: categories = [], isLoading: isLoadingCategories } = useTreatmentCategories();
 
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -84,6 +89,7 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
       setAppointmentDate(null);
       setAppointmentTime('');
       setDuration('30');
+      setSelectedCategoryId('');
       setReason('');
       setNotes('');
       setError('');
@@ -478,16 +484,88 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
           </select>
         </div>
 
-        {/* Причина визита */}
+        {/* Категория лечения / Причина визита */}
         <div>
           <label className="block text-sm font-normal text-text-10 mb-2">
-            Причина визита / Процедура
+            Категория лечения / Причина визита
           </label>
-          <Input
-            placeholder="Например: Консультация, Лечение кариеса, Профилактический осмотр"
-            value={reason}
-            onChange={e => setReason(e.target.value)}
-          />
+          {isLoadingCategories ? (
+            <div className="flex items-center gap-2 py-2">
+              <Spinner size="sm" />
+              <span className="text-xs text-text-10">Загрузка категорий...</span>
+            </div>
+          ) : categories.length > 0 ? (
+            <div className="space-y-2">
+              <select
+                value={selectedCategoryId}
+                onChange={(e) => {
+                  const categoryId = e.target.value;
+                  setSelectedCategoryId(categoryId);
+                  
+                  // Находим выбранную категорию
+                  const selectedCategory = categories.find(cat => cat.id === categoryId);
+                  if (selectedCategory) {
+                    // Устанавливаем название категории как reason
+                    setReason(selectedCategory.name);
+                    // Устанавливаем длительность по умолчанию из категории
+                    setDuration(String(selectedCategory.defaultDuration));
+                  } else {
+                    // Если выбрано "Другое", очищаем reason
+                    setReason('');
+                  }
+                }}
+                className="block w-full px-4 py-2.5 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-smooth"
+              >
+                <option value="">Выберите категорию или введите вручную</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                    {category.defaultDuration && ` (${category.defaultDuration} мин)`}
+                  </option>
+                ))}
+                <option value="custom">Другое (ввести вручную)</option>
+              </select>
+              
+              {/* Поле для ручного ввода, если выбрано "Другое" */}
+              {selectedCategoryId === 'custom' && (
+                <Input
+                  placeholder="Введите причину визита вручную..."
+                  value={reason}
+                  onChange={e => setReason(e.target.value)}
+                />
+              )}
+              
+              {/* Показываем выбранную категорию, если выбрана из списка */}
+              {selectedCategoryId && selectedCategoryId !== 'custom' && (
+                <div className="px-3 py-2 bg-main-10 border border-main-100/20 rounded-sm">
+                  <p className="text-xs text-text-10 mb-1">Выбранная категория:</p>
+                  <p className="text-sm font-medium text-text-100">{reason}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategoryId('custom');
+                      setReason('');
+                    }}
+                    className="text-xs text-main-100 hover:text-main-100/80 mt-1 underline"
+                  >
+                    Изменить или ввести вручную
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Input
+                placeholder="Например: Консультация, Лечение кариеса, Профилактический осмотр"
+                value={reason}
+                onChange={e => setReason(e.target.value)}
+              />
+              <p className="text-xs text-text-10">
+                Категории лечения не настроены. Добавьте их в разделе{' '}
+                <strong>Clinic → Web → Категории лечения</strong>
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Заметки */}

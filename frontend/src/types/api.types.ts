@@ -351,6 +351,7 @@ export interface TreatmentCategory {
   name: string;
   defaultDuration: number; // Длительность процедуры по умолчанию (минуты)
   description?: string;
+  color?: string; // Цвет категории в формате HEX (например, "#8B5CF6" для фиолетового)
   createdAt: Date | string;
   updatedAt: Date | string;
 }
@@ -362,6 +363,7 @@ export interface CreateTreatmentCategoryRequest {
   name: string;
   defaultDuration: number;
   description?: string;
+  color?: string; // Цвет категории в формате HEX
 }
 
 /**
@@ -371,6 +373,7 @@ export interface UpdateTreatmentCategoryRequest {
   name?: string;
   defaultDuration?: number;
   description?: string;
+  color?: string; // Цвет категории в формате HEX
 }
 
 /**

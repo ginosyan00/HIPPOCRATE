@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Modal, Card, Button, Input, Spinner } from '../common';
 import { Appointment, User } from '../../types/api.types';
 import { formatAppointmentDateTime, formatAppointmentTime } from '../../utils/dateFormat';
 import { useAuthStore } from '../../store/useAuthStore';
-import { useUpdateAppointment } from '../../hooks/useAppointments';
+import { useUpdateAppointment, useUpdateAppointmentStatus } from '../../hooks/useAppointments';
 import { useUpdatePatient } from '../../hooks/usePatients';
 import { useDoctors } from '../../hooks/useUsers';
 import { userService } from '../../services/user.service';
+import { STATUS_COLORS, getStatusColor } from '../../utils/appointmentColors';
 
 // Import icons
 import doctorIcon from '../../assets/icons/doctor.svg';
@@ -34,6 +35,7 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
 }) => {
   const user = useAuthStore(state => state.user);
   const updateAppointmentMutation = useUpdateAppointment();
+  const updateAppointmentStatusMutation = useUpdateAppointmentStatus();
   const updatePatientMutation = useUpdatePatient();
   const { data: doctors = [], isLoading: isLoadingDoctors } = useDoctors();
 
@@ -65,6 +67,10 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [doctorsList, setDoctorsList] = useState<User[]>([]);
+  
+  // Состояние для кастомного dropdown статуса
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
 
   // Инициализация формы при открытии модального окна
   useEffect(() => {
@@ -104,6 +110,23 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
       loadDoctors();
     }
   }, [isOpen]);
+
+  // Закрытие dropdown при клике вне его
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
+        setIsStatusDropdownOpen(false);
+      }
+    };
+
+    if (isStatusDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isStatusDropdownOpen]);
 
   if (!appointment) return null;
 
@@ -163,7 +186,7 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
 
   // Обработка сохранения
   const handleSave = async () => {
-    if (!validateForm() || !canEditAppointment) {
+    if (!validateForm() || !canEditAppointment || !appointment) {
       return;
     }
 
@@ -181,31 +204,112 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
         });
       }
 
-      // Обновляем данные записи
-      const appointmentData: Partial<Appointment> = {};
+      const originalStatus = appointment.status;
+      const statusChanged = status !== originalStatus;
       
-      if (isCompleted) {
-        // Для завершенных записей можно обновлять только сумму
-        if (amount) {
-          appointmentData.amount = parseFloat(amount);
+      // Если статус изменился, используем отдельный endpoint для изменения статуса
+      if (statusChanged) {
+        console.log('🔄 [APPOINTMENT DETAIL] Статус изменился, используем updateStatus:', {
+          from: originalStatus,
+          to: status,
+        });
+        
+        // Для завершенных записей передаем amount при изменении статуса
+        const amountValue = amount ? parseFloat(amount) : undefined;
+        
+        await updateAppointmentStatusMutation.mutateAsync({
+          id: appointment.id,
+          status: status,
+          amount: status === 'completed' ? amountValue : undefined,
+        });
+        
+        // Если статус изменился с completed на другой, обновляем остальные поля отдельно
+        // Если статус меняется на completed, другие поля не обновляем (только amount через updateStatus)
+        if (originalStatus === 'completed' && status !== 'completed') {
+          const appointmentData: any = {};
+          const dateTime = new Date(`${appointmentDate}T${appointmentTime}`);
+          appointmentData.appointmentDate = dateTime.toISOString();
+          appointmentData.duration = parseInt(duration);
+          appointmentData.doctorId = doctorId;
+          appointmentData.reason = reason.trim() || undefined;
+          appointmentData.notes = notes.trim() || undefined;
+          appointmentData.amount = amountValue;
+          
+          // Удаляем пустые поля
+          Object.keys(appointmentData).forEach(key => {
+            if (appointmentData[key] === undefined) {
+              delete appointmentData[key];
+            }
+          });
+          
+          if (Object.keys(appointmentData).length > 0) {
+            await updateAppointmentMutation.mutateAsync({
+              id: appointment.id,
+              data: appointmentData as any,
+            });
+          }
+        } else if (status !== 'completed') {
+          // Если статус меняется между незавершенными статусами, обновляем все поля
+          const appointmentData: any = {};
+          const dateTime = new Date(`${appointmentDate}T${appointmentTime}`);
+          appointmentData.appointmentDate = dateTime.toISOString();
+          appointmentData.duration = parseInt(duration);
+          appointmentData.doctorId = doctorId;
+          appointmentData.reason = reason.trim() || undefined;
+          appointmentData.notes = notes.trim() || undefined;
+          appointmentData.amount = amountValue;
+          
+          // Удаляем пустые поля
+          Object.keys(appointmentData).forEach(key => {
+            if (appointmentData[key] === undefined) {
+              delete appointmentData[key];
+            }
+          });
+          
+          if (Object.keys(appointmentData).length > 0) {
+            await updateAppointmentMutation.mutateAsync({
+              id: appointment.id,
+              data: appointmentData as any,
+            });
+          }
         }
       } else {
-        // Для незавершенных записей можно обновлять все поля
-        const dateTime = new Date(`${appointmentDate}T${appointmentTime}`);
-        appointmentData.appointmentDate = dateTime;
-        appointmentData.duration = parseInt(duration);
-        appointmentData.doctorId = doctorId;
-        appointmentData.reason = reason.trim() || undefined;
-        appointmentData.notes = notes.trim() || undefined;
-        appointmentData.amount = amount ? parseFloat(amount) : undefined;
-        appointmentData.status = status as any;
+        // Статус не изменился, обновляем обычным способом
+        const appointmentData: any = {};
+        
+        if (isCompleted) {
+          // Для завершенных записей можно обновлять только сумму
+          // Отправляем undefined если поле пустое (для очистки суммы на бэкенде)
+          appointmentData.amount = amount ? parseFloat(amount) : undefined;
+        } else {
+          // Для незавершенных записей можно обновлять все поля кроме статуса
+          const dateTime = new Date(`${appointmentDate}T${appointmentTime}`);
+          appointmentData.appointmentDate = dateTime.toISOString();
+          appointmentData.duration = parseInt(duration);
+          appointmentData.doctorId = doctorId;
+          appointmentData.reason = reason.trim() || undefined;
+          appointmentData.notes = notes.trim() || undefined;
+          appointmentData.amount = amount ? parseFloat(amount) : undefined;
+        }
+        
+        // Удаляем пустые поля
+        Object.keys(appointmentData).forEach(key => {
+          if (appointmentData[key] === undefined) {
+            delete appointmentData[key];
+          }
+        });
+        
+        // Проверяем, что есть что обновлять
+        if (Object.keys(appointmentData).length > 0) {
+          await updateAppointmentMutation.mutateAsync({
+            id: appointment.id,
+            data: appointmentData as any,
+          });
+        }
       }
 
-      await updateAppointmentMutation.mutateAsync({
-        id: appointment.id,
-        data: appointmentData,
-      });
-
+      console.log('✅ [APPOINTMENT DETAIL] Данные успешно сохранены');
+      
       // Закрываем модальное окно после успешного сохранения
       onClose();
     } catch (error: any) {
@@ -215,22 +319,6 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
       });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  // Получаем цвет статуса
-  const getStatusColor = (status: string): string => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-      case 'confirmed':
-        return 'bg-main-10 text-main-100 border-main-100/20';
-      case 'completed':
-        return 'bg-green-50 text-green-700 border-green-200';
-      case 'cancelled':
-        return 'bg-gray-100 text-gray-600 border-gray-300';
-      default:
-        return 'bg-gray-100 text-gray-600 border-gray-300';
     }
   };
 
@@ -249,6 +337,14 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
         return status;
     }
   };
+
+  // Опции статусов с цветами
+  const statusOptions = [
+    { value: 'pending', label: 'Ожидает', color: STATUS_COLORS.pending },
+    { value: 'confirmed', label: 'Подтвержден', color: STATUS_COLORS.confirmed },
+    { value: 'completed', label: 'Завершен', color: STATUS_COLORS.completed },
+    { value: 'cancelled', label: 'Отменен', color: STATUS_COLORS.cancelled },
+  ];
 
   const patientInitial = patientName.charAt(0).toUpperCase() || 'П';
 
@@ -351,19 +447,56 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
 
             <div>
               <label className="block text-xs text-text-10 mb-2">Статус</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                disabled={isCompleted || isCancelled}
-                className={`w-full px-3 py-2 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all ${
-                  (isCompleted || isCancelled) ? 'bg-bg-primary cursor-not-allowed' : ''
-                }`}
-              >
-                <option value="pending">Ожидает</option>
-                <option value="confirmed">Подтвержден</option>
-                <option value="completed">Завершен</option>
-                <option value="cancelled">Отменен</option>
-              </select>
+              <div className="relative" ref={statusDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => !isCompleted && !isCancelled && setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                  disabled={isCompleted || isCancelled}
+                  className={`w-full px-3 py-2 border border-stroke rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all flex items-center justify-between ${
+                    (isCompleted || isCancelled) ? 'bg-bg-primary cursor-not-allowed' : 'cursor-pointer hover:border-main-100'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: getStatusColor(status) }}
+                    />
+                    <span>{getStatusLabel(status)}</span>
+                  </div>
+                  <svg
+                    className={`w-4 h-4 text-text-10 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {isStatusDropdownOpen && !isCompleted && !isCancelled && (
+                  <div className="absolute z-50 w-full mt-1 bg-bg-white border border-stroke rounded-sm shadow-lg">
+                    {statusOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => {
+                          setStatus(option.value);
+                          setIsStatusDropdownOpen(false);
+                        }}
+                        className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-bg-primary transition-colors ${
+                          status === option.value ? 'bg-main-10' : ''
+                        }`}
+                      >
+                        <div
+                          className="w-3 h-3 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: option.color }}
+                        />
+                        <span>{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

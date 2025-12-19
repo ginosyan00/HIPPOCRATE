@@ -32,10 +32,11 @@ export const TreatmentCategoriesSection: React.FC = () => {
     name: '',
     defaultDuration: 30,
     description: '',
+    color: '',
   });
 
   const handleAddClick = () => {
-    setFormData({ name: '', defaultDuration: 30, description: '' });
+    setFormData({ name: '', defaultDuration: 30, description: '', color: '' });
     setIsAddFormVisible(!isAddFormVisible);
     setEditingCategory(null);
   };
@@ -45,6 +46,7 @@ export const TreatmentCategoriesSection: React.FC = () => {
       name: category.name,
       defaultDuration: category.defaultDuration,
       description: category.description || '',
+      color: category.color || '',
     });
     setEditingCategory(category);
     setIsAddFormVisible(true);
@@ -58,19 +60,51 @@ export const TreatmentCategoriesSection: React.FC = () => {
     e.preventDefault();
 
     try {
+      // Нормализуем цвет: убеждаемся, что он в формате HEX с #
+      let normalizedColor = formData.color.trim().toUpperCase();
+      if (normalizedColor && !normalizedColor.startsWith('#')) {
+        normalizedColor = '#' + normalizedColor;
+      }
+      // Проверяем валидность HEX формата
+      if (normalizedColor && normalizedColor !== '#' && !/^#[0-9A-F]{6}$/.test(normalizedColor)) {
+        toast.error('Цвет должен быть в формате HEX (например, #8B5CF6)');
+        return;
+      }
+
+      // Подготавливаем данные
+      const submitData: any = {
+        name: formData.name.trim(),
+        defaultDuration: formData.defaultDuration,
+        description: formData.description.trim() || undefined,
+      };
+
+      // Обработка цвета
+      if (normalizedColor && normalizedColor !== '#') {
+        // Валидный цвет - сохраняем
+        submitData.color = normalizedColor;
+      } else {
+        // Пустой цвет - при создании не отправляем, при обновлении удаляем (null)
+        if (editingCategory) {
+          submitData.color = null; // Удаляем цвет при обновлении
+        }
+        // При создании цвет не включается в данные (будет null по умолчанию)
+      }
+
+      console.log('🎨 [TREATMENT CATEGORY FORM] Отправка данных:', JSON.stringify(submitData, null, 2));
+
       if (editingCategory) {
         await updateMutation.mutateAsync({
           id: editingCategory.id,
-          data: formData,
+          data: submitData,
         });
         toast.success('Категория успешно обновлена');
       } else {
-        await createMutation.mutateAsync(formData);
+        await createMutation.mutateAsync(submitData);
         toast.success('Категория успешно создана');
       }
       setIsAddFormVisible(false);
       setEditingCategory(null);
-      setFormData({ name: '', defaultDuration: 30, description: '' });
+      setFormData({ name: '', defaultDuration: 30, description: '', color: '' });
     } catch (error: any) {
       toast.error(error.message || 'Ошибка при сохранении категории');
     }
@@ -91,7 +125,7 @@ export const TreatmentCategoriesSection: React.FC = () => {
   const handleCancelForm = () => {
     setIsAddFormVisible(false);
     setEditingCategory(null);
-    setFormData({ name: '', defaultDuration: 30, description: '' });
+    setFormData({ name: '', defaultDuration: 30, description: '', color: '' });
   };
 
   if (isLoading) {
@@ -165,18 +199,53 @@ export const TreatmentCategoriesSection: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Описание (опционально, менее заметное) */}
-                <div>
-                  <label className="block text-sm font-medium text-text-10 mb-2">
-                    Описание (опционально)
-                  </label>
-                  <textarea
-                    className="w-full px-4 py-3 border border-stroke rounded-lg bg-bg-white text-sm text-text-100 focus:outline-none focus:ring-2 focus:ring-main-100 focus:border-main-100 resize-none transition-colors"
-                    rows={2}
-                    placeholder="Краткое описание категории..."
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  />
+                {/* Описание и цвет в одной строке */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-text-10 mb-2">
+                      Описание (опционально)
+                    </label>
+                    <textarea
+                      className="w-full px-4 py-3 border border-stroke rounded-lg bg-bg-white text-sm text-text-100 focus:outline-none focus:ring-2 focus:ring-main-100 focus:border-main-100 resize-none transition-colors"
+                      rows={2}
+                      placeholder="Краткое описание категории..."
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-text-50 mb-2">
+                      Цвет категории (HEX)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={formData.color && formData.color.startsWith('#') ? formData.color : '#9CA3AF'}
+                        onChange={(e) => {
+                          const colorValue = e.target.value.toUpperCase();
+                          setFormData({ ...formData, color: colorValue });
+                        }}
+                        className="w-16 h-12 border border-stroke rounded-lg cursor-pointer"
+                        title="Выберите цвет категории"
+                      />
+                      <input
+                        type="text"
+                        placeholder="#9CA3AF"
+                        value={formData.color}
+                        onChange={(e) => {
+                          const value = e.target.value.toUpperCase();
+                          if (value === '' || /^#[0-9A-F]{0,6}$/.test(value)) {
+                            setFormData({ ...formData, color: value });
+                          }
+                        }}
+                        className="flex-1 px-4 py-3 border border-stroke rounded-lg bg-bg-white text-sm text-text-100 focus:outline-none focus:ring-2 focus:ring-main-100 focus:border-main-100 transition-colors font-mono"
+                        maxLength={7}
+                      />
+                    </div>
+                    <p className="text-xs text-text-10 mt-1">
+                      Цвет будет использоваться для карточек назначений
+                    </p>
+                  </div>
                 </div>
 
                 {/* Кнопки действий */}
@@ -234,7 +303,16 @@ export const TreatmentCategoriesSection: React.FC = () => {
                   className="flex items-center justify-between p-4 border border-stroke rounded-sm bg-bg-white hover:border-main-100 transition-colors"
                 >
                   <div className="flex-1">
-                    <h4 className="text-text-100 font-semibold text-base">{category.name}</h4>
+                    <div className="flex items-center gap-3">
+                      {category.color && (
+                        <div
+                          className="w-6 h-6 rounded-sm border border-stroke flex-shrink-0"
+                          style={{ backgroundColor: category.color }}
+                          title={`Цвет категории: ${category.color}`}
+                        />
+                      )}
+                      <h4 className="text-text-100 font-semibold text-base">{category.name}</h4>
+                    </div>
                     {category.description && (
                       <p className="text-text-10 text-sm mt-1">{category.description}</p>
                     )}
@@ -242,6 +320,11 @@ export const TreatmentCategoriesSection: React.FC = () => {
                       <span className="text-text-50 text-sm">
                         Длительность по умолчанию: <strong>{category.defaultDuration} мин</strong>
                       </span>
+                      {category.color && (
+                        <span className="text-text-50 text-sm font-mono">
+                          Цвет: <strong>{category.color}</strong>
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

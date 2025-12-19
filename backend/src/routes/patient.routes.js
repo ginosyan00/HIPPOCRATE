@@ -66,11 +66,11 @@ router.post(
 /**
  * PUT /api/v1/patients/:id
  * Обновить пациента
- * Доступ: ADMIN, DOCTOR
+ * Доступ: ADMIN, CLINIC, DOCTOR
  */
 router.put(
   '/:id',
-  authorize('ADMIN', 'DOCTOR'),
+  authorize('ADMIN', 'CLINIC', 'DOCTOR'),
   validate(updatePatientSchema),
   patientController.update
 );

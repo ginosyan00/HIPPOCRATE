@@ -211,80 +211,93 @@ export const DoctorScheduleEditor = forwardRef<DoctorScheduleEditorRef, DoctorSc
     getSchedule,
   }), [saveSchedule, getSchedule]);
 
+  // Контент формы/полей
+  const formContent = (
+    <div className="space-y-4">
+      <div className="space-y-3">
+        {DAYS.map(({ key, label, short }) => {
+          const daySchedule = scheduleState[key];
+          return (
+            <div
+              key={key}
+              className="flex items-center gap-4 p-4 border border-stroke rounded-sm bg-bg-white hover:border-main-100 transition-smooth"
+            >
+              {/* Checkbox для открыто/закрыто */}
+              <div className="flex items-center gap-2 min-w-[140px]">
+                <input
+                  type="checkbox"
+                  id={`day-${key}`}
+                  checked={daySchedule.isWorking}
+                  onChange={() => handleDayToggle(key)}
+                  className="w-4 h-4 text-main-100 border-stroke rounded focus:ring-main-100 focus:ring-2"
+                />
+                <label htmlFor={`day-${key}`} className="text-sm font-medium text-text-100 cursor-pointer">
+                  {label}
+                </label>
+              </div>
+
+              {/* Время работы */}
+              {daySchedule.isWorking ? (
+                <div className="flex items-center gap-2 flex-1">
+                  <input
+                    type="time"
+                    value={daySchedule.startTime || ''}
+                    onChange={e => handleTimeChange(key, 'startTime', e.target.value)}
+                    className="px-3 py-2 border border-stroke rounded-sm bg-bg-white text-sm text-text-100 focus:outline-none focus:border-main-100 transition-smooth"
+                    required={!hideSubmitButton}
+                  />
+                  <span className="text-text-50">—</span>
+                  <input
+                    type="time"
+                    value={daySchedule.endTime || ''}
+                    onChange={e => handleTimeChange(key, 'endTime', e.target.value)}
+                    className="px-3 py-2 border border-stroke rounded-sm bg-bg-white text-sm text-text-100 focus:outline-none focus:border-main-100 transition-smooth"
+                    required={!hideSubmitButton}
+                  />
+                </div>
+              ) : (
+                <div className="flex-1 text-sm text-text-10">Выходной</div>
+              )}
+
+              {/* Кнопки действий */}
+              {daySchedule.isWorking && (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleApplyToAll(key)}
+                    className="text-xs text-main-100 hover:text-main-100/80 transition-smooth"
+                    title="Применить ко всем дням"
+                  >
+                    Применить ко всем
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {!hideSubmitButton && (
+        <div className="flex justify-end pt-4 border-t border-stroke">
+          <Button type="submit" variant="primary" size="md" isLoading={isLoading} disabled={isLoading}>
+            Сохранить расписание
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <Card title={title} padding="lg">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-3">
-          {DAYS.map(({ key, label, short }) => {
-            const daySchedule = scheduleState[key];
-            return (
-              <div
-                key={key}
-                className="flex items-center gap-4 p-4 border border-stroke rounded-sm bg-bg-white hover:border-main-100 transition-smooth"
-              >
-                {/* Checkbox для открыто/закрыто */}
-                <div className="flex items-center gap-2 min-w-[140px]">
-                  <input
-                    type="checkbox"
-                    id={`day-${key}`}
-                    checked={daySchedule.isWorking}
-                    onChange={() => handleDayToggle(key)}
-                    className="w-4 h-4 text-main-100 border-stroke rounded focus:ring-main-100 focus:ring-2"
-                  />
-                  <label htmlFor={`day-${key}`} className="text-sm font-medium text-text-100 cursor-pointer">
-                    {label}
-                  </label>
-                </div>
-
-                {/* Время работы */}
-                {daySchedule.isWorking ? (
-                  <div className="flex items-center gap-2 flex-1">
-                    <input
-                      type="time"
-                      value={daySchedule.startTime || ''}
-                      onChange={e => handleTimeChange(key, 'startTime', e.target.value)}
-                      className="px-3 py-2 border border-stroke rounded-sm bg-bg-white text-sm text-text-100 focus:outline-none focus:border-main-100 transition-smooth"
-                      required
-                    />
-                    <span className="text-text-50">—</span>
-                    <input
-                      type="time"
-                      value={daySchedule.endTime || ''}
-                      onChange={e => handleTimeChange(key, 'endTime', e.target.value)}
-                      className="px-3 py-2 border border-stroke rounded-sm bg-bg-white text-sm text-text-100 focus:outline-none focus:border-main-100 transition-smooth"
-                      required
-                    />
-                  </div>
-                ) : (
-                  <div className="flex-1 text-sm text-text-10">Выходной</div>
-                )}
-
-                {/* Кнопки действий */}
-                {daySchedule.isWorking && (
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleApplyToAll(key)}
-                      className="text-xs text-main-100 hover:text-main-100/80 transition-smooth"
-                      title="Применить ко всем дням"
-                    >
-                      Применить ко всем
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {!hideSubmitButton && (
-          <div className="flex justify-end pt-4 border-t border-stroke">
-            <Button type="submit" variant="primary" size="md" isLoading={isLoading} disabled={isLoading}>
-              Сохранить расписание
-            </Button>
-          </div>
-        )}
-      </form>
+      {hideSubmitButton ? (
+        // Если форма скрыта, просто отображаем контент без формы (для использования внутри другой формы)
+        formContent
+      ) : (
+        // Если форма видна, оборачиваем в форму
+        <form onSubmit={handleSubmit}>
+          {formContent}
+        </form>
+      )}
     </Card>
   );
 });

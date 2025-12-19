@@ -5,6 +5,8 @@ import { Card } from '../common';
 import { Appointment } from '../../types/api.types';
 import { formatAppointmentTime } from '../../utils/dateFormat';
 import { useAuthStore } from '../../store/useAuthStore';
+import { useTreatmentCategories } from '../../hooks/useTreatmentCategories';
+import { getCategoryColor, getStatusColor } from '../../utils/appointmentColors';
 
 // Import icons
 import analyticsIcon from '../../assets/icons/analytics.svg';
@@ -38,6 +40,9 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
 }) => {
   const user = useAuthStore(state => state.user);
   const [currentWeek, setCurrentWeek] = useState(new Date());
+  
+  // Загружаем категории для получения цветов
+  const { data: categories = [] } = useTreatmentCategories();
 
   // Генерируем дни недели
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 }); // Понедельник
@@ -313,28 +318,36 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                         const appointmentDate = parseISO(appointment.appointmentDate.toString());
                         const appointmentTime = formatAppointmentTime(appointmentDate);
 
+                        // Получаем цвета для карточки
+                        const categoryColor = getCategoryColor(appointment, categories);
+                        const statusColorValue = getStatusColor(appointment.status);
+                        
                         return (
                           <div
                             key={appointment.id}
-                            className="bg-bg-white border border-stroke rounded-lg p-2.5 hover:shadow-md transition-all duration-200 cursor-pointer"
+                            className="border rounded-lg p-2.5 hover:shadow-md transition-all duration-200 cursor-pointer relative"
+                            style={{
+                              backgroundColor: categoryColor,
+                              borderLeft: `4px solid ${statusColorValue}`,
+                            }}
                             onClick={() => onAppointmentClick?.(appointment)}
                           >
                             {/* Верхняя часть карточки */}
                             <div className="flex items-start justify-between mb-2">
                               {/* Заголовок карточки */}
                               <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-semibold text-text-100 truncate mb-0.5">
+                                <h4 className="text-sm font-semibold text-white truncate mb-0.5">
                                   {user?.role === 'PATIENT'
                                     ? (user?.name || 'Я')
                                     : (appointment.patient?.name || 'Пациент')}
                                 </h4>
                                 <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="text-[10px] text-text-50 flex items-center gap-1">
-                                    <img src={clockIcon} alt="Время" className="w-3 h-3" />
+                                  <span className="text-[10px] text-white/90 flex items-center gap-1">
+                                    <img src={clockIcon} alt="Время" className="w-3 h-3 brightness-0 invert" />
                                     {appointmentTime}
                                   </span>
                                   {appointment.duration && (
-                                    <span className="text-[10px] text-text-50">• {appointment.duration} мин</span>
+                                    <span className="text-[10px] text-white/90">• {appointment.duration} мин</span>
                                   )}
                                 </div>
                               </div>
@@ -343,21 +356,21 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
 
                             {/* Статус бейдж */}
                             <div className="mb-2">
-                              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-sm text-[10px] font-medium border ${getStatusBadgeColor(appointment.status)}`}>
-                                <img src={getStatusIcon(appointment.status)} alt={getStatusLabel(appointment.status)} className="w-3 h-3" />
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-sm text-[10px] font-medium border bg-white/20 text-white border-white/30">
+                                <img src={getStatusIcon(appointment.status)} alt={getStatusLabel(appointment.status)} className="w-3 h-3 brightness-0 invert" />
                                 {getStatusLabel(appointment.status)}
                               </span>
                             </div>
 
                             {/* Информация о враче */}
                             {appointment.doctor?.name && (
-                              <div className="mb-2 text-[10px] text-text-50">
+                              <div className="mb-2 text-[10px] text-white/90">
                                 <span className="font-medium flex items-center gap-1">
-                                  <img src={doctorIcon} alt="Врач" className="w-3 h-3" />
+                                  <img src={doctorIcon} alt="Врач" className="w-3 h-3 brightness-0 invert" />
                                   Врач:
                                 </span> {appointment.doctor.name}
                                 {appointment.doctor.specialization && (
-                                  <span className="text-text-10"> ({appointment.doctor.specialization})</span>
+                                  <span className="text-white/80"> ({appointment.doctor.specialization})</span>
                                 )}
                               </div>
                             )}
@@ -365,20 +378,20 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                             {/* Причина визита */}
                             {appointment.reason && (
                               <div className="mb-2 text-[10px]">
-                                <span className="text-text-10">Причина:</span>
-                                <span className="text-text-50 ml-1">{appointment.reason}</span>
+                                <span className="text-white/80">Причина:</span>
+                                <span className="text-white ml-1">{appointment.reason}</span>
                               </div>
                             )}
 
                             {/* Иконки связи (телефон, email, чат) */}
-                            <div className="flex items-center gap-2 mb-2 pt-1.5 border-t border-stroke">
+                            <div className="flex items-center gap-2 mb-2 pt-1.5 border-t border-white/20">
                               {appointment.patient?.phone && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     window.location.href = `tel:${appointment.patient?.phone}`;
                                   }}
-                                  className="p-1 hover:bg-bg-primary rounded-sm transition-smooth text-text-50 hover:text-main-100"
+                                  className="p-1 hover:bg-white/20 rounded-sm transition-smooth text-white/80 hover:text-white"
                                   title={`Позвонить: ${appointment.patient.phone}`}
                                   type="button"
                                 >
@@ -393,7 +406,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                                     e.stopPropagation();
                                     window.location.href = `mailto:${appointment.patient?.email}`;
                                   }}
-                                  className="p-1 hover:bg-bg-primary rounded-sm transition-smooth text-text-50 hover:text-main-100"
+                                  className="p-1 hover:bg-white/20 rounded-sm transition-smooth text-white/80 hover:text-white"
                                   title={`Написать: ${appointment.patient.email}`}
                                   type="button"
                                 >

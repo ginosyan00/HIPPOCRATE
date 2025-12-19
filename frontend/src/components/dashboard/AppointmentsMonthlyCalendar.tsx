@@ -229,6 +229,10 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                   e.stopPropagation();
                   onViewChange('weekly');
                 }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
                 className={`group text-base font-medium transition-colors duration-150 flex-shrink-0 relative ${
                   currentView === 'weekly'
                     ? 'bg-main-100 text-white'
@@ -243,11 +247,12 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                   boxSizing: 'border-box',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  position: 'relative',
+                  zIndex: 1
                 }}
                 title="Недельный вид"
                 type="button"
-                onMouseDown={(e) => e.preventDefault()}
               >
                 <span className="flex items-center gap-2" style={{ pointerEvents: 'none' }}>
                   <img 
@@ -269,6 +274,10 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                   e.stopPropagation();
                   onViewChange('monthly');
                 }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
                 className={`group text-base font-medium transition-colors duration-150 flex-shrink-0 relative ${
                   currentView === 'monthly'
                     ? 'bg-main-100 text-white'
@@ -283,11 +292,12 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                   boxSizing: 'border-box',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  position: 'relative',
+                  zIndex: 1
                 }}
                 title="Месячный календарь"
                 type="button"
-                onMouseDown={(e) => e.preventDefault()}
               >
                 <span className="flex items-center gap-2" style={{ pointerEvents: 'none' }}>
                   <img 
@@ -309,6 +319,10 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                   e.stopPropagation();
                   onViewChange('list');
                 }}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
                 className={`group text-base font-medium transition-colors duration-150 flex-shrink-0 relative ${
                   currentView === 'list'
                     ? 'bg-main-100 text-white'
@@ -323,11 +337,12 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                   boxSizing: 'border-box',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  position: 'relative',
+                  zIndex: 1
                 }}
                 title="Таблица"
                 type="button"
-                onMouseDown={(e) => e.preventDefault()}
               >
                 <span className="flex items-center gap-2" style={{ pointerEvents: 'none' }}>
                   <img 

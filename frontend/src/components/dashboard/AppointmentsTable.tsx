@@ -83,6 +83,10 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
       return;
     }
 
+    // Останавливаем распространение события, чтобы не вызывать другие обработчики
+    e.stopPropagation();
+    e.preventDefault();
+
     setSelectedAppointment(appointment);
     setIsDetailModalOpen(true);
   };
@@ -267,7 +271,11 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
   }
 
   return (
-    <div className="overflow-x-auto">
+    <div 
+      className="overflow-x-auto"
+      onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+    >
       <table className="w-full border-collapse">
         <thead>
           <tr className="bg-bg-primary border-b-2 border-stroke">
@@ -362,6 +370,7 @@ export const AppointmentsTable: React.FC<AppointmentsTableProps> = ({
               key={appointment.id}
               className="border-b border-stroke hover:bg-bg-secondary transition-colors cursor-pointer"
               onClick={(e) => handleRowClick(appointment, e)}
+              onMouseDown={(e) => e.stopPropagation()}
             >
               {onToggleSelect && (
                 <td 

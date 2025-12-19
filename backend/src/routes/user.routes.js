@@ -146,22 +146,22 @@ router.put(
 /**
  * GET /api/v1/users/:id/treatment-categories
  * Получить категории лечения врача
- * Доступ: ADMIN, CLINIC (клиника может получать категории своих врачей)
+ * Доступ: ADMIN, CLINIC (клиника может получать категории своих врачей), DOCTOR (может получать свои категории)
  */
 router.get(
   '/:id/treatment-categories',
-  authorize('ADMIN', 'CLINIC'),
+  authorize('ADMIN', 'CLINIC', 'DOCTOR'),
   treatmentCategoryController.getDoctorCategories
 );
 
 /**
  * PUT /api/v1/users/:id/treatment-categories
  * Обновить категории лечения врача
- * Доступ: ADMIN, CLINIC (клиника может обновлять категории своих врачей)
+ * Доступ: ADMIN, CLINIC (клиника может обновлять категории своих врачей), DOCTOR (может обновлять свои категории)
  */
 router.put(
   '/:id/treatment-categories',
-  authorize('ADMIN', 'CLINIC'),
+  authorize('ADMIN', 'CLINIC', 'DOCTOR'),
   validate(updateDoctorCategoriesSchema),
   treatmentCategoryController.updateDoctorCategories
 );

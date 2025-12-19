@@ -114,21 +114,33 @@ export async function deleteCategory(req, res, next) {
  */
 export async function getDoctorCategories(req, res, next) {
   try {
-    const { clinicId } = req.user;
+    const { clinicId, role, userId } = req.user;
     const { id } = req.params;
 
-    if (!clinicId) {
+    // DOCTOR может получать только свои категории
+    if (role === 'DOCTOR' && userId !== id) {
+      return errorResponse(res, 'You can only access your own categories', 403);
+    }
+
+    // Для ADMIN не требуется clinicId, для CLINIC и DOCTOR - обязателен
+    if (role !== 'ADMIN' && !clinicId) {
       return errorResponse(res, 'User is not associated with a clinic', 403);
     }
 
-    // Проверяем, что врач принадлежит той же клинике
+    // Проверяем, что врач существует и принадлежит той же клинике (если не ADMIN)
     const { prisma } = await import('../config/database.js');
+    const where = {
+      id,
+      role: 'DOCTOR',
+    };
+
+    // Для CLINIC и DOCTOR проверяем принадлежность к клинике, для ADMIN - нет
+    if (role !== 'ADMIN' && clinicId) {
+      where.clinicId = clinicId;
+    }
+
     const doctor = await prisma.user.findFirst({
-      where: {
-        id,
-        clinicId,
-        role: 'DOCTOR',
-      },
+      where,
     });
 
     if (!doctor) {
@@ -148,22 +160,34 @@ export async function getDoctorCategories(req, res, next) {
  */
 export async function updateDoctorCategories(req, res, next) {
   try {
-    const { clinicId } = req.user;
+    const { clinicId, role, userId } = req.user;
     const { id } = req.params;
     const { categoryIds } = req.body;
 
-    if (!clinicId) {
+    // DOCTOR может обновлять только свои категории
+    if (role === 'DOCTOR' && userId !== id) {
+      return errorResponse(res, 'You can only update your own categories', 403);
+    }
+
+    // Для ADMIN не требуется clinicId, для CLINIC и DOCTOR - обязателен
+    if (role !== 'ADMIN' && !clinicId) {
       return errorResponse(res, 'User is not associated with a clinic', 403);
     }
 
-    // Проверяем, что врач принадлежит той же клинике
+    // Проверяем, что врач существует и принадлежит той же клинике (если не ADMIN)
     const { prisma } = await import('../config/database.js');
+    const where = {
+      id,
+      role: 'DOCTOR',
+    };
+
+    // Для CLINIC и DOCTOR проверяем принадлежность к клинике, для ADMIN - нет
+    if (role !== 'ADMIN' && clinicId) {
+      where.clinicId = clinicId;
+    }
+
     const doctor = await prisma.user.findFirst({
-      where: {
-        id,
-        clinicId,
-        role: 'DOCTOR',
-      },
+      where,
     });
 
     if (!doctor) {

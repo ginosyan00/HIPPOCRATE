@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef, useCallback } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef, useCallback, useMemo } from 'react';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
 import { Spinner } from '../common/Spinner';
@@ -44,14 +44,25 @@ export const DoctorCategoriesSection = forwardRef<DoctorCategoriesSectionRef, Do
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
 
-  // Инициализируем выбранные категории из текущих категорий врача
-  useEffect(() => {
-    if (doctorCategories.length > 0) {
-      setSelectedCategoryIds(doctorCategories.map(cat => cat.id));
-    } else {
-      setSelectedCategoryIds([]);
-    }
+  // Создаем стабильную строку из ID категорий для сравнения
+  const doctorCategoryIdsString = useMemo(() => {
+    return doctorCategories.map(cat => cat.id).sort().join(',');
   }, [doctorCategories]);
+
+  // Инициализируем выбранные категории из текущих категорий врача
+  // Используем строку ID вместо массива для предотвращения бесконечных циклов
+  useEffect(() => {
+    const newIds = doctorCategories.map(cat => cat.id);
+    setSelectedCategoryIds(prevIds => {
+      const prevIdsString = prevIds.sort().join(',');
+      const newIdsString = newIds.sort().join(',');
+      // Обновляем только если ID действительно изменились
+      if (prevIdsString !== newIdsString) {
+        return newIds;
+      }
+      return prevIds;
+    });
+  }, [doctorCategoryIdsString]);
 
   // Открываем/закрываем форму для добавления категорий
   const handleAddClick = () => {

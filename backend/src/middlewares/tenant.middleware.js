@@ -15,8 +15,9 @@ export function tenantMiddleware(req, res, next) {
   }
 
   // Для PATIENT clinicId может быть null (новый пользователь еще не связан с клиникой)
-  // Для других ролей (DOCTOR, ADMIN, CLINIC) clinicId обязателен
-  if (req.user.role !== 'PATIENT' && !req.user.clinicId) {
+  // Для ADMIN clinicId может быть null (админ может работать со всеми клиниками)
+  // Для других ролей (DOCTOR, CLINIC) clinicId обязателен
+  if (req.user.role !== 'PATIENT' && req.user.role !== 'ADMIN' && !req.user.clinicId) {
     return res.status(401).json({
       success: false,
       error: {

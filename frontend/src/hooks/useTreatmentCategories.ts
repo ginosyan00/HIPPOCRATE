@@ -94,3 +94,29 @@ export function useDeleteTreatmentCategory() {
     },
   });
 }
+
+/**
+ * Hook для обновления категорий врача
+ * @param doctorId - ID врача
+ */
+export function useUpdateDoctorCategories(doctorId: string | null | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (categoryIds: string[]) => {
+      if (!doctorId) {
+        throw new Error('Doctor ID is required');
+      }
+      return treatmentCategoryService.updateDoctorCategories(doctorId, categoryIds);
+    },
+    onSuccess: (_, categoryIds) => {
+      // Инвалидируем кеш категорий врача для обновления списка
+      queryClient.invalidateQueries({ queryKey: ['doctor-treatment-categories', doctorId] });
+      console.log('✅ [DOCTOR CATEGORIES] Категории врача успешно обновлены:', categoryIds.length);
+    },
+    onError: (error: any) => {
+      console.error('❌ [DOCTOR CATEGORIES] Ошибка обновления категорий врача:', error);
+      toast.error(error.message || 'Ошибка при обновлении категорий');
+    },
+  });
+}

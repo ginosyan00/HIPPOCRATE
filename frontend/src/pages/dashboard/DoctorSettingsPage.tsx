@@ -5,6 +5,7 @@ import { DoctorProfileSection } from '../../components/dashboard/DoctorProfileSe
 import { PasswordSection } from '../../components/dashboard/PasswordSection';
 import { DoctorScheduleEditor } from '../../components/dashboard/DoctorScheduleEditor';
 import { DoctorStatusToggle } from '../../components/dashboard/DoctorStatusToggle';
+import { DoctorCategoriesSection } from '../../components/dashboard/DoctorCategoriesSection';
 import { useUser, useUpdateUser, useDeleteMyAccount } from '../../hooks/useUsers';
 import { useDoctorProfile, useUpdateDoctorProfile, useUploadDoctorAvatar, useDoctorSchedule, useUpdateDoctorSchedule } from '../../hooks/useDoctor';
 import { useUpdatePassword } from '../../hooks/useAuth';
@@ -175,6 +176,12 @@ export const DoctorSettingsPage: React.FC = () => {
         {/* Статус врача (доступен и для врача, и для клиники) */}
         <DoctorStatusToggle
           doctor={doctor}
+          isEditingSelf={isEditingSelf}
+        />
+
+        {/* Категории лечения */}
+        <DoctorCategoriesSection
+          doctorId={doctor.id}
           isEditingSelf={isEditingSelf}
         />
 

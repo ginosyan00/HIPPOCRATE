@@ -10,6 +10,7 @@ import { DoctorScheduleEditor, DoctorScheduleEditorRef } from '../../components/
 import { DoctorProfileSection, DoctorProfileSectionRef } from '../../components/dashboard/DoctorProfileSection';
 import { DoctorStatusQuickToggle } from '../../components/dashboard/DoctorStatusQuickToggle';
 import { DoctorStatusToggle } from '../../components/dashboard/DoctorStatusToggle';
+import { DoctorCategoriesSection } from '../../components/dashboard/DoctorCategoriesSection';
 import { toast } from 'react-hot-toast';
 
 // Import icons
@@ -330,6 +331,12 @@ export const DoctorsPage: React.FC = () => {
                   isEditingSelf={false}
                 />
               )}
+
+              {/* Категории лечения */}
+              <DoctorCategoriesSection
+                doctorId={doctor.id}
+                isEditingSelf={false}
+              />
 
               {/* Расписание врача с возможностью редактирования */}
               <DoctorScheduleEditor

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 import { Modal, Button, Input, Spinner, Calendar } from '../common';
 
 // Import icons
@@ -273,6 +274,9 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
       });
 
       console.log('✅ [CREATE APPOINTMENT MODAL] Приём успешно создан');
+
+      // Показываем уведомление об успехе
+      toast.success('Приём успешно создан');
 
       // Уведомляем родительский компонент
       onSuccess();

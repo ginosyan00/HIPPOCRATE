@@ -57,3 +57,4 @@ export const updateDoctorCategoriesSchema = Joi.object({
     'string.guid': 'ID категории должен быть валидным UUID',
   }),
 });
+

@@ -93,3 +93,4 @@ export const treatmentCategoryService = {
     return data.data;
   },
 };
+

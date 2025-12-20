@@ -267,3 +267,4 @@ export async function updateDoctorCategories(doctorId, categoryIds) {
   console.log('✅ [TREATMENT CATEGORY SERVICE] Категории врача обновлены');
   return { success: true };
 }
+

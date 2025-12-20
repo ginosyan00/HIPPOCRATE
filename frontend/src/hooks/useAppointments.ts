@@ -18,12 +18,11 @@ export function useAppointments(params?: {
   return useQuery({
     queryKey: ['appointments', params],
     queryFn: () => appointmentService.getAll(params),
-    staleTime: 10000, // 10 секунд
-    placeholderData: (previousData) => previousData, // Плавный переход - сохраняем предыдущие данные
+    staleTime: 0, // 0 секунд - данные всегда считаются stale, чтобы invalidate работал правильно
     refetchOnWindowFocus: false, // Не обновлять при фокусе окна
     gcTime: 300000, // 5 минут - кешируем данные дольше
     retry: 1, // Меньше попыток для быстрого ответа
-    refetchOnMount: false, // Не обновлять при монтировании если данные свежие
+    refetchOnMount: 'always', // Всегда обновлять при монтировании, если данные invalidated
   });
 }
 
@@ -40,10 +39,23 @@ export function useCreateAppointment() {
 
   return useMutation({
     mutationFn: (data: any) => appointmentService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    onSuccess: async () => {
+      // Инвалидируем и принудительно refetch все queries с appointments
+      await queryClient.invalidateQueries({ 
+        queryKey: ['appointments'],
+        refetchType: 'active' // Refetch только активные queries
+      });
       // Также инвалидируем patient appointments, чтобы пациент видел обновления
-      queryClient.invalidateQueries({ queryKey: ['patient-appointments'] });
+      await queryClient.invalidateQueries({ 
+        queryKey: ['patient-appointments'],
+        refetchType: 'active'
+      });
+      // Инвалидируем patient visits для обновления раздела Patients
+      await queryClient.invalidateQueries({ 
+        queryKey: ['patientVisits'],
+        refetchType: 'active'
+      });
+      console.log('✅ [APPOINTMENTS] Новый приём создан, кеш обновлен');
     },
   });
 }
@@ -54,10 +66,17 @@ export function useUpdateAppointment() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Appointment> }) =>
       appointmentService.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    onSuccess: async () => {
+      // Инвалидируем и принудительно refetch все queries с appointments
+      await queryClient.invalidateQueries({ 
+        queryKey: ['appointments'],
+        refetchType: 'active'
+      });
       // Также инвалидируем patient appointments, чтобы пациент видел обновления
-      queryClient.invalidateQueries({ queryKey: ['patient-appointments'] });
+      await queryClient.invalidateQueries({ 
+        queryKey: ['patient-appointments'],
+        refetchType: 'active'
+      });
     },
   });
 }

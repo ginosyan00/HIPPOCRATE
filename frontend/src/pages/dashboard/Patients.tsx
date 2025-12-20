@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
 import { Button, Input, Card, Modal, Spinner } from '../../components/common';
 import { usePatients, useCreatePatient, useUpdatePatient, useDeletePatient, useDoctorPatients } from '../../hooks/usePatients';
 import { usePatientVisits } from '../../hooks/usePatientVisits';
 import { useDoctors } from '../../hooks/useUsers';
+import { useTreatmentCategories } from '../../hooks/useTreatmentCategories';
 import { Patient, AppointmentStatus, Gender, DoctorPatient, UserRole } from '../../types/api.types';
 import type { PatientVisit } from '../../types/api.types';
 import { formatAppointmentDateTime } from '../../utils/dateFormat';
 import { useAuthStore } from '../../store/useAuthStore';
+import { getCategoryColor, DEFAULT_CATEGORY_COLOR } from '../../utils/appointmentColors';
 
 // Import search icon
 import searchIcon from '../../assets/icons/search.svg';
@@ -84,16 +87,20 @@ export const PatientsPage: React.FC = () => {
   // Для админов/ассистентов: загружаем пациентов (для cards view)
   const { data: patientsData, isLoading: isLoadingPatients } = usePatients({ search });
   
-  // Для админов/ассистентов: загружаем все визиты (для table view)
+  // Для админов/ассистентов: загружаем все визиты (для table view и cards view - нужны для цветов)
   const { data: visitsData, isLoading: isLoadingVisits } = usePatientVisits({
     search: viewMode === 'table' && !isDoctor ? search : undefined,
     doctorId: !isDoctor && doctorFilter ? doctorFilter : undefined,
-    status: !isDoctor && statusFilter ? statusFilter : undefined,
+    status: viewMode === 'table' && !isDoctor && statusFilter ? statusFilter : undefined, // Для cards view загружаем все статусы
     limit: 100,
   });
 
   // Загружаем врачей для фильтра (только для админов/ассистентов)
   const { data: doctorsData } = useDoctors();
+
+  // Загружаем категории лечения для цветов карточек
+  const { data: categoriesData } = useTreatmentCategories();
+  const categories = categoriesData || [];
 
   const createMutation = useCreatePatient();
   const updateMutation = useUpdatePatient();
@@ -152,12 +159,17 @@ export const PatientsPage: React.FC = () => {
           id: editingPatient.id,
           data: patientData,
         });
+        toast.success('Пациент успешно обновлен');
       } else {
         await createMutation.mutateAsync(patientData);
+        toast.success('Пациент успешно создан');
+        // Переключаемся на cards view, чтобы увидеть нового пациента
+        setViewMode('cards');
       }
       setIsModalOpen(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error saving patient:', err);
+      toast.error(err?.message || 'Ошибка при сохранении пациента');
     }
   };
 
@@ -165,8 +177,10 @@ export const PatientsPage: React.FC = () => {
     if (confirm(`Удалить пациента ${name}?`)) {
       try {
         await deleteMutation.mutateAsync(id);
-      } catch (err) {
+        toast.success('Пациент успешно удален');
+      } catch (err: any) {
         console.error('Error deleting patient:', err);
+        toast.error(err?.message || 'Ошибка при удалении пациента');
       }
     }
   };
@@ -212,6 +226,21 @@ export const PatientsPage: React.FC = () => {
   const uniqueVisits = Array.from(
     new Map(visits.map((visit: PatientVisit) => [visit.appointmentId, visit])).values()
   ) as PatientVisit[];
+
+  // Создаем Map для быстрого поиска последнего визита пациента (для cards view)
+  const lastVisitByPatientId = useMemo(() => {
+    const visitMap = new Map<string, PatientVisit>();
+    uniqueVisits.forEach((visit: PatientVisit) => {
+      const patientId = visit.patientId;
+      if (patientId) {
+        const existing = visitMap.get(patientId);
+        if (!existing || new Date(visit.appointmentDate) > new Date(existing.appointmentDate)) {
+          visitMap.set(patientId, visit);
+        }
+      }
+    });
+    return visitMap;
+  }, [uniqueVisits]);
 
   // Группируем визиты по пациентам для отображения уникальных пациентов
   const uniquePatientsWithVisits = useMemo(() => {
@@ -628,46 +657,76 @@ export const PatientsPage: React.FC = () => {
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {patients.map((patient: Patient) => (
-                  <Card 
-                    key={patient.id} 
-                    padding="md"
-                    className="cursor-pointer hover:border-main-100/30 transition-smooth"
-                    onClick={() => navigate(`/dashboard/patients/${patient.id}`)}
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <div className="w-12 h-12 bg-main-10 rounded-sm flex items-center justify-center flex-shrink-0">
-                          <span className="text-base text-main-100 font-medium">
-                            {patient.name.charAt(0).toUpperCase()}
-                          </span>
+                {patients.map((patient: Patient) => {
+                  // Находим последний визит пациента для определения цвета
+                  const lastVisit = lastVisitByPatientId.get(patient.id);
+                  const cardColor = lastVisit 
+                    ? getCategoryColor(
+                        {
+                          id: lastVisit.appointmentId,
+                          reason: lastVisit.reason,
+                          status: lastVisit.status,
+                        } as any,
+                        categories
+                      )
+                    : DEFAULT_CATEGORY_COLOR;
+
+                  return (
+                    <Card 
+                      key={patient.id} 
+                      padding="md"
+                      className="cursor-pointer hover:border-main-100/30 transition-smooth relative overflow-hidden"
+                      onClick={() => navigate(`/dashboard/patients/${patient.id}`)}
+                    >
+                      {/* Цветная полоса слева */}
+                      <div 
+                        className="absolute left-0 top-0 bottom-0 w-1"
+                        style={{ backgroundColor: cardColor }}
+                      />
+                      <div className="space-y-3 pl-1">
+                        <div className="flex items-start gap-3">
+                          <div 
+                            className="w-12 h-12 rounded-sm flex items-center justify-center flex-shrink-0 text-white font-medium"
+                            style={{ backgroundColor: cardColor }}
+                          >
+                            <span className="text-base">
+                              {patient.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base font-medium text-text-100 truncate">{patient.name}</h3>
+                            <p className="text-xs text-text-50">{patient.phone}</p>
+                            {patient.email && <p className="text-xs text-text-10 truncate">{patient.email}</p>}
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-base font-medium text-text-100 truncate">{patient.name}</h3>
-                          <p className="text-xs text-text-50">{patient.phone}</p>
-                          {patient.email && <p className="text-xs text-text-10 truncate">{patient.email}</p>}
+
+                        {patient.notes && (
+                          <p className="text-xs text-text-10 line-clamp-2">{patient.notes}</p>
+                        )}
+
+                        {lastVisit && (
+                          <div className="text-xs text-text-50">
+                            <span className="font-medium">Последний визит:</span>{' '}
+                            {lastVisit.reason || 'Не указано'}
+                          </div>
+                        )}
+
+                        <div className="flex gap-2 pt-2 border-t border-stroke" onClick={(e) => e.stopPropagation()}>
+                          <Button size="sm" variant="secondary" onClick={() => handleOpenModal(patient)}>
+                            Редактировать
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={() => handleDelete(patient.id, patient.name)}
+                          >
+                            Удалить
+                          </Button>
                         </div>
                       </div>
-
-                      {patient.notes && (
-                        <p className="text-xs text-text-10 line-clamp-2">{patient.notes}</p>
-                      )}
-
-                      <div className="flex gap-2 pt-2 border-t border-stroke" onClick={(e) => e.stopPropagation()}>
-                        <Button size="sm" variant="secondary" onClick={() => handleOpenModal(patient)}>
-                          Редактировать
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          onClick={() => handleDelete(patient.id, patient.name)}
-                        >
-                          Удалить
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </>

@@ -200,3 +200,4 @@ export async function updateDoctorCategories(req, res, next) {
     next(error);
   }
 }
+

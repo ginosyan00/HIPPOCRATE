@@ -123,7 +123,7 @@ export const AddDoctorPage: React.FC = () => {
               </h3>
               <div className="space-y-4">
                 <Input
-                  label="ФИО *"
+                  label="ФИО"
                   placeholder="Арам Григорян"
                   value={name}
                   onChange={e => setName(e.target.value)}
@@ -132,7 +132,7 @@ export const AddDoctorPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
-                    label="Email *"
+                    label="Email"
                     type="email"
                     placeholder="doctor@example.com"
                     value={email}
@@ -149,7 +149,7 @@ export const AddDoctorPage: React.FC = () => {
                 </div>
 
                 <Input
-                  label="Пароль *"
+                  label="Пароль"
                   type="password"
                   placeholder="••••••••"
                   value={password}
@@ -191,7 +191,7 @@ export const AddDoctorPage: React.FC = () => {
               </h3>
               <div className="space-y-4">
                 <Input
-                  label="Специализация *"
+                  label="Специализация"
                   placeholder="Стоматолог-терапевт"
                   value={specialization}
                   onChange={e => setSpecialization(e.target.value)}
@@ -200,7 +200,7 @@ export const AddDoctorPage: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Input
-                    label="Номер лицензии *"
+                    label="Номер лицензии"
                     placeholder="MD-123456"
                     value={licenseNumber}
                     onChange={e => setLicenseNumber(e.target.value)}
@@ -208,7 +208,7 @@ export const AddDoctorPage: React.FC = () => {
                   />
 
                   <Input
-                    label="Опыт работы (лет) *"
+                    label="Опыт работы (лет)"
                     type="number"
                     placeholder="5"
                     value={experience}

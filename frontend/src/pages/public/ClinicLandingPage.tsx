@@ -220,14 +220,21 @@ export const ClinicLandingPage: React.FC = () => {
     );
   }
 
+  const isDashboard = location.pathname.startsWith('/dashboard');
+  
+  // Определяем обертку в зависимости от контекста
+  const ContentWrapper = isDashboard ? 'div' : 'main';
+  const wrapperClassName = isDashboard ? 'w-full' : 'bg-bg-primary min-h-screen';
+  const backButtonContainerClassName = isDashboard ? 'w-full mb-6' : 'container mx-auto px-8 pt-8';
+
   return (
     <>
       {/* Main Content */}
-      <main className="bg-bg-primary min-h-screen">
+      <ContentWrapper className={wrapperClassName}>
         {/* Back Button */}
-        <div className="container mx-auto px-8 pt-8">
+        <div className={backButtonContainerClassName}>
           <BackButton 
-            fallback={location.pathname.startsWith('/dashboard') ? '/dashboard/patient/clinics' : '/clinics'} 
+            fallback={isDashboard ? '/dashboard/patient/clinics' : '/clinics'} 
           />
         </div>
 
@@ -295,7 +302,7 @@ export const ClinicLandingPage: React.FC = () => {
 
         {/* Contacts Section */}
         <ClinicContacts clinic={clinic} />
-      </main>
+      </ContentWrapper>
 
       {/* Appointment Modal */}
       <Modal
@@ -471,17 +478,20 @@ export const ClinicLandingPage: React.FC = () => {
         )}
       </Modal>
 
-      {/* Footer */}
-      <footer className="bg-bg-white border-t border-stroke py-8 mt-20">
-        <div className="container mx-auto px-8 text-center">
-          <p className="text-text-10 text-sm">
-            © 2025 Hippocrates Dental. Все права защищены.
-          </p>
-        </div>
-      </footer>
+      {/* Footer - только для публичной версии */}
+      {!isDashboard && (
+        <footer className="bg-bg-white border-t border-stroke py-8 mt-20">
+          <div className="container mx-auto px-8 text-center">
+            <p className="text-text-10 text-sm">
+              © 2025 Hippocrates Dental. Все права защищены.
+            </p>
+          </div>
+        </footer>
+      )}
     </>
   );
 };
+
 
 
 

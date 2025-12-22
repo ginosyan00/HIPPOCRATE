@@ -232,15 +232,20 @@ export const ClinicPage: React.FC = () => {
   }
 
   const workingHours = clinic.workingHours || {};
+  const isDashboard = location.pathname.startsWith('/dashboard');
+
+  // Определяем обертку в зависимости от контекста
+  const ContentWrapper = isDashboard ? 'div' : 'main';
+  const wrapperClassName = isDashboard ? 'w-full' : 'container mx-auto px-8 py-12';
 
   return (
     <>
       {/* Main Content */}
-      <main className="container mx-auto px-8 py-12">
+      <ContentWrapper className={wrapperClassName}>
         {/* Back Button */}
         <div className="mb-6">
           <BackButton 
-            fallback={location.pathname.startsWith('/dashboard') ? '/dashboard/patient/clinics' : '/clinics'} 
+            fallback={isDashboard ? '/dashboard/patient/clinics' : '/clinics'} 
           />
         </div>
 
@@ -347,7 +352,6 @@ export const ClinicPage: React.FC = () => {
                   <div className="text-center space-y-4">
                     <div className="w-20 h-20 rounded-full overflow-hidden mx-auto border-2 border-stroke bg-main-10 flex items-center justify-center cursor-pointer hover:border-main-100 transition-smooth"
                       onClick={() => {
-                        const isDashboard = location.pathname.startsWith('/dashboard');
                         if (isDashboard) {
                           navigate(`/dashboard/patient/clinic/${slug}/doctor/${doctor.id}`);
                         } else {
@@ -369,7 +373,6 @@ export const ClinicPage: React.FC = () => {
                       <h3 
                         className="text-base font-medium text-text-100 cursor-pointer hover:text-main-100 transition-smooth"
                         onClick={() => {
-                          const isDashboard = location.pathname.startsWith('/dashboard');
                           if (isDashboard) {
                             navigate(`/dashboard/patient/clinic/${slug}/doctor/${doctor.id}`);
                           } else {
@@ -392,7 +395,6 @@ export const ClinicPage: React.FC = () => {
                       <Button
                         className="flex-1 text-sm font-normal bg-bg-white text-text-100 hover:bg-main-10 border border-stroke"
                         onClick={() => {
-                          const isDashboard = location.pathname.startsWith('/dashboard');
                           if (isDashboard) {
                             navigate(`/dashboard/patient/clinic/${slug}/doctor/${doctor.id}`);
                           } else {
@@ -410,7 +412,7 @@ export const ClinicPage: React.FC = () => {
             </div>
           )}
         </div>
-      </main>
+      </ContentWrapper>
 
       {/* Appointment Modal - Figma Style */}
       <Modal
@@ -596,14 +598,16 @@ export const ClinicPage: React.FC = () => {
         )}
       </Modal>
 
-      {/* Footer */}
-      <footer className="bg-bg-white border-t border-stroke py-8 mt-20">
-        <div className="container mx-auto px-8 text-center">
-          <p className="text-text-10 text-sm">
-            © 2025 Hippocrates Dental. Все права защищены.
-          </p>
-        </div>
-      </footer>
+      {/* Footer - только для публичной версии */}
+      {!isDashboard && (
+        <footer className="bg-bg-white border-t border-stroke py-8 mt-20">
+          <div className="container mx-auto px-8 text-center">
+            <p className="text-text-10 text-sm">
+              © 2025 Hippocrates Dental. Все права защищены.
+            </p>
+          </div>
+        </footer>
+      )}
     </>
   );
 };

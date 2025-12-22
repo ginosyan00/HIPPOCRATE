@@ -97,7 +97,7 @@ function App() {
           element={
             <RoleProtectedRoute allowedRoles={[UserRole.PATIENT]}>
               <NewDashboardLayout>
-                <ClinicPage />
+                <ClinicLandingPage />
               </NewDashboardLayout>
             </RoleProtectedRoute>
           }

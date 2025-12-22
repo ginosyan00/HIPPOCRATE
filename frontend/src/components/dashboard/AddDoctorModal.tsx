@@ -108,7 +108,7 @@ export const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ isOpen, onClose,
           <h3 className="text-sm font-semibold text-text-50 mb-3">Основная информация</h3>
           <div className="space-y-3">
             <Input
-              label="ФИО *"
+              label="ФИО"
               placeholder="Арам Григорян"
               value={name}
               onChange={e => setName(e.target.value)}
@@ -117,7 +117,7 @@ export const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ isOpen, onClose,
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Input
-                label="Email *"
+                label="Email"
                 type="email"
                 placeholder="doctor@example.com"
                 value={email}
@@ -134,7 +134,7 @@ export const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ isOpen, onClose,
             </div>
 
             <Input
-              label="Пароль *"
+              label="Пароль"
               type="password"
               placeholder="••••••••"
               value={password}
@@ -172,7 +172,7 @@ export const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ isOpen, onClose,
           <h3 className="text-sm font-semibold text-text-50 mb-3">Профессиональная информация</h3>
           <div className="space-y-3">
             <Input
-              label="Специализация *"
+              label="Специализация"
               placeholder="Стоматолог-терапевт"
               value={specialization}
               onChange={e => setSpecialization(e.target.value)}
@@ -181,7 +181,7 @@ export const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ isOpen, onClose,
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Input
-                label="Номер лицензии *"
+                label="Номер лицензии"
                 placeholder="MD-123456"
                 value={licenseNumber}
                 onChange={e => setLicenseNumber(e.target.value)}
@@ -189,7 +189,7 @@ export const AddDoctorModal: React.FC<AddDoctorModalProps> = ({ isOpen, onClose,
               />
 
               <Input
-                label="Опыт работы (лет) *"
+                label="Опыт работы (лет)"
                 type="number"
                 placeholder="5"
                 value={experience}

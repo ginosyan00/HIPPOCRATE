@@ -295,7 +295,7 @@ export const RegisterUserPage: React.FC = () => {
                   <h3 className="text-base font-medium text-text-50 mb-4">Информация о клинике</h3>
                   <div className="space-y-4">
                     <Input
-                      label="Название клиники *"
+                      label="Название клиники"
                       placeholder="Медицинский центр 'Здоровье'"
                       value={clinicName}
                       onChange={e => setClinicName(e.target.value)}
@@ -304,7 +304,7 @@ export const RegisterUserPage: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Input
-                        label="Email клиники *"
+                        label="Email клиники"
                         type="email"
                         placeholder="clinic@example.com"
                         value={clinicEmail}
@@ -313,7 +313,7 @@ export const RegisterUserPage: React.FC = () => {
                       />
 
                       <Input
-                        label="Телефон клиники *"
+                        label="Телефон клиники"
                         placeholder="+374 10 123456"
                         value={clinicPhone}
                         onChange={e => setClinicPhone(e.target.value)}
@@ -323,7 +323,7 @@ export const RegisterUserPage: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <Input
-                        label="Город *"
+                        label="Город"
                         placeholder="Ереван"
                         value={city}
                         onChange={e => setCity(e.target.value)}

@@ -105,38 +105,14 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
 
   // Получаем цвет заголовка колонки для дня недели
   const getDayHeaderColor = (dayIndex: number, isToday: boolean): string => {
-    if (isToday) {
-      return 'bg-main-100 text-white';
-    }
-    
-    // Разные цвета для разных дней (как на изображении)
-    const colors = [
-      'bg-blue-500 text-white',      // Понедельник
-      'bg-blue-400 text-white',       // Вторник
-      'bg-green-500 text-white',      // Среда
-      'bg-yellow-500 text-white',     // Четверг
-      'bg-orange-500 text-white',      // Пятница
-      'bg-purple-500 text-white',      // Суббота
-      'bg-pink-500 text-white',        // Воскресенье
-    ];
-    
-    return colors[dayIndex] || 'bg-gray-500 text-white';
+    // Все дни с цветом #00a79d
+    return 'bg-[#00a79d] text-white';
   };
 
   // Получаем цвет статуса для бейджа
   const getStatusBadgeColor = (status: string): string => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-50 text-yellow-700 border-yellow-200';
-      case 'confirmed':
-        return 'bg-main-10 text-main-100 border-main-100/20';
-      case 'completed':
-        return 'bg-green-50 text-green-700 border-green-200';
-      case 'cancelled':
-        return 'bg-gray-100 text-gray-600 border-gray-300';
-      default:
-        return 'bg-gray-100 text-gray-600 border-gray-300';
-    }
+    // Все статусы с цветом #00a79d
+    return 'bg-[#00a79d]/10 text-[#00a79d] border-[#00a79d]/20';
   };
 
   // Получаем иконку статуса
@@ -180,7 +156,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={goToPreviousWeek}
-              className="p-2 hover:bg-bg-primary rounded-sm transition-smooth text-text-50 hover:text-main-100"
+              className="p-2 hover:bg-bg-primary rounded-sm transition-smooth text-text-50 hover:text-[#00a79d]"
               type="button"
               title="Предыдущая неделя"
             >
@@ -190,14 +166,14 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
             </button>
             <button
               onClick={goToToday}
-              className="px-3 py-1.5 text-sm font-normal text-text-50 hover:text-main-100 hover:bg-bg-primary rounded-sm transition-smooth"
+              className="px-3 py-1.5 text-sm font-normal text-text-50 hover:text-[#00a79d] hover:bg-bg-primary rounded-sm transition-smooth"
               type="button"
             >
               Сегодня
             </button>
             <button
               onClick={goToNextWeek}
-              className="p-2 hover:bg-bg-primary rounded-sm transition-smooth text-text-50 hover:text-main-100"
+              className="p-2 hover:bg-bg-primary rounded-sm transition-smooth text-text-50 hover:text-[#00a79d]"
               type="button"
               title="Следующая неделя"
             >
@@ -231,7 +207,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                 }}
                 className={`group text-base font-medium transition-colors duration-150 flex-shrink-0 relative ${
                   currentView === 'weekly'
-                    ? 'bg-main-100 text-white'
+                    ? 'bg-[#00a79d] text-white'
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                 }`}
                 style={{
@@ -276,7 +252,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                 }}
                 className={`group text-base font-medium transition-colors duration-150 flex-shrink-0 relative ${
                   currentView === 'monthly'
-                    ? 'bg-main-100 text-white'
+                    ? 'bg-[#00a79d] text-white'
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                 }`}
                 style={{
@@ -321,7 +297,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                 }}
                 className={`group text-base font-medium transition-colors duration-150 flex-shrink-0 relative ${
                   currentView === 'list'
-                    ? 'bg-main-100 text-white'
+                    ? 'bg-[#00a79d] text-white'
                     : 'bg-bg-white text-text-50 hover:bg-bg-primary'
                 }`}
                 style={{
@@ -380,7 +356,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
             return (
               <div
                 key={day.toISOString()}
-                className={`flex-1 min-w-0 flex flex-col ${isToday ? 'ring-2 ring-main-100 ring-offset-2' : ''}`}
+                className={`flex-1 min-w-0 flex flex-col ${isToday ? 'ring-2 ring-[#00a79d] ring-offset-2' : ''}`}
               >
                 {/* Заголовок колонки */}
                 <div className={`${getDayHeaderColor(dayIndex, isToday)} p-2 rounded-t-lg`}>
@@ -507,7 +483,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                                   e.stopPropagation();
                                   // TODO: Открыть чат с пациентом
                                 }}
-                                className="p-1 hover:bg-bg-primary rounded-sm transition-smooth text-text-50 hover:text-main-100"
+                                className="p-1 hover:bg-bg-primary rounded-sm transition-smooth text-text-50 hover:text-[#00a79d]"
                                 title="Открыть чат"
                                 type="button"
                               >
@@ -533,19 +509,19 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
       <Card padding="sm">
         <div className="flex items-center gap-4 flex-wrap text-xs">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm bg-yellow-500"></div>
+            <div className="w-3 h-3 rounded-sm bg-[#00a79d]"></div>
             <span className="text-text-50">Ожидает</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm bg-main-100"></div>
+            <div className="w-3 h-3 rounded-sm bg-[#00a79d]"></div>
             <span className="text-text-50">Подтвержден</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm bg-green-500"></div>
+            <div className="w-3 h-3 rounded-sm bg-[#00a79d]"></div>
             <span className="text-text-50">Завершен</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-sm bg-gray-400"></div>
+            <div className="w-3 h-3 rounded-sm bg-[#00a79d]"></div>
             <span className="text-text-50">Отменен</span>
           </div>
         </div>

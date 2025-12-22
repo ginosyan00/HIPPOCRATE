@@ -75,6 +75,17 @@ export function useMessages(conversationId: string | null, enabled: boolean = tr
         unreadMessages = query.data.messages.filter(
           (msg) => !msg.isRead && msg.senderType !== 'patient'
         );
+      } else if (user?.role === 'DOCTOR') {
+        // Для врачей: в clinic_doctor беседах читаем сообщения от клиники, в остальных - от пациентов
+        if (conversation?.type === 'clinic_doctor') {
+          unreadMessages = query.data.messages.filter(
+            (msg) => !msg.isRead && msg.senderType === 'clinic'
+          );
+        } else {
+          unreadMessages = query.data.messages.filter(
+            (msg) => !msg.isRead && msg.senderType === 'patient'
+          );
+        }
       } else {
         unreadMessages = query.data.messages.filter(
           (msg) => !msg.isRead && msg.senderType === 'patient'

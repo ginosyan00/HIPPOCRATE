@@ -560,13 +560,20 @@ export async function markAsRead(conversationId, userId, userRole, clinicId) {
 
   // Определяем, какие сообщения нужно отметить как прочитанные
   // Пациенты читают сообщения от врачей/клиники
-  // Врачи читают сообщения от пациентов
+  // Врачи читают сообщения от пациентов (в беседах patient_doctor) и от клиники (в беседах clinic_doctor)
   // Клиника читает сообщения от пациентов (в беседах patient_doctor и patient_clinic) и от врачей (в беседах clinic_doctor)
   let senderTypeFilter;
   if (userRole === 'PATIENT') {
     senderTypeFilter = { not: 'patient' };
   } else if (userRole === 'DOCTOR') {
-    senderTypeFilter = 'patient';
+    // Врачи читают сообщения от пациентов и от клиники
+    if (conversation.type === 'clinic_doctor') {
+      // В беседах клиника-врач врач читает сообщения от клиники
+      senderTypeFilter = 'clinic';
+    } else {
+      // В беседах patient_doctor врач читает сообщения от пациентов
+      senderTypeFilter = 'patient';
+    }
   } else if (userRole === 'ADMIN' || userRole === 'CLINIC') {
     // Для клиники нужно проверить тип беседы
     if (conversation.type === 'clinic_doctor') {
@@ -627,18 +634,20 @@ export async function getUnreadCount(clinicId, userRole, userId, patientId = nul
     
     where.conversation = conversationWhere;
   } else if (userRole === 'DOCTOR') {
-    // Врачи видят непрочитанные сообщения от пациентов в своих беседах
+    // Врачи видят непрочитанные сообщения:
+    // - От пациентов в беседах patient_doctor (где userId = userId врача)
+    // - От клиники в беседах clinic_doctor (где userId = userId врача)
     if (!clinicId) {
       throw new Error('CLINIC_ID_REQUIRED');
     }
     
-    where.senderType = 'patient';
+    // Непрочитанные сообщения от пациентов и клиники
+    where.senderType = {
+      in: ['patient', 'clinic'],
+    };
     where.conversation = {
       clinicId,
-      OR: [
-        { userId },
-        { userId: null },
-      ],
+      userId, // Только беседы, где врач является участником
     };
   } else if (userRole === 'ADMIN' || userRole === 'CLINIC') {
     // Админы и клиника видят непрочитанные сообщения:

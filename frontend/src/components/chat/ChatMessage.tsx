@@ -144,7 +144,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     >
       {!isOwnMessage && (
         <div className="flex-shrink-0 mr-2">
-          {showAvatar && !isGrouped ? (
+          {showAvatar ? (
             <div className="w-10 h-10 rounded-full bg-main-10 flex items-center justify-center ring-2 ring-white shadow-sm overflow-hidden">
               {message.senderType === 'patient' && conversation?.patient?.avatar ? (
                 <img
@@ -180,7 +180,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
         </div>
       )}
 
-      {/* Avatar для своих сообщений */}
+      {/* Avatar для своих сообщений - показываем только для первого сообщения в группе */}
       {isOwnMessage && (
         <div className="flex-shrink-0 ml-2">
           {showAvatar && !isGrouped ? (
@@ -220,15 +220,20 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
       )}
 
       <div className={`flex flex-col ${isOwnMessage ? 'items-end' : 'items-start'} max-w-[75%]`}>
-        {!isOwnMessage && !isGrouped && (
-          <span className="text-xs text-text-50 font-medium mb-1 px-1">
-            {message.senderType === 'patient'
-              ? conversation?.patient?.name || 'Пациент'
-              : message.senderType === 'doctor'
-              ? conversation?.user?.name || 'Врач'
-              : conversation?.clinic?.name || 'Клиника'}
-          </span>
+        {/* Имя отправителя для чужих сообщений - всегда показываем с зеленым индикатором */}
+        {!isOwnMessage && (
+          <div className="flex items-center gap-2 mb-1 px-1">
+            <span className="inline-block w-2 h-2 rounded-full bg-green-500"></span>
+            <span className="text-xs text-text-50 font-medium">
+              {message.senderType === 'patient'
+                ? conversation?.patient?.name || 'Пациент'
+                : message.senderType === 'doctor'
+                ? conversation?.user?.name || 'Врач'
+                : conversation?.clinic?.name || 'Клиника'}
+            </span>
+          </div>
         )}
+        {/* Имя отправителя для своих сообщений - показываем только для первого сообщения в группе */}
         {isOwnMessage && !isGrouped && (
           <span className="text-xs text-text-50 font-medium mb-1 px-1">
             {user?.role === 'PATIENT'

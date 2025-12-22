@@ -130,14 +130,35 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
 
   if (!appointment) return null;
 
+  // Функция для преобразования строки суммы в число
+  const parseAmount = (amountStr: string): number | undefined => {
+    if (!amountStr || amountStr.trim() === '') return undefined;
+    const cleaned = amountStr.replace(/\s/g, '').replace(',', '.');
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? undefined : num;
+  };
+
+  // Обработка изменения суммы
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Разрешаем только цифры, точку, запятую и пробелы
+    if (value === '' || /^[\d\s.,]+$/.test(value)) {
+      setAmount(value);
+      setErrors((prev) => ({ ...prev, amount: '' }));
+    }
+  };
+
   // Валидация формы
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     // Для завершенных записей валидируем только сумму
     if (isCompleted) {
-      if (amount && (isNaN(parseFloat(amount)) || parseFloat(amount) < 0)) {
-        newErrors.amount = 'Сумма должна быть положительным числом';
+      if (amount) {
+        const amountNum = parseAmount(amount);
+        if (amountNum === undefined || amountNum < 0) {
+          newErrors.amount = 'Сумма должна быть положительным числом';
+        }
       }
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
@@ -176,8 +197,11 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
     if (!duration || parseInt(duration) <= 0) {
       newErrors.duration = 'Длительность должна быть больше 0';
     }
-    if (amount && (isNaN(parseFloat(amount)) || parseFloat(amount) < 0)) {
-      newErrors.amount = 'Сумма должна быть положительным числом';
+    if (amount) {
+      const amountNum = parseAmount(amount);
+      if (amountNum === undefined || amountNum < 0) {
+        newErrors.amount = 'Сумма должна быть положительным числом';
+      }
     }
 
     setErrors(newErrors);
@@ -215,7 +239,7 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
         });
         
         // Для завершенных записей передаем amount при изменении статуса
-        const amountValue = amount ? parseFloat(amount) : undefined;
+        const amountValue = parseAmount(amount);
         
         await updateAppointmentStatusMutation.mutateAsync({
           id: appointment.id,
@@ -280,7 +304,7 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
         if (isCompleted) {
           // Для завершенных записей можно обновлять только сумму
           // Отправляем undefined если поле пустое (для очистки суммы на бэкенде)
-          appointmentData.amount = amount ? parseFloat(amount) : undefined;
+          appointmentData.amount = parseAmount(amount);
         } else {
           // Для незавершенных записей можно обновлять все поля кроме статуса
           const dateTime = new Date(`${appointmentDate}T${appointmentTime}`);
@@ -289,7 +313,7 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
           appointmentData.doctorId = doctorId;
           appointmentData.reason = reason.trim() || undefined;
           appointmentData.notes = notes.trim() || undefined;
-          appointmentData.amount = amount ? parseFloat(amount) : undefined;
+          appointmentData.amount = parseAmount(amount);
         }
         
         // Удаляем пустые поля
@@ -527,15 +551,10 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
                 Сумма оплаты (֏)
               </label>
               <input
-                type="number"
-                min="0"
-                step="0.01"
+                type="text"
                 value={amount}
-                onChange={(e) => {
-                  setAmount(e.target.value);
-                  setErrors((prev) => ({ ...prev, amount: '' }));
-                }}
-                placeholder="0"
+                onChange={handleAmountChange}
+                placeholder="Например: 124 749,95"
                 className={`w-full px-3 py-2 border rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all ${
                   errors.amount ? 'border-red-500' : 'border-stroke'
                 }`}

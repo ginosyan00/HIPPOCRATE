@@ -243,12 +243,16 @@ async function checkTimeSlotAvailability(
   const endTime = new Date(startTime.getTime() + duration * 60000);
 
   // Ищем конфликтующие приёмы
+  // Приём конфликтует, если два интервала пересекаются
+  // Два интервала пересекаются, если: startTime < existingEnd && endTime > existingStart
+  // Для оптимизации запроса находим все приёмы, которые могут пересекаться:
+  // - Начало существующего приёма < конец нашего слота (такие приёмы могут пересекаться)
   const where = {
     clinicId,
     doctorId,
     status: { notIn: ['cancelled'] }, // Игнорируем отмененные
     appointmentDate: {
-      lt: endTime, // Начало < наш конец
+      lt: endTime, // Начало существующего приёма < конец нашего слота
     },
   };
 
@@ -259,13 +263,21 @@ async function checkTimeSlotAvailability(
 
   const conflicting = await prisma.appointment.findMany({ where });
 
-  // Проверяем пересечения
+  // Проверяем пересечения более точно
   for (const existing of conflicting) {
     const existingStart = new Date(existing.appointmentDate);
     const existingEnd = new Date(existingStart.getTime() + existing.duration * 60000);
 
-    // Проверка пересечения интервалов
+    // Проверка пересечения интервалов: два интервала пересекаются, если
+    // начало первого < конец второго И конец первого > начало второго
     if (startTime < existingEnd && endTime > existingStart) {
+      console.log(`❌ [CHECK AVAILABILITY] Конфликт времени:`, {
+        requestedStart: startTime.toISOString(),
+        requestedEnd: endTime.toISOString(),
+        existingStart: existingStart.toISOString(),
+        existingEnd: existingEnd.toISOString(),
+        existingId: existing.id,
+      });
       return false;
     }
   }
@@ -741,11 +753,25 @@ export async function getBusyTimeSlots(clinicId, doctorId, date) {
     throw new Error('Doctor not found or inactive');
   }
 
-  // Создаем начало и конец дня
-  const startOfDay = new Date(date);
+  // Правильно парсим дату в локальном времени
+  // Если date уже Date объект, используем его, иначе парсим строку YYYY-MM-DD
+  let dateObj;
+  if (date instanceof Date) {
+    dateObj = new Date(date);
+  } else if (typeof date === 'string') {
+    // Парсим строку формата YYYY-MM-DD в локальном времени
+    // Это важно для правильной работы с временными зонами
+    const [year, month, day] = date.split('-').map(Number);
+    dateObj = new Date(year, month - 1, day);
+  } else {
+    throw new Error('Invalid date format');
+  }
+
+  // Создаем начало и конец дня в локальном времени
+  const startOfDay = new Date(dateObj);
   startOfDay.setHours(0, 0, 0, 0);
 
-  const endOfDay = new Date(date);
+  const endOfDay = new Date(dateObj);
   endOfDay.setHours(23, 59, 59, 999);
 
   // Получаем все приёмы врача на эту дату (исключая отмененные)
@@ -780,6 +806,8 @@ export async function getBusyTimeSlots(clinicId, doctorId, date) {
       appointmentId: apt.id,
     };
   });
+
+  console.log(`✅ [GET BUSY SLOTS] Врач ${doctorId}, дата ${date}: найдено ${busySlots.length} занятых слотов`);
 
   return busySlots;
 }

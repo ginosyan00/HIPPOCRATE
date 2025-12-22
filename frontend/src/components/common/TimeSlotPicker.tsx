@@ -58,16 +58,25 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
   const isTimeSlotBusy = (time: string): boolean => {
     if (!selectedDate || busySlots.length === 0) return false;
 
+    // Получаем дату в формате YYYY-MM-DD
     let dateStr: string;
     if (selectedDate instanceof Date) {
-      dateStr = selectedDate.toISOString().split('T')[0];
+      // Используем локальную дату, а не UTC
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      dateStr = `${year}-${month}-${day}`;
     } else if (typeof selectedDate === 'string') {
       dateStr = selectedDate.split('T')[0];
     } else {
       return false;
     }
 
-    const slotDateTime = new Date(`${dateStr}T${time}:00`);
+    // Создаем дату и время слота в локальном времени
+    // Используем конструктор Date(year, month, day, hour, minute) для локального времени
+    const [hours, minutes] = time.split(':').map(Number);
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const slotDateTime = new Date(year, month - 1, day, hours, minutes, 0);
     const slotEndTime = new Date(slotDateTime.getTime() + appointmentDuration * 60000);
 
     return busySlots.some(busySlot => {
@@ -75,6 +84,8 @@ export const TimeSlotPicker: React.FC<TimeSlotPickerProps> = ({
       const busyEnd = new Date(busySlot.end);
 
       // Проверяем пересечение интервалов
+      // slotDateTime < busyEnd означает, что наш слот начинается до конца занятого слота
+      // slotEndTime > busyStart означает, что наш слот заканчивается после начала занятого слота
       return slotDateTime < busyEnd && slotEndTime > busyStart;
     });
   };

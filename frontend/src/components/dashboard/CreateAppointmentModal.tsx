@@ -119,7 +119,18 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
 
       try {
         setIsLoadingBusySlots(true);
-        const dateStr = appointmentDate.toISOString().split('T')[0];
+        // Используем локальную дату, а не UTC, чтобы избежать проблем с часовыми поясами
+        const year = appointmentDate.getFullYear();
+        const month = String(appointmentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(appointmentDate.getDate()).padStart(2, '0');
+        const dateStr = `${year}-${month}-${day}`;
+        
+        console.log('🔍 [CREATE APPOINTMENT MODAL] Загрузка занятых слотов:', {
+          doctorId,
+          appointmentDate: appointmentDate.toLocaleString(),
+          dateStr,
+        });
+        
         const slots = await appointmentService.getBusySlots(doctorId, dateStr);
         setBusySlots(slots);
         console.log('✅ [CREATE APPOINTMENT MODAL] Занятые слоты загружены:', slots);

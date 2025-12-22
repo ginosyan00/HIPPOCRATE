@@ -376,7 +376,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                       Нет приёмов
                     </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {dayAppointments.map((appointment) => {
                         const appointmentDate = safeParseDate(appointment.appointmentDate);
                         const appointmentTime = formatAppointmentTime(appointmentDate);
@@ -385,114 +385,45 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                         const categoryColor = getCategoryColor(appointment, categories);
                         const statusColorValue = getStatusColor(appointment.status);
                         
+                        // Для PATIENT роли показываем "Я" или имя пользователя, для других ролей - имя пациента
+                        const isPatientView = user?.role === 'PATIENT';
+                        const patientName = isPatientView
+                          ? (user?.name || 'Я')
+                          : (appointment.patient?.name || 'Пациент');
+                        const patientInitial = patientName.charAt(0).toUpperCase();
+                        
                         return (
                           <div
                             key={appointment.id}
-                            className="border rounded-lg p-2.5 hover:shadow-md transition-all duration-200 cursor-pointer relative"
+                            className="w-full text-left px-2 py-1.5 rounded-sm text-xs text-white hover:opacity-90 hover:shadow-md transition-all duration-200 cursor-pointer"
                             style={{
                               backgroundColor: categoryColor,
                               borderLeft: `4px solid ${statusColorValue}`,
                             }}
                             onClick={() => onAppointmentClick?.(appointment)}
                           >
-                            {/* Верхняя часть карточки */}
-                            <div className="flex items-start justify-between mb-2">
-                              {/* Заголовок карточки */}
+                            <div className="flex items-center gap-2">
+                              {/* Avatar Circle */}
+                              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold text-white border border-white/30">
+                                {patientInitial}
+                              </div>
+                              {/* Name and Time */}
                               <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-semibold text-white truncate mb-0.5">
-                                  {user?.role === 'PATIENT'
-                                    ? (user?.name || 'Я')
-                                    : (appointment.patient?.name || 'Пациент')}
-                                </h4>
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="text-[10px] text-white/90 flex items-center gap-1">
-                                    <img src={clockIcon} alt="Время" className="w-3 h-3 brightness-0 invert" />
-                                    {appointmentTime}
+                                <div className="font-semibold truncate text-white">
+                                  {patientName}
+                                </div>
+                                <div className="text-[10px] text-white/80 font-medium mt-0.5">
+                                  {appointmentTime}
+                                </div>
+                                {/* Статус */}
+                                <div className="mt-1 flex items-center gap-1">
+                                  <img src={getStatusIcon(appointment.status)} alt={getStatusLabel(appointment.status)} className="w-2.5 h-2.5 opacity-90" />
+                                  <span className="text-[9px] text-white/90 font-medium">
+                                    {getStatusLabel(appointment.status)}
                                   </span>
-                                  {appointment.duration && (
-                                    <span className="text-[10px] text-white/90">• {appointment.duration} мин</span>
-                                  )}
                                 </div>
                               </div>
-
                             </div>
-
-                            {/* Статус бейдж */}
-                            <div className="mb-2">
-                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-sm text-[10px] font-medium border bg-white/20 text-white border-white/30">
-                                <img src={getStatusIcon(appointment.status)} alt={getStatusLabel(appointment.status)} className="w-3 h-3 brightness-0 invert" />
-                                {getStatusLabel(appointment.status)}
-                              </span>
-                            </div>
-
-                            {/* Информация о враче */}
-                            {appointment.doctor?.name && (
-                              <div className="mb-2 text-[10px] text-white/90">
-                                <span className="font-medium flex items-center gap-1">
-                                  <img src={doctorIcon} alt="Врач" className="w-3 h-3 brightness-0 invert" />
-                                  Врач:
-                                </span> {appointment.doctor.name}
-                                {appointment.doctor.specialization && (
-                                  <span className="text-white/80"> ({appointment.doctor.specialization})</span>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Причина визита */}
-                            {appointment.reason && (
-                              <div className="mb-2 text-[10px]">
-                                <span className="text-white/80">Причина:</span>
-                                <span className="text-white ml-1">{appointment.reason}</span>
-                              </div>
-                            )}
-
-                            {/* Иконки связи (телефон, email, чат) */}
-                            <div className="flex items-center gap-2 mb-2 pt-1.5 border-t border-white/20">
-                              {appointment.patient?.phone && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    window.location.href = `tel:${appointment.patient?.phone}`;
-                                  }}
-                                  className="p-1 hover:bg-white/20 rounded-sm transition-smooth text-white/80 hover:text-white"
-                                  title={`Позвонить: ${appointment.patient.phone}`}
-                                  type="button"
-                                >
-                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                                  </svg>
-                                </button>
-                              )}
-                              {appointment.patient?.email && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    window.location.href = `mailto:${appointment.patient?.email}`;
-                                  }}
-                                  className="p-1 hover:bg-white/20 rounded-sm transition-smooth text-white/80 hover:text-white"
-                                  title={`Написать: ${appointment.patient.email}`}
-                                  type="button"
-                                >
-                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                  </svg>
-                                </button>
-                              )}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  // TODO: Открыть чат с пациентом
-                                }}
-                                className="p-1 hover:bg-bg-primary rounded-sm transition-smooth text-text-50 hover:text-[#00a79d]"
-                                title="Открыть чат"
-                                type="button"
-                              >
-                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                </svg>
-                              </button>
-                            </div>
-
                           </div>
                         );
                       })}

@@ -405,24 +405,44 @@ export async function getMessages(conversationId, clinicId, options = {}) {
  * @param {string} imageUrl - URL изображения (опционально)
  * @returns {Promise<object>} Message
  */
-export async function sendMessage(conversationId, senderId, senderType, content, clinicId, imageUrl = null) {
+export async function sendMessage(conversationId, senderId, senderType, content, clinicId, imageUrl = null, patientId = null) {
   // Проверяем доступ к беседе
   const conversation = await prisma.conversation.findUnique({
     where: { id: conversationId },
+    include: {
+      patient: {
+        select: {
+          id: true,
+          status: true,
+        },
+      },
+    },
   });
 
   if (!conversation) {
     throw new Error('CONVERSATION_NOT_FOUND');
   }
 
-  // Для PATIENT clinicId может быть null, поэтому проверяем только если он указан
-  // Для других ролей clinicId обязателен
-  if (senderType !== 'patient' && !clinicId) {
-    throw new Error('CLINIC_ID_REQUIRED');
-  }
+  // Для PATIENT проверяем, что беседа принадлежит этому пациенту
+  if (senderType === 'patient') {
+    // Если patientId передан, проверяем соответствие
+    if (patientId && conversation.patientId !== patientId) {
+      throw new Error('ACCESS_DENIED');
+    }
+    // Если patientId не передан, но есть в беседе, проверяем через поиск пациента
+    if (!patientId && conversation.patientId) {
+      // В этом случае проверка будет выполнена в контроллере перед вызовом sendMessage
+      // Здесь просто пропускаем проверку patientId, если он не передан
+    }
+  } else {
+    // Для других ролей clinicId обязателен
+    if (!clinicId) {
+      throw new Error('CLINIC_ID_REQUIRED');
+    }
 
-  if (clinicId && conversation.clinicId !== clinicId) {
-    throw new Error('ACCESS_DENIED');
+    if (conversation.clinicId !== clinicId) {
+      throw new Error('ACCESS_DENIED');
+    }
   }
 
   // Создаем сообщение
@@ -664,7 +684,8 @@ export async function createConversationWithMessage(
   const conversation = await findOrCreateConversation(clinicId, patientId, userId);
 
   // Отправляем сообщение
-  const message = await sendMessage(conversation.id, senderId, senderType, content, clinicId, imageUrl);
+  // Для PATIENT передаем patientId для проверки доступа
+  const message = await sendMessage(conversation.id, senderId, senderType, content, clinicId, imageUrl, patientId);
 
   return {
     conversation,
@@ -694,7 +715,8 @@ export async function createClinicDoctorConversationWithMessage(
   const conversation = await findOrCreateClinicDoctorConversation(clinicId, doctorId);
 
   // Отправляем сообщение
-  const message = await sendMessage(conversation.id, senderId, senderType, content, clinicId, imageUrl);
+  // Для клиники patientId не нужен, так как senderType = 'clinic'
+  const message = await sendMessage(conversation.id, senderId, senderType, content, clinicId, imageUrl, null);
 
   return {
     conversation,
@@ -724,7 +746,8 @@ export async function createClinicPatientConversationWithMessage(
   const conversation = await findOrCreateClinicPatientConversation(clinicId, patientId);
 
   // Отправляем сообщение
-  const message = await sendMessage(conversation.id, senderId, senderType, content, clinicId, imageUrl);
+  // Для клиники patientId не нужен, так как senderType = 'clinic'
+  const message = await sendMessage(conversation.id, senderId, senderType, content, clinicId, imageUrl, null);
 
   return {
     conversation,

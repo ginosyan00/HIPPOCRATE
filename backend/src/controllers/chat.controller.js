@@ -169,9 +169,38 @@ export async function sendMessage(req, res, next) {
 
     // Если conversationId указан, отправляем в существующую беседу
     if (conversationId) {
-      // Для пациентов проверяем статус перед отправкой сообщения
+      // Для пациентов нужно получить patientId для проверки доступа
+      let patientIdForCheck = null;
       if (userRole === 'PATIENT') {
         const { prisma } = await import('../config/database.js');
+        
+        // Получаем данные пользователя для поиска пациента
+        const currentUser = await prisma.user.findUnique({
+          where: { id: senderId },
+          select: { email: true, phone: true },
+        });
+
+        if (currentUser) {
+          // Ищем пациента по email/phone
+          const where = {
+            OR: [
+              { email: currentUser.email },
+              { phone: currentUser.phone || '' },
+            ],
+          };
+          
+          // Если clinicId есть, добавляем его для более точного поиска
+          if (clinicId) {
+            where.clinicId = clinicId;
+          }
+          
+          const patient = await prisma.patient.findFirst({
+            where,
+            orderBy: { createdAt: 'desc' },
+          });
+          
+          patientIdForCheck = patient?.id;
+        }
         
         // Получаем беседу для проверки статуса пациента
         const conversationForCheck = await prisma.conversation.findUnique({
@@ -208,13 +237,15 @@ export async function sendMessage(req, res, next) {
         senderType,
         content,
         clinicId,
-        imageUrl
+        imageUrl,
+        patientIdForCheck // Передаем patientId для проверки доступа
       );
       conversation = await chatService.getConversationById(
         conversationId,
         clinicId,
         userRole,
-        senderId
+        senderId,
+        patientIdForCheck // Передаем patientId для проверки доступа
       );
     } else {
       // Создаем новую беседу

@@ -254,8 +254,28 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
 
       // Объединяем дату и время
       const [hours, minutes] = appointmentTime.split(':').map(Number);
+      
+      // Создаем новый Date объект из выбранной даты
+      // Важно: создаем копию, чтобы не изменять исходный объект
       const appointmentDateTime = new Date(appointmentDate);
+      
+      // Устанавливаем время в локальном часовом поясе
+      // setHours() устанавливает локальное время, которое затем будет конвертировано в UTC при toISOString()
       appointmentDateTime.setHours(hours, minutes, 0, 0);
+      
+      // Логируем для отладки
+      console.log('🔵 [CREATE APPOINTMENT MODAL] Формирование даты и времени:', {
+        selectedDate: appointmentDate,
+        selectedTime: appointmentTime,
+        hours,
+        minutes,
+        appointmentDateTimeLocal: appointmentDateTime.toLocaleString('ru-RU'),
+        appointmentDateTimeUTC: appointmentDateTime.toISOString(),
+        localHours: appointmentDateTime.getHours(),
+        localMinutes: appointmentDateTime.getMinutes(),
+        utcHours: appointmentDateTime.getUTCHours(),
+        utcMinutes: appointmentDateTime.getUTCMinutes(),
+      });
 
       // Проверяем, что дата в будущем
       if (appointmentDateTime <= new Date()) {

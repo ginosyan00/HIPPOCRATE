@@ -99,7 +99,8 @@ export function formatAppointmentDateTime(
 ): string {
   try {
     // Преобразуем в Date объект для работы
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    // Используем safeParseDate для правильной обработки различных форматов
+    const dateObj = safeParseDate(date);
     
     // Проверяем валидность даты
     if (isNaN(dateObj.getTime())) {
@@ -229,6 +230,8 @@ export function formatAppointmentDate(
 
 /**
  * Форматирует только время приема БЕЗ конвертации часовых поясов
+ * ВАЖНО: Использует локальные методы Date для правильного отображения времени,
+ * которое было выбрано пользователем, даже если оно сохранено в UTC в БД
  * 
  * @param date - Дата (Date объект или ISO строка)
  * @param format - Формат ('short' | 'long')
@@ -239,27 +242,44 @@ export function formatAppointmentTime(
   format: 'short' | 'long' = 'short'
 ): string {
   try {
-    const dateStr = typeof date === 'string' ? date : date.toISOString();
-    const match = dateStr.match(/T(\d{2}):(\d{2}):(\d{2})/);
+    // Преобразуем в Date объект для работы
+    const dateObj = typeof date === 'string' ? safeParseDate(date) : date;
     
-    if (!match) {
-      const dateObj = typeof date === 'string' ? new Date(date) : date;
-      return dateObj.toLocaleTimeString('ru-RU', {
-        hour: '2-digit',
-        minute: '2-digit',
-        ...(format === 'long' && { second: '2-digit' }),
-      });
+    // Проверяем валидность даты
+    if (isNaN(dateObj.getTime())) {
+      throw new Error('Invalid date');
     }
     
-    const [, hours, minutes, seconds] = match;
+    // КЛЮЧЕВОЙ МОМЕНТ: Используем локальные методы getHours() и getMinutes()
+    // Эти методы автоматически конвертируют UTC время в локальное время браузера,
+    // что даст нам правильное время, соответствующее выбранному пользователем.
+    // 
+    // Пример:
+    // - Пользователь выбирает: 15:00 (локальное время UTC+4)
+    // - Сохраняется в БД: 11:00 UTC (15:00 - 4 часа = 11:00 UTC)
+    // - ISO строка: "2025-01-20T11:00:00.000Z"
+    // - dateObj.getHours() вернет: 15 (локальное время) ✅ ПРАВИЛЬНО!
+    // - Если бы использовали regex: "11:00" (UTC время) ❌ НЕПРАВИЛЬНО!
+    const hours = dateObj.getHours();
+    const minutes = dateObj.getMinutes();
+    const seconds = dateObj.getSeconds();
     
-    return format === 'long' ? `${hours}:${minutes}:${seconds}` : `${hours}:${minutes}`;
+    // Форматируем время
+    const formattedHours = String(hours).padStart(2, '0');
+    const formattedMinutes = String(minutes).padStart(2, '0');
+    const formattedSeconds = String(seconds).padStart(2, '0');
+    
+    return format === 'long' 
+      ? `${formattedHours}:${formattedMinutes}:${formattedSeconds}`
+      : `${formattedHours}:${formattedMinutes}`;
   } catch (error) {
     console.error('❌ [DATE FORMAT] Ошибка форматирования времени:', error);
+    // Fallback на стандартное форматирование
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     return dateObj.toLocaleTimeString('ru-RU', {
       hour: '2-digit',
       minute: '2-digit',
+      ...(format === 'long' && { second: '2-digit' }),
     });
   }
 }

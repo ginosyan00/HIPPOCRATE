@@ -396,3 +396,32 @@ export async function updatePassword(userId, currentPassword, newPassword) {
   return { success: true, message: 'Password updated successfully' };
 }
 
+/**
+ * Проверяет пароль пользователя (для подтверждения доступа к защищенным разделам)
+ * @param {string} userId - ID пользователя
+ * @param {string} password - Пароль для проверки
+ * @returns {Promise<object>} Результат проверки
+ */
+export async function verifyUserPassword(userId, password) {
+  console.log('🔵 [AUTH SERVICE] Проверка пароля пользователя:', userId);
+
+  // Получаем пользователя
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  // Проверяем пароль
+  const isPasswordValid = await verifyPassword(password, user.passwordHash);
+  if (!isPasswordValid) {
+    console.log('🔴 [AUTH SERVICE] Неверный пароль');
+    throw new Error('Password is incorrect');
+  }
+
+  console.log('✅ [AUTH SERVICE] Пароль подтвержден');
+  return { success: true, message: 'Password verified successfully' };
+}
+

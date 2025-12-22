@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useUIStore } from '../../store/useUIStore';
 
@@ -21,6 +21,7 @@ export const Sidebar: React.FC = () => {
   const user = useAuthStore(state => state.user);
   const logout = useAuthStore(state => state.logout);
   const navigate = useNavigate();
+  const location = useLocation();
   const isSidebarOpen = useUIStore(state => state.isSidebarOpen);
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -29,6 +30,13 @@ export const Sidebar: React.FC = () => {
         ? 'text-main-100 font-semibold'
         : 'text-text-10 font-normal hover:text-text-50'
     }`;
+
+  // Обработчик клика по Analytics
+  const handleAnalyticsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    // Просто переходим на страницу Analytics - проверка пароля будет на самой странице
+    navigate('/dashboard/analytics');
+  };
 
   // Ստիլ dashboard icon-ի համար - grayscale filter, որպեսզի կապույտ գույնը դառնա մոխրագույն
   // Dashboard icon-ը միշտ թափանցիկ է, նույնիսկ երբ ակտիվ է
@@ -187,10 +195,13 @@ export const Sidebar: React.FC = () => {
                 <span className="text-sm">Doctors</span>
               </NavLink>
 
-              <NavLink to="/dashboard/analytics" className={navLinkClass}>
+              <button
+                onClick={handleAnalyticsClick}
+                className={navLinkClass({ isActive: location.pathname === '/dashboard/analytics' })}
+              >
                 <img src={analyticsIcon} alt="Analytics" className="w-6 h-6" />
                 <span className="text-sm">Analytic</span>
-              </NavLink>
+              </button>
 
               <NavLink to="/dashboard/web" className={navLinkClass}>
                 <img src={webIcon} alt="Web" className="w-6 h-6" />

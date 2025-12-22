@@ -57,6 +57,16 @@ export const authService = {
     });
     return data.data;
   },
+
+  /**
+   * Проверить пароль пользователя (для доступа к защищенным разделам)
+   */
+  async verifyPassword(password: string): Promise<{ success: boolean; message: string }> {
+    const { data } = await api.post<ApiResponse<{ success: boolean; message: string }>>('/auth/verify-password', {
+      password,
+    });
+    return data.data;
+  },
 };
 
 

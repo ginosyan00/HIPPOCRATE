@@ -2,7 +2,7 @@ import express from 'express';
 import * as authController from '../controllers/auth.controller.js';
 import { validate } from '../middlewares/validation.middleware.js';
 import { authenticate } from '../middlewares/auth.middleware.js';
-import { registerSchema, loginSchema, registerUserSchema, updatePasswordSchema } from '../validators/auth.validator.js';
+import { registerSchema, loginSchema, registerUserSchema, updatePasswordSchema, verifyPasswordSchema } from '../validators/auth.validator.js';
 
 const router = express.Router();
 
@@ -46,6 +46,13 @@ router.get('/me', authenticate, authController.getMe);
  * Protected endpoint
  */
 router.put('/password', authenticate, validate(updatePasswordSchema), authController.updatePassword);
+
+/**
+ * POST /api/v1/auth/verify-password
+ * Проверить пароль пользователя (для доступа к защищенным разделам)
+ * Protected endpoint
+ */
+router.post('/verify-password', authenticate, validate(verifyPasswordSchema), authController.verifyPassword);
 
 export default router;
 

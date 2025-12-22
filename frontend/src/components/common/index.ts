@@ -12,5 +12,6 @@ export { BackButton } from './BackButton';
 export { Calendar } from './Calendar';
 export { TimeSlotPicker } from './TimeSlotPicker';
 export { DeleteAccountSection } from './DeleteAccountSection';
+export { PasswordVerificationModal } from './PasswordVerificationModal';
 
 

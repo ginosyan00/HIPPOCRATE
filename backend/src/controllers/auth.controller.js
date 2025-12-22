@@ -91,3 +91,24 @@ export async function updatePassword(req, res, next) {
   }
 }
 
+/**
+ * POST /api/v1/auth/verify-password
+ * Проверить пароль пользователя (для доступа к защищенным разделам)
+ * Protected endpoint
+ */
+export async function verifyPassword(req, res, next) {
+  try {
+    const { userId } = req.user;
+    const { password } = req.body;
+
+    if (!password) {
+      return errorResponse(res, 'VALIDATION_ERROR', 'Password is required', 400);
+    }
+
+    const result = await authService.verifyUserPassword(userId, password);
+    successResponse(res, result);
+  } catch (error) {
+    next(error);
+  }
+}
+

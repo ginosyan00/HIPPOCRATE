@@ -239,3 +239,12 @@ export const updatePasswordSchema = Joi.object({
     }),
 });
 
+/**
+ * Проверка пароля (для доступа к защищенным разделам)
+ */
+export const verifyPasswordSchema = Joi.object({
+  password: Joi.string().required().messages({
+    'any.required': 'Password is required',
+  }),
+});
+

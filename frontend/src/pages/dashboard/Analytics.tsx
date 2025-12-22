@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { RotateCcw } from 'lucide-react';
 import { NewDashboardLayout } from '../../components/dashboard/NewDashboardLayout';
-import { Button, Input } from '../../components/common';
+import { Button, Input, PasswordVerificationModal } from '../../components/common';
 import { MetricsCards } from '../../components/dashboard/MetricsCards';
 import { AnalyticsLineChart } from '../../components/dashboard/AnalyticsLineChart';
 import { AnalyticsBarChart } from '../../components/dashboard/AnalyticsBarChart';
@@ -20,9 +20,52 @@ import { format, startOfWeek } from 'date-fns';
 /**
  * Analytics Page
  * Страница аналитики клиники с графиками, таблицей и фильтрами
+ * Требует подтверждения пароля для доступа
  */
 export const AnalyticsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const passwordCheckDone = useRef(false);
+
+  // Проверка подтверждения пароля при монтировании и очистка при размонтировании
+  useEffect(() => {
+    // Защита от повторного выполнения
+    if (passwordCheckDone.current) return;
+    passwordCheckDone.current = true;
+
+    const isPasswordVerified = sessionStorage.getItem('analytics_password_verified') === 'true';
+    
+    if (!isPasswordVerified) {
+      // Пароль не подтвержден, показываем модальное окно
+      setIsPasswordModalOpen(true);
+    }
+
+    // Cleanup: при размонтировании компонента (выходе со страницы) очищаем подтверждение пароля
+    // Это гарантирует, что при каждом следующем входе потребуется новый пароль
+    return () => {
+      console.log('🔴 [ANALYTICS PAGE] Выход со страницы Analytics, очищаем подтверждение пароля');
+      sessionStorage.removeItem('analytics_password_verified');
+      passwordCheckDone.current = false; // Сбрасываем флаг при размонтировании
+    };
+  }, []);
+
+  // Обработчик успешной проверки пароля
+  const handlePasswordVerified = () => {
+    // Пароль подтвержден, закрываем модальное окно
+    setIsPasswordModalOpen(false);
+  };
+
+  // Обработчик закрытия модального окна без подтверждения
+  const handlePasswordModalClose = () => {
+    // Если пароль не подтвержден, перенаправляем на dashboard
+    const isPasswordVerified = sessionStorage.getItem('analytics_password_verified') === 'true';
+    if (!isPasswordVerified) {
+      navigate('/dashboard');
+    } else {
+      setIsPasswordModalOpen(false);
+    }
+  };
 
   // Инициализация фильтров из URL параметров
   const [doctorId, setDoctorId] = useState<string>(searchParams.get('doctorId') || '');
@@ -149,8 +192,31 @@ export const AnalyticsPage: React.FC = () => {
     return titles[chartType];
   };
 
+  // Если пароль не подтвержден, показываем только модальное окно вместо контента
+  const isPasswordVerified = sessionStorage.getItem('analytics_password_verified') === 'true';
+  
+  if (!isPasswordVerified) {
+    return (
+      <>
+        <NewDashboardLayout>
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="text-center">
+              <p className="text-text-50 mb-4">Для доступа к разделу Analytics требуется подтверждение пароля</p>
+            </div>
+          </div>
+        </NewDashboardLayout>
+        <PasswordVerificationModal
+          isOpen={isPasswordModalOpen}
+          onClose={handlePasswordModalClose}
+          onSuccess={handlePasswordVerified}
+        />
+      </>
+    );
+  }
+
   return (
-    <NewDashboardLayout>
+    <>
+      <NewDashboardLayout>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -316,6 +382,12 @@ export const AnalyticsPage: React.FC = () => {
         />
       </div>
     </NewDashboardLayout>
+    <PasswordVerificationModal
+      isOpen={isPasswordModalOpen}
+      onClose={handlePasswordModalClose}
+      onSuccess={handlePasswordVerified}
+    />
+    </>
   );
 };
 

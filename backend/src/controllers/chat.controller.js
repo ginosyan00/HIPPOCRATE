@@ -154,7 +154,7 @@ export async function getMessages(req, res, next) {
  */
 export async function sendMessage(req, res, next) {
   try {
-    const { conversationId, patientId, userId, content, imageUrl } = req.body;
+    const { conversationId, patientId, userId, doctorId, content, imageUrl, conversationType } = req.body;
     const clinicId = req.user.clinicId;
     const userRole = req.user.role;
     const senderId = req.user.userId;
@@ -169,6 +169,39 @@ export async function sendMessage(req, res, next) {
 
     // Если conversationId указан, отправляем в существующую беседу
     if (conversationId) {
+      // Для пациентов проверяем статус перед отправкой сообщения
+      if (userRole === 'PATIENT') {
+        const { prisma } = await import('../config/database.js');
+        
+        // Получаем беседу для проверки статуса пациента
+        const conversationForCheck = await prisma.conversation.findUnique({
+          where: { id: conversationId },
+          include: {
+            patient: {
+              select: {
+                id: true,
+                status: true,
+              },
+            },
+          },
+        });
+
+        if (!conversationForCheck) {
+          throw new Error('CONVERSATION_NOT_FOUND');
+        }
+
+        // Проверяем, что пациент не является гостем
+        if (conversationForCheck.patient?.status === 'guest') {
+          return res.status(403).json({
+            success: false,
+            error: {
+              code: 'GUEST_CANNOT_SEND_MESSAGES',
+              message: 'Гостевые пациенты не могут отправлять сообщения. Пожалуйста, зарегистрируйтесь.',
+            },
+          });
+        }
+      }
+
       message = await chatService.sendMessage(
         conversationId,
         senderId,
@@ -185,11 +218,58 @@ export async function sendMessage(req, res, next) {
       );
     } else {
       // Создаем новую беседу
-      // Для пациентов нужно найти или создать patientId
-      let finalPatientId = patientId;
-      let finalClinicId = clinicId; // Объявляем вне блока для использования позже
       
-      if (userRole === 'PATIENT' && !finalPatientId) {
+      // Для клиники (ADMIN/CLINIC) поддерживаем создание бесед с врачами и пациентами
+      if ((userRole === 'ADMIN' || userRole === 'CLINIC') && !clinicId) {
+        throw new Error('CLINIC_ID_REQUIRED');
+      }
+
+      // Если указан doctorId и роль клиники - создаем беседу клиника-врач
+      if ((userRole === 'ADMIN' || userRole === 'CLINIC') && doctorId) {
+        const result = await chatService.createClinicDoctorConversationWithMessage(
+          clinicId,
+          doctorId,
+          senderId,
+          senderType,
+          content,
+          imageUrl
+        );
+        message = result.message;
+        conversation = result.conversation;
+      }
+      // Если указан patientId и роль клиники - создаем беседу клиника-пациент
+      else if ((userRole === 'ADMIN' || userRole === 'CLINIC') && patientId) {
+        try {
+          const result = await chatService.createClinicPatientConversationWithMessage(
+            clinicId,
+            patientId,
+            senderId,
+            senderType,
+            content,
+            imageUrl
+          );
+          message = result.message;
+          conversation = result.conversation;
+        } catch (error) {
+          if (error.message === 'CANNOT_CREATE_CONVERSATION_WITH_GUEST') {
+            return res.status(403).json({
+              success: false,
+              error: {
+                code: 'CANNOT_CREATE_CONVERSATION_WITH_GUEST',
+                message: 'Нельзя создать беседу с гостевым пациентом. Гости не могут получать и отвечать на сообщения.',
+              },
+            });
+          }
+          throw error;
+        }
+      }
+      // Для пациентов создаем обычную беседу patient_doctor или patient_clinic
+      else if (userRole === 'PATIENT') {
+        // Для пациентов нужно найти или создать patientId
+        let finalPatientId = patientId;
+        let finalClinicId = clinicId; // Объявляем вне блока для использования позже
+        
+        if (!finalPatientId) {
         // Используем findOrCreatePatient для автоматического создания, если пациента нет
         const patientService = await import('../services/patient.service.js');
         const { prisma } = await import('../config/database.js');
@@ -255,29 +335,63 @@ export async function sendMessage(req, res, next) {
         });
         finalPatientId = patient.id;
         console.log('✅ [CHAT CONTROLLER] Пациент найден/создан:', finalPatientId);
+
+        // Проверяем статус пациента - гости не могут отправлять сообщения
+        if (patient.status === 'guest') {
+          return res.status(403).json({
+            success: false,
+            error: {
+              code: 'GUEST_CANNOT_SEND_MESSAGES',
+              message: 'Гостевые пациенты не могут отправлять сообщения. Пожалуйста, зарегистрируйтесь.',
+            },
+          });
+        }
       }
 
-      if (!finalPatientId) {
-        throw new Error('PATIENT_NOT_FOUND');
-      }
+        if (!finalPatientId) {
+          throw new Error('PATIENT_NOT_FOUND');
+        }
 
-      // Используем finalClinicId, если он был определен
-      const finalClinicIdForConversation = finalClinicId || clinicId;
-      if (!finalClinicIdForConversation) {
-        throw new Error('CLINIC_NOT_FOUND');
-      }
+        // Дополнительная проверка статуса пациента, если patientId был передан напрямую
+        if (finalPatientId && userRole === 'PATIENT') {
+          const { prisma } = await import('../config/database.js');
+          const patientRecord = await prisma.patient.findUnique({
+            where: { id: finalPatientId },
+            select: { status: true },
+          });
 
-      const result = await chatService.createConversationWithMessage(
-        finalClinicIdForConversation,
-        finalPatientId,
-        userId || null,
-        senderId,
-        senderType,
-        content,
-        imageUrl
-      );
-      message = result.message;
-      conversation = result.conversation;
+          if (patientRecord && patientRecord.status === 'guest') {
+            return res.status(403).json({
+              success: false,
+              error: {
+                code: 'GUEST_CANNOT_SEND_MESSAGES',
+                message: 'Гостевые пациенты не могут отправлять сообщения. Пожалуйста, зарегистрируйтесь.',
+              },
+            });
+          }
+        }
+
+        // Используем finalClinicId, если он был определен
+        const finalClinicIdForConversation = finalClinicId || clinicId;
+        if (!finalClinicIdForConversation) {
+          throw new Error('CLINIC_NOT_FOUND');
+        }
+
+        const result = await chatService.createConversationWithMessage(
+          finalClinicIdForConversation,
+          finalPatientId,
+          userId || null,
+          senderId,
+          senderType,
+          content,
+          imageUrl
+        );
+        message = result.message;
+        conversation = result.conversation;
+      } else {
+        // Для других ролей (DOCTOR) или если не указаны параметры
+        throw new Error('INVALID_CONVERSATION_PARAMETERS');
+      }
     }
 
     successResponse(
@@ -389,6 +503,120 @@ export async function deleteMessage(req, res, next) {
       res,
       {
         message: deletedMessage,
+      },
+      200
+    );
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * GET /api/v1/chat/available-contacts
+ * Получить список врачей и пациентов для общения (для клиники)
+ * Возвращает врачей и пациентов, с которыми можно начать беседу
+ */
+export async function getAvailableContacts(req, res, next) {
+  try {
+    const clinicId = req.user.clinicId;
+    const userRole = req.user.role;
+
+    // Только для ADMIN и CLINIC
+    if (userRole !== 'ADMIN' && userRole !== 'CLINIC') {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Доступно только для владельцев клиники',
+        },
+      });
+    }
+
+    if (!clinicId) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'BAD_REQUEST',
+          message: 'Clinic ID is required',
+        },
+      });
+    }
+
+    const { prisma } = await import('../config/database.js');
+    const userService = await import('../services/user.service.js');
+    const patientService = await import('../services/patient.service.js');
+
+    // Получаем всех врачей клиники
+    const doctors = await userService.findDoctors(clinicId);
+
+    // Получаем всех пациентов клиники (только registered, не guest)
+    const patientsResult = await patientService.findAll(clinicId, {
+      page: 1,
+      limit: 1000, // Большой лимит для получения всех пациентов
+      status: 'registered', // Только зарегистрированные пациенты
+    });
+
+    // Получаем существующие беседы клиники
+    const existingConversations = await prisma.conversation.findMany({
+      where: {
+        clinicId,
+      },
+      select: {
+        userId: true,
+        patientId: true,
+        type: true,
+      },
+    });
+
+    // Создаем Set для быстрого поиска существующих бесед
+    const doctorConversationSet = new Set();
+    const patientConversationSet = new Set();
+
+    existingConversations.forEach((conv) => {
+      if (conv.type === 'clinic_doctor' && conv.userId) {
+        doctorConversationSet.add(conv.userId);
+      }
+      if (conv.type === 'patient_clinic' && conv.patientId) {
+        patientConversationSet.add(conv.patientId);
+      }
+    });
+
+    // Фильтруем врачей - показываем только тех, с кем еще нет беседы
+    const availableDoctors = doctors
+      .filter((doctor) => !doctorConversationSet.has(doctor.id))
+      .map((doctor) => ({
+        id: doctor.id,
+        name: doctor.name,
+        email: doctor.email,
+        specialization: doctor.specialization,
+        phone: doctor.phone,
+        avatar: doctor.avatar,
+        experience: doctor.experience,
+        status: doctor.status,
+      }));
+
+    // Фильтруем пациентов - показываем только тех, с кем еще нет беседы
+    // Дополнительно фильтруем по статусу (только registered)
+    const availablePatients = patientsResult.patients
+      .filter((patient) => !patientConversationSet.has(patient.id) && patient.status === 'registered')
+      .map((patient) => ({
+        id: patient.id,
+        name: patient.name,
+        phone: patient.phone,
+        email: patient.email,
+        avatar: patient.avatar,
+        status: patient.status, // Добавляем status для проверки на frontend
+      }));
+
+    successResponse(
+      res,
+      {
+        doctors: availableDoctors,
+        patients: availablePatients,
+        meta: {
+          totalDoctors: availableDoctors.length,
+          totalPatients: availablePatients.length,
+        },
       },
       200
     );

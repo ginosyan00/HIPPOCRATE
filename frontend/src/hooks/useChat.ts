@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { chatService, Conversation, Message, SendMessageRequest } from '../services/chat.service';
 import { useAuthStore } from '../store/useAuthStore';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 /**
  * useChat Hook
@@ -54,9 +54,33 @@ export function useMessages(conversationId: string | null, enabled: boolean = tr
   // Автоматически отмечаем как прочитанные при загрузке
   useEffect(() => {
     if (query.data?.messages && enabled && conversationId) {
-      const unreadMessages = query.data.messages.filter(
-        (msg) => !msg.isRead && msg.senderType !== 'patient'
-      );
+      // Для клиники непрочитанные сообщения - от пациентов (в patient_* беседах) и от врачей (в clinic_doctor беседах)
+      // Для врачей и пациентов - от противоположной стороны
+      const user = useAuthStore.getState().user;
+      const conversation = queryClient.getQueryData<{ conversations: Conversation[] }>(['chat', 'conversations'])?.conversations.find(c => c.id === conversationId);
+      
+      let unreadMessages;
+      if (user?.role === 'CLINIC' || user?.role === 'ADMIN') {
+        // Для клиники: в clinic_doctor беседах читаем сообщения от врачей, в остальных - от пациентов
+        if (conversation?.type === 'clinic_doctor') {
+          unreadMessages = query.data.messages.filter(
+            (msg) => !msg.isRead && msg.senderType === 'doctor'
+          );
+        } else {
+          unreadMessages = query.data.messages.filter(
+            (msg) => !msg.isRead && msg.senderType === 'patient'
+          );
+        }
+      } else if (user?.role === 'PATIENT') {
+        unreadMessages = query.data.messages.filter(
+          (msg) => !msg.isRead && msg.senderType !== 'patient'
+        );
+      } else {
+        unreadMessages = query.data.messages.filter(
+          (msg) => !msg.isRead && msg.senderType === 'patient'
+        );
+      }
+      
       if (unreadMessages.length > 0) {
         chatService.markAsRead(conversationId).then(() => {
           queryClient.invalidateQueries({ queryKey: ['chat', 'messages', conversationId] });

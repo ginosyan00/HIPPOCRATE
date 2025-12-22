@@ -80,6 +80,12 @@ export const PatientChat: React.FC<PatientChatProps> = ({
 
   // Обработка отправки сообщения
   const handleSendMessage = async (content: string, imageUrl?: string) => {
+    // Проверяем статус пациента перед отправкой
+    if (isGuestPatient) {
+      alert('Гостевые пациенты не могут отправлять сообщения. Пожалуйста, зарегистрируйтесь.');
+      return;
+    }
+
     if (!selectedConversation) {
       // Создаем новую беседу (для пациентов)
       try {
@@ -95,8 +101,11 @@ export const PatientChat: React.FC<PatientChatProps> = ({
           setShowConversationsList(false);
           setShowDoctorsList(false);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Ошибка отправки сообщения:', error);
+        if (error?.response?.data?.error?.code === 'GUEST_CANNOT_SEND_MESSAGES') {
+          alert(error.response.data.error.message || 'Гостевые пациенты не могут отправлять сообщения. Пожалуйста, зарегистрируйтесь.');
+        }
       }
     } else {
       // Отправляем в существующую беседу
@@ -106,8 +115,11 @@ export const PatientChat: React.FC<PatientChatProps> = ({
           content: content || '',
           imageUrl,
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Ошибка отправки сообщения:', error);
+        if (error?.response?.data?.error?.code === 'GUEST_CANNOT_SEND_MESSAGES') {
+          alert(error.response.data.error.message || 'Гостевые пациенты не могут отправлять сообщения. Пожалуйста, зарегистрируйтесь.');
+        }
       }
     }
   };
@@ -171,6 +183,9 @@ export const PatientChat: React.FC<PatientChatProps> = ({
 
   // Выбранная беседа
   const selectedConversationData = conversations.find((c) => c.id === selectedConversation);
+  
+  // Проверяем, является ли пациент гостем
+  const isGuestPatient = user?.role === 'PATIENT' && selectedConversationData?.patient?.status === 'guest';
 
   if (!isOpen) return null;
 
@@ -551,7 +566,17 @@ export const PatientChat: React.FC<PatientChatProps> = ({
 
             {/* Поле ввода сообщения */}
             <div className="border-t border-stroke bg-white shadow-md">
-              <ChatInput onSendMessage={handleSendMessage} disabled={!selectedConversation} />
+              {isGuestPatient ? (
+                <div className="px-4 py-3 bg-yellow-50 border-l-4 border-yellow-400">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Гостевые пациенты не могут отправлять сообщения.</strong>
+                    <br />
+                    Пожалуйста, зарегистрируйтесь, чтобы общаться с клиникой.
+                  </p>
+                </div>
+              ) : (
+                <ChatInput onSendMessage={handleSendMessage} disabled={!selectedConversation} />
+              )}
             </div>
           </div>
         )}
@@ -588,6 +613,7 @@ export const PatientChat: React.FC<PatientChatProps> = ({
 
             {/* Поле ввода для первого сообщения */}
             <div className="border-t border-stroke bg-white shadow-md">
+              {/* Backend проверит статус и вернет ошибку, если пациент guest */}
               <ChatInput onSendMessage={handleSendMessage} disabled={false} />
             </div>
           </div>

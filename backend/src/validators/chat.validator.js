@@ -10,8 +10,9 @@ import Joi from 'joi';
  */
 export const sendMessageSchema = Joi.object({
   conversationId: Joi.string().uuid().optional(),
-  patientId: Joi.string().uuid().optional(), // Если создаем новую беседу
-  userId: Joi.string().uuid().optional(), // ID врача (опционально)
+  patientId: Joi.string().uuid().optional(), // Если создаем новую беседу клиника-пациент
+  doctorId: Joi.string().uuid().optional(), // Если создаем новую беседу клиника-врач
+  userId: Joi.string().uuid().optional(), // ID врача (для пациентов, опционально)
   content: Joi.string().trim().max(5000).allow('').optional(),
   imageUrl: Joi.string()
     .pattern(/^\/uploads\/chat\/[a-zA-Z0-9\-_.]+\.(jpg|jpeg|png|gif|webp)$/i)
@@ -20,6 +21,7 @@ export const sendMessageSchema = Joi.object({
     .messages({
       'string.pattern.base': 'Некорректный путь к изображению',
     }),
+  conversationType: Joi.string().valid('patient_doctor', 'patient_clinic', 'clinic_doctor').optional(),
 })
   .custom((value, helpers) => {
     // Проверяем, что есть хотя бы content или imageUrl

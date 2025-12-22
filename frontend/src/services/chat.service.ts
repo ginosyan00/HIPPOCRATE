@@ -11,7 +11,7 @@ export interface Conversation {
   clinicId: string;
   patientId: string | null;
   userId: string | null;
-  type: 'patient_doctor' | 'patient_clinic' | 'system';
+  type: 'patient_doctor' | 'patient_clinic' | 'clinic_doctor' | 'system';
   lastMessageAt: string | null;
   lastMessageText: string | null;
   isArchived: boolean;
@@ -23,6 +23,7 @@ export interface Conversation {
     phone: string;
     email: string | null;
     avatar: string | null;
+    status?: 'registered' | 'guest'; // Статус пациента
   };
   user?: {
     id: string;
@@ -57,9 +58,11 @@ export interface Message {
 export interface SendMessageRequest {
   conversationId?: string;
   patientId?: string;
-  userId?: string;
+  doctorId?: string; // Для создания беседы клиника-врач
+  userId?: string; // Для пациентов (ID врача)
   content?: string;
   imageUrl?: string;
+  conversationType?: 'patient_doctor' | 'patient_clinic' | 'clinic_doctor';
 }
 
 export interface GetMessagesResponse {
@@ -160,6 +163,61 @@ export const chatService = {
     const { data } = await api.delete<ApiResponse<{ message: Message }>>(
       `/chat/messages/${messageId}`
     );
+    return data.data;
+  },
+
+  /**
+   * Получить список доступных контактов для общения (врачи и пациенты)
+   * Доступно только для клиники (ADMIN/CLINIC)
+   */
+  async getAvailableContacts(): Promise<{
+    doctors: Array<{
+      id: string;
+      name: string;
+      email: string;
+      specialization: string | null;
+      phone: string | null;
+      avatar: string | null;
+      experience: number | null;
+      status: string;
+    }>;
+    patients: Array<{
+      id: string;
+      name: string;
+      phone: string;
+      email: string | null;
+      avatar: string | null;
+      status?: 'registered' | 'guest'; // Статус пациента
+    }>;
+    meta: {
+      totalDoctors: number;
+      totalPatients: number;
+    };
+  }> {
+    const { data } = await api.get<ApiResponse<{
+      doctors: Array<{
+        id: string;
+        name: string;
+        email: string;
+        specialization: string | null;
+        phone: string | null;
+        avatar: string | null;
+        experience: number | null;
+        status: string;
+      }>;
+      patients: Array<{
+        id: string;
+        name: string;
+        phone: string;
+        email: string | null;
+        avatar: string | null;
+        status?: 'registered' | 'guest'; // Статус пациента
+      }>;
+      meta: {
+        totalDoctors: number;
+        totalPatients: number;
+      };
+    }>>('/chat/available-contacts');
     return data.data;
   },
 };

@@ -39,6 +39,100 @@ export async function findOrCreateConversation(clinicId, patientId, userId = nul
 }
 
 /**
+ * Найти или создать беседу между клиникой и врачом
+ * @param {string} clinicId - ID клиники
+ * @param {string} doctorId - ID врача
+ * @returns {Promise<object>} Conversation
+ */
+export async function findOrCreateClinicDoctorConversation(clinicId, doctorId) {
+  // Проверяем, существует ли уже беседа
+  const existing = await prisma.conversation.findFirst({
+    where: {
+      clinicId,
+      userId: doctorId,
+      patientId: null, // Беседа клиника-врач не имеет patientId
+      type: 'clinic_doctor',
+    },
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  // Проверяем, что врач принадлежит клинике
+  const doctor = await prisma.user.findFirst({
+    where: {
+      id: doctorId,
+      clinicId,
+      role: 'DOCTOR',
+    },
+  });
+
+  if (!doctor) {
+    throw new Error('DOCTOR_NOT_FOUND_OR_NOT_BELONGS_TO_CLINIC');
+  }
+
+  // Создаем новую беседу клиника-врач
+  return await prisma.conversation.create({
+    data: {
+      clinicId,
+      userId: doctorId,
+      patientId: null,
+      type: 'clinic_doctor',
+    },
+  });
+}
+
+/**
+ * Найти или создать беседу между клиникой и пациентом (инициированную клиникой)
+ * @param {string} clinicId - ID клиники
+ * @param {string} patientId - ID пациента
+ * @returns {Promise<object>} Conversation
+ */
+export async function findOrCreateClinicPatientConversation(clinicId, patientId) {
+  // Проверяем, существует ли уже беседа patient_clinic
+  const existing = await prisma.conversation.findFirst({
+    where: {
+      clinicId,
+      patientId,
+      userId: null, // Беседа клиника-пациент без конкретного врача
+      type: 'patient_clinic',
+    },
+  });
+
+  if (existing) {
+    return existing;
+  }
+
+  // Проверяем, что пациент принадлежит клинике и является registered (не guest)
+  const patient = await prisma.patient.findFirst({
+    where: {
+      id: patientId,
+      clinicId,
+    },
+  });
+
+  if (!patient) {
+    throw new Error('PATIENT_NOT_FOUND_OR_NOT_BELONGS_TO_CLINIC');
+  }
+
+  // Проверяем статус пациента - клиника не может создавать беседы с гостями
+  if (patient.status === 'guest') {
+    throw new Error('CANNOT_CREATE_CONVERSATION_WITH_GUEST');
+  }
+
+  // Создаем новую беседу клиника-пациент
+  return await prisma.conversation.create({
+    data: {
+      clinicId,
+      patientId,
+      userId: null,
+      type: 'patient_clinic',
+    },
+  });
+}
+
+/**
  * Получить все беседы для пользователя
  * @param {string} clinicId - ID клиники
  * @param {string} userRole - Роль пользователя (PATIENT, DOCTOR, ADMIN)
@@ -94,7 +188,10 @@ export async function getConversations(clinicId, userRole, userId, patientId = n
         ],
       };
     } else {
-      // Админы видят все беседы клиники
+      // Админы и клиника видят все беседы клиники:
+      // - patient_doctor (беседы пациентов с врачами)
+      // - patient_clinic (беседы пациентов с клиникой)
+      // - clinic_doctor (беседы клиники с врачами)
       where.clinicId = clinicId;
     }
   }
@@ -110,6 +207,7 @@ export async function getConversations(clinicId, userRole, userId, patientId = n
             phone: true,
             email: true,
             avatar: true,
+            status: true, // Добавляем status для проверки guest/registered
           },
         },
         user: {
@@ -133,7 +231,11 @@ export async function getConversations(clinicId, userRole, userId, patientId = n
             messages: {
               where: {
                 isRead: false,
-                senderType: userRole === 'PATIENT' ? { not: 'patient' } : 'patient',
+                senderType: userRole === 'PATIENT' 
+                  ? { not: 'patient' } 
+                  : (userRole === 'ADMIN' || userRole === 'CLINIC')
+                    ? { in: ['patient', 'doctor'] } // Клиника читает сообщения от пациентов и врачей
+                    : 'patient', // Врачи читают сообщения от пациентов
               },
             },
           },
@@ -179,6 +281,7 @@ export async function getConversationById(conversationId, clinicId, userRole, us
           phone: true,
           email: true,
           avatar: true,
+          status: true, // Добавляем status для проверки guest/registered
         },
       },
       user: {
@@ -224,7 +327,10 @@ export async function getConversationById(conversationId, clinicId, userRole, us
     }
   }
 
-  // ADMIN и CLINIC имеют доступ ко всем беседам своей клиники (для мониторинга)
+  // ADMIN и CLINIC имеют доступ ко всем беседам своей клиники:
+  // - patient_doctor (беседы пациентов с врачами)
+  // - patient_clinic (беседы пациентов с клиникой)
+  // - clinic_doctor (беседы клиники с врачами)
   // Это уже проверено выше через clinicId, поэтому дополнительная проверка не нужна
 
   return conversation;
@@ -434,8 +540,25 @@ export async function markAsRead(conversationId, userId, userRole, clinicId) {
 
   // Определяем, какие сообщения нужно отметить как прочитанные
   // Пациенты читают сообщения от врачей/клиники
-  // Врачи/админы читают сообщения от пациентов
-  const senderTypeFilter = userRole === 'PATIENT' ? { not: 'patient' } : 'patient';
+  // Врачи читают сообщения от пациентов
+  // Клиника читает сообщения от пациентов (в беседах patient_doctor и patient_clinic) и от врачей (в беседах clinic_doctor)
+  let senderTypeFilter;
+  if (userRole === 'PATIENT') {
+    senderTypeFilter = { not: 'patient' };
+  } else if (userRole === 'DOCTOR') {
+    senderTypeFilter = 'patient';
+  } else if (userRole === 'ADMIN' || userRole === 'CLINIC') {
+    // Для клиники нужно проверить тип беседы
+    if (conversation.type === 'clinic_doctor') {
+      // В беседах клиника-врач клиника читает сообщения от врачей
+      senderTypeFilter = 'doctor';
+    } else {
+      // В беседах patient_doctor и patient_clinic клиника читает сообщения от пациентов
+      senderTypeFilter = 'patient';
+    }
+  } else {
+    senderTypeFilter = 'patient';
+  }
 
   const result = await prisma.message.updateMany({
     where: {
@@ -498,12 +621,16 @@ export async function getUnreadCount(clinicId, userRole, userId, patientId = nul
       ],
     };
   } else if (userRole === 'ADMIN' || userRole === 'CLINIC') {
-    // Админы видят все непрочитанные сообщения от пациентов в клинике
+    // Админы и клиника видят непрочитанные сообщения:
+    // - От пациентов в беседах patient_doctor и patient_clinic
+    // - От врачей в беседах clinic_doctor
     if (!clinicId) {
       throw new Error('CLINIC_ID_REQUIRED');
     }
     
-    where.senderType = 'patient';
+    where.senderType = {
+      in: ['patient', 'doctor'], // Непрочитанные от пациентов и врачей
+    };
     where.conversation = {
       clinicId,
     };
@@ -535,6 +662,66 @@ export async function createConversationWithMessage(
 ) {
   // Создаем или находим беседу
   const conversation = await findOrCreateConversation(clinicId, patientId, userId);
+
+  // Отправляем сообщение
+  const message = await sendMessage(conversation.id, senderId, senderType, content, clinicId, imageUrl);
+
+  return {
+    conversation,
+    message,
+  };
+}
+
+/**
+ * Создать беседу клиника-врач и отправить первое сообщение
+ * @param {string} clinicId - ID клиники
+ * @param {string} doctorId - ID врача
+ * @param {string} senderId - ID отправителя (ID клиники или админа)
+ * @param {string} senderType - Тип отправителя (clinic)
+ * @param {string} content - Текст сообщения
+ * @param {string} imageUrl - URL изображения (опционально)
+ * @returns {Promise<object>} { conversation, message }
+ */
+export async function createClinicDoctorConversationWithMessage(
+  clinicId,
+  doctorId,
+  senderId,
+  senderType,
+  content,
+  imageUrl = null
+) {
+  // Создаем или находим беседу клиника-врач
+  const conversation = await findOrCreateClinicDoctorConversation(clinicId, doctorId);
+
+  // Отправляем сообщение
+  const message = await sendMessage(conversation.id, senderId, senderType, content, clinicId, imageUrl);
+
+  return {
+    conversation,
+    message,
+  };
+}
+
+/**
+ * Создать беседу клиника-пациент и отправить первое сообщение
+ * @param {string} clinicId - ID клиники
+ * @param {string} patientId - ID пациента
+ * @param {string} senderId - ID отправителя (ID клиники или админа)
+ * @param {string} senderType - Тип отправителя (clinic)
+ * @param {string} content - Текст сообщения
+ * @param {string} imageUrl - URL изображения (опционально)
+ * @returns {Promise<object>} { conversation, message }
+ */
+export async function createClinicPatientConversationWithMessage(
+  clinicId,
+  patientId,
+  senderId,
+  senderType,
+  content,
+  imageUrl = null
+) {
+  // Создаем или находим беседу клиника-пациент
+  const conversation = await findOrCreateClinicPatientConversation(clinicId, patientId);
 
   // Отправляем сообщение
   const message = await sendMessage(conversation.id, senderId, senderType, content, clinicId, imageUrl);

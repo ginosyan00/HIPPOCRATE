@@ -51,5 +51,8 @@ router.get('/unread-count', authenticate, chatController.getUnreadCount);
 // Удалить сообщение
 router.delete('/messages/:id', authenticate, chatController.deleteMessage);
 
+// Получить список доступных контактов для общения (врачи и пациенты)
+router.get('/available-contacts', authenticate, chatController.getAvailableContacts);
+
 export default router;
 

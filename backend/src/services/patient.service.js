@@ -12,13 +12,18 @@ import { prisma } from '../config/database.js';
  * @returns {Promise<object>} { patients, meta }
  */
 export async function findAll(clinicId, options = {}) {
-  const { search, page = 1, limit = 20 } = options;
+  const { search, page = 1, limit = 20, status } = options;
   const skip = (page - 1) * limit;
 
   // Построение where clause
   const where = {
     clinicId, // ВСЕГДА фильтруем по clinicId!
   };
+
+  // Фильтрация по статусу, если указан
+  if (status) {
+    where.status = status;
+  }
 
   // Получаем всех пациентов (без пагинации для дедупликации и поиска)
   // Поиск будем делать на уровне приложения для case-insensitive поиска

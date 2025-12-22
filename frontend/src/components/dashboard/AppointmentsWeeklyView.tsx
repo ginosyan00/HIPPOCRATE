@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isSameDay, parseISO } from 'date-fns';
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks, isSameDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Card } from '../common';
 import { Appointment } from '../../types/api.types';
-import { formatAppointmentTime } from '../../utils/dateFormat';
+import { formatAppointmentTime, safeParseDate } from '../../utils/dateFormat';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useTreatmentCategories } from '../../hooks/useTreatmentCategories';
 import { getCategoryColor, getStatusColor } from '../../utils/appointmentColors';
@@ -54,21 +54,30 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
     const grouped: Record<string, Appointment[]> = {};
     
     appointments.forEach(appointment => {
-      const appointmentDate = parseISO(appointment.appointmentDate.toString());
-      const dateKey = format(appointmentDate, 'yyyy-MM-dd');
-      
-      if (!grouped[dateKey]) {
-        grouped[dateKey] = [];
+      try {
+        const appointmentDate = safeParseDate(appointment.appointmentDate);
+        const dateKey = format(appointmentDate, 'yyyy-MM-dd');
+        
+        if (!grouped[dateKey]) {
+          grouped[dateKey] = [];
+        }
+        grouped[dateKey].push(appointment);
+      } catch (error) {
+        console.error('❌ [WEEKLY VIEW] Ошибка парсинга даты приёма:', error, appointment);
       }
-      grouped[dateKey].push(appointment);
     });
     
     // Сортируем приёмы по времени в каждом дне
     Object.keys(grouped).forEach(dateKey => {
       grouped[dateKey].sort((a, b) => {
-        const dateA = parseISO(a.appointmentDate.toString());
-        const dateB = parseISO(b.appointmentDate.toString());
-        return dateA.getTime() - dateB.getTime();
+        try {
+          const dateA = safeParseDate(a.appointmentDate);
+          const dateB = safeParseDate(b.appointmentDate);
+          return dateA.getTime() - dateB.getTime();
+        } catch (error) {
+          console.error('❌ [WEEKLY VIEW] Ошибка сортировки приёмов:', error);
+          return 0;
+        }
       });
     });
     
@@ -393,7 +402,7 @@ export const AppointmentsWeeklyView: React.FC<AppointmentsWeeklyViewProps> = ({
                   ) : (
                     <div className="space-y-2">
                       {dayAppointments.map((appointment) => {
-                        const appointmentDate = parseISO(appointment.appointmentDate.toString());
+                        const appointmentDate = safeParseDate(appointment.appointmentDate);
                         const appointmentTime = formatAppointmentTime(appointmentDate);
 
                         // Получаем цвета для карточки

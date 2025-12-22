@@ -392,3 +392,4 @@ export const TreatmentCategoriesSection: React.FC = () => {
   );
 };
 
+

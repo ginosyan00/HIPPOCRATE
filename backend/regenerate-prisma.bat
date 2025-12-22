@@ -7,3 +7,4 @@ echo Prisma Client regenerated successfully!
 echo Please restart your server.
 pause
 
+

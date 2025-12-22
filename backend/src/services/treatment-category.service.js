@@ -268,3 +268,4 @@ export async function updateDoctorCategories(doctorId, categoryIds) {
   return { success: true };
 }
 
+

@@ -1,8 +1,79 @@
+import { parseISO } from 'date-fns';
+
 /**
  * Date Format Utilities
  * Утилиты для форматирования дат и времени
  * Исправляет проблемы с часовыми поясами при отображении времени приема
  */
+
+/**
+ * Безопасно парсит дату из различных форматов
+ * Правильно обрабатывает как Date объекты, так и ISO строки
+ * 
+ * @param date - Дата (Date объект или строка в формате ISO)
+ * @returns Date объект
+ */
+export function safeParseDate(date: Date | string): Date {
+  try {
+    // Если это уже Date объект, возвращаем его
+    if (date instanceof Date) {
+      // Проверяем валидность
+      if (isNaN(date.getTime())) {
+        throw new Error('Invalid Date object');
+      }
+      return date;
+    }
+    
+    // Если это строка, пытаемся распарсить
+    if (typeof date === 'string') {
+      // Если строка уже в ISO формате (содержит T и Z или +), используем parseISO
+      if (date.includes('T') && (date.includes('Z') || date.includes('+') || date.match(/\d{2}:\d{2}/))) {
+        const parsed = parseISO(date);
+        // Проверяем, что дата после 25.12.2025 парсится правильно
+        if (parsed.getFullYear() >= 2025 && parsed.getMonth() === 11 && parsed.getDate() >= 25) {
+          console.log('✅ [DATE UTILS] Успешно распарсена дата после 25.12.2025:', {
+            input: date,
+            parsed: parsed.toISOString(),
+            year: parsed.getFullYear(),
+            month: parsed.getMonth() + 1,
+            day: parsed.getDate(),
+          });
+        }
+        return parsed;
+      }
+      
+      // Иначе пытаемся создать Date объект напрямую
+      const parsed = new Date(date);
+      if (isNaN(parsed.getTime())) {
+        throw new Error(`Invalid date string: ${date}`);
+      }
+      
+      // Логируем для дат после 25.12.2025
+      if (parsed.getFullYear() >= 2025 && parsed.getMonth() === 11 && parsed.getDate() >= 25) {
+        console.log('✅ [DATE UTILS] Успешно распарсена дата после 25.12.2025 через new Date():', {
+          input: date,
+          parsed: parsed.toISOString(),
+          year: parsed.getFullYear(),
+          month: parsed.getMonth() + 1,
+          day: parsed.getDate(),
+        });
+      }
+      
+      return parsed;
+    }
+    
+    throw new Error(`Unsupported date type: ${typeof date}`);
+  } catch (error) {
+    console.error('❌ [DATE UTILS] Ошибка парсинга даты:', error, 'Input:', date);
+    // Fallback: пытаемся создать Date объект
+    const fallback = date instanceof Date ? date : new Date(date);
+    if (isNaN(fallback.getTime())) {
+      console.error('❌ [DATE UTILS] Fallback также не удался, возвращаем текущую дату');
+      return new Date();
+    }
+    return fallback;
+  }
+}
 
 /**
  * Форматирует дату и время приема БЕЗ конвертации часовых поясов

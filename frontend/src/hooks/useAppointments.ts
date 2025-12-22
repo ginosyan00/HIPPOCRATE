@@ -14,6 +14,7 @@ export function useAppointments(params?: {
   time?: string;
   week?: string;
   category?: string;
+  limit?: number; // Добавляем поддержку limit параметра
 }) {
   return useQuery({
     queryKey: ['appointments', params],

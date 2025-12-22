@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, parseISO } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Card } from '../common';
 import { Appointment } from '../../types/api.types';
-import { formatAppointmentDateTime } from '../../utils/dateFormat';
+import { formatAppointmentDateTime, safeParseDate } from '../../utils/dateFormat';
 import { DayAppointmentsModal } from './DayAppointmentsModal';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useTreatmentCategories } from '../../hooks/useTreatmentCategories';
@@ -52,11 +52,16 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
   const appointmentsByDate = useMemo(() => {
     const grouped: Record<string, Appointment[]> = {};
     appointments.forEach(appointment => {
-      const dateKey = format(parseISO(appointment.appointmentDate.toString()), 'yyyy-MM-dd');
-      if (!grouped[dateKey]) {
-        grouped[dateKey] = [];
+      try {
+        const appointmentDate = safeParseDate(appointment.appointmentDate);
+        const dateKey = format(appointmentDate, 'yyyy-MM-dd');
+        if (!grouped[dateKey]) {
+          grouped[dateKey] = [];
+        }
+        grouped[dateKey].push(appointment);
+      } catch (error) {
+        console.error('❌ [CALENDAR] Ошибка парсинга даты приёма:', error, appointment);
       }
-      grouped[dateKey].push(appointment);
     });
     return grouped;
   }, [appointments]);
@@ -509,7 +514,8 @@ export const AppointmentsMonthlyCalendar: React.FC<AppointmentsMonthlyCalendarPr
                             ? (user?.name || 'Я')
                             : (appointment.patient?.name || 'Пациент');
                           const patientInitial = patientName.charAt(0).toUpperCase();
-                          const appointmentTime = format(parseISO(appointment.appointmentDate.toString()), 'HH:mm');
+                          const appointmentDate = safeParseDate(appointment.appointmentDate);
+                          const appointmentTime = format(appointmentDate, 'HH:mm');
                           
                           // Получаем цвета для карточки
                           const categoryColor = getCategoryColor(appointment, categories);

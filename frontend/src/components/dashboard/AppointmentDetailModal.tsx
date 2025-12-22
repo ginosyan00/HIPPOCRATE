@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Modal, Card, Button, Input, Spinner } from '../common';
 import { Appointment, User } from '../../types/api.types';
-import { formatAppointmentDateTime, formatAppointmentTime } from '../../utils/dateFormat';
+import { formatAppointmentDateTime, formatAppointmentTime, safeParseDate } from '../../utils/dateFormat';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useUpdateAppointment, useUpdateAppointmentStatus } from '../../hooks/useAppointments';
 import { useUpdatePatient } from '../../hooks/usePatients';
@@ -75,7 +75,7 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
   // Инициализация формы при открытии модального окна
   useEffect(() => {
     if (appointment && isOpen) {
-      const appointmentDateObj = parseISO(appointment.appointmentDate.toString());
+      const appointmentDateObj = safeParseDate(appointment.appointmentDate);
       const dateStr = format(appointmentDateObj, 'yyyy-MM-dd');
       const timeStr = format(appointmentDateObj, 'HH:mm');
 
@@ -707,7 +707,7 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
             <div className="text-xs">
               <p className="text-text-10 mb-1">Время регистрации на сайте</p>
               <p className="text-text-100">
-                {format(parseISO(appointment.registeredAt.toString()), 'd MMM yyyy, HH:mm', { locale: ru })}
+                {format(safeParseDate(appointment.registeredAt), 'd MMM yyyy, HH:mm', { locale: ru })}
               </p>
             </div>
           </Card>

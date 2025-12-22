@@ -1,9 +1,9 @@
 import React from 'react';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Modal, Card } from '../common';
 import { Appointment } from '../../types/api.types';
-import { formatAppointmentDateTime, formatAppointmentTime } from '../../utils/dateFormat';
+import { formatAppointmentDateTime, formatAppointmentTime, safeParseDate } from '../../utils/dateFormat';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useTreatmentCategories } from '../../hooks/useTreatmentCategories';
 import { getCategoryColor, getStatusColor } from '../../utils/appointmentColors';
@@ -41,9 +41,14 @@ export const DayAppointmentsModal: React.FC<DayAppointmentsModalProps> = ({
 
   // Сортируем приёмы по времени
   const sortedAppointments = [...appointments].sort((a, b) => {
-    const dateA = parseISO(a.appointmentDate.toString());
-    const dateB = parseISO(b.appointmentDate.toString());
-    return dateA.getTime() - dateB.getTime();
+    try {
+      const dateA = safeParseDate(a.appointmentDate);
+      const dateB = safeParseDate(b.appointmentDate);
+      return dateA.getTime() - dateB.getTime();
+    } catch (error) {
+      console.error('❌ [DAY MODAL] Ошибка сортировки приёмов:', error);
+      return 0;
+    }
   });
 
   // Получаем классы цвета статуса для бейджа (для обратной совместимости)
@@ -102,7 +107,7 @@ export const DayAppointmentsModal: React.FC<DayAppointmentsModalProps> = ({
             </div>
             <div className="space-y-3 max-h-[60vh] overflow-y-auto">
               {sortedAppointments.map((appointment) => {
-                const appointmentDate = parseISO(appointment.appointmentDate.toString());
+                const appointmentDate = safeParseDate(appointment.appointmentDate);
                 const appointmentTime = formatAppointmentTime(appointmentDate);
                 // Для PATIENT роли показываем "Я" или имя пользователя, для других ролей - имя пациента
                 const isPatientView = user?.role === 'PATIENT';

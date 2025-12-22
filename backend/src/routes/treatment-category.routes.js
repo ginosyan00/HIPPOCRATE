@@ -64,3 +64,4 @@ router.delete('/:id', treatmentCategoryController.deleteCategory);
 
 export default router;
 
+

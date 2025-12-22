@@ -183,6 +183,7 @@ export const AppointmentsPage: React.FC = () => {
   // Они должны отображаться только в разделе Patients
   // Но если выбран фильтр "Все статусы" (пустая строка), показываем все приёмы
   // Для врачей автоматически устанавливаем doctorId = user.id (врачи видят только свои назначения)
+  // ВАЖНО: Используем большой лимит (1000) для календарного вида, чтобы получить все записи месяца
   const { data, isLoading, isFetching, error } = useAppointments({
     status: statusFilter && statusFilter.trim() !== '' ? statusFilter : undefined,
     date: dateFilter || undefined,
@@ -190,6 +191,7 @@ export const AppointmentsPage: React.FC = () => {
     time: timeFilter || undefined,
     week: weekFilter || undefined,
     category: categoryFilter || undefined,
+    limit: 1000, // Большой лимит для получения всех записей (особенно важно для календарного вида)
   });
   const queryClient = useQueryClient();
   const updateStatusMutation = useUpdateAppointmentStatus();
@@ -201,7 +203,49 @@ export const AppointmentsPage: React.FC = () => {
   const filteredAppointments = React.useMemo(() => {
     // API возвращает { appointments: Appointment[], meta: {...} }
     const appointments = (data as any)?.appointments || [];
-    if (!appointments || appointments.length === 0) return [];
+    
+    console.log('🔵 [APPOINTMENTS PAGE] Данные с API:', {
+      totalAppointments: appointments.length,
+      filters: {
+        statusFilter,
+        dateFilter,
+        weekFilter,
+        doctorFilter,
+        timeFilter,
+        categoryFilter,
+      },
+      firstFewAppointments: appointments.slice(0, 5).map((apt: any) => ({
+        id: apt.id,
+        appointmentDate: apt.appointmentDate,
+        patientName: apt.patient?.name,
+        status: apt.status,
+        doctorName: apt.doctor?.name,
+      })),
+      // Проверяем, есть ли записи после 25 декабря
+      appointmentsAfterDec25: appointments.filter((apt: any) => {
+        try {
+          const aptDate = new Date(apt.appointmentDate);
+          return aptDate > new Date('2024-12-25T23:59:59.999Z');
+        } catch {
+          return false;
+        }
+      }).map((apt: any) => ({
+        id: apt.id,
+        appointmentDate: apt.appointmentDate,
+        patientName: apt.patient?.name,
+      })),
+    });
+    
+    if (!appointments || appointments.length === 0) {
+      console.log('⚠️ [APPOINTMENTS PAGE] Нет записей для отображения');
+      if (weekFilter) {
+        console.warn('⚠️ [APPOINTMENTS PAGE] Установлен фильтр по неделе:', weekFilter, '- это может скрывать записи');
+      }
+      if (dateFilter) {
+        console.warn('⚠️ [APPOINTMENTS PAGE] Установлен фильтр по дате:', dateFilter, '- это может скрывать записи');
+      }
+      return [];
+    }
     
     // Если статус выбран явно (не пустая строка), используем данные как есть
     // API уже отфильтровал по статусу
@@ -213,7 +257,7 @@ export const AppointmentsPage: React.FC = () => {
     // Показываем все приёмы без фильтрации
     // Это позволяет видеть все приёмы, включая завершенные и отмененные
     return appointments;
-  }, [data, statusFilter]);
+  }, [data, statusFilter, dateFilter, weekFilter, doctorFilter, timeFilter, categoryFilter]);
 
   /**
    * Обработчик изменения статуса приёма

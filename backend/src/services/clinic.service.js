@@ -15,28 +15,51 @@ import { createSlug } from '../utils/slug.util.js';
 export async function getClinicById(clinicId) {
   console.log('🔵 [CLINIC SERVICE] Получение клиники:', clinicId);
 
-  const clinic = await prisma.clinic.findUnique({
-    where: { id: clinicId },
-    include: {
-      settings: true,
-    },
-  });
-
-  if (!clinic) {
-    throw new Error('Clinic not found');
+  // Валидация clinicId
+  if (!clinicId || typeof clinicId !== 'string' || clinicId.trim() === '') {
+    console.error('🔴 [CLINIC SERVICE] Невалидный clinicId:', clinicId);
+    throw new Error('Invalid clinic ID');
   }
 
-  // Парсим workingHours из JSON string
-  if (clinic.workingHours) {
-    try {
-      clinic.workingHours = JSON.parse(clinic.workingHours);
-    } catch (e) {
-      clinic.workingHours = null;
+  try {
+    const clinic = await prisma.clinic.findUnique({
+      where: { id: clinicId },
+      include: {
+        settings: true,
+      },
+    });
+
+    if (!clinic) {
+      console.error('🔴 [CLINIC SERVICE] Клиника не найдена:', clinicId);
+      throw new Error('Clinic not found');
     }
-  }
 
-  console.log('✅ [CLINIC SERVICE] Клиника найдена:', clinic.name);
-  return clinic;
+    // Парсим workingHours из JSON string
+    if (clinic.workingHours) {
+      try {
+        clinic.workingHours = JSON.parse(clinic.workingHours);
+      } catch (e) {
+        console.warn('⚠️ [CLINIC SERVICE] Ошибка парсинга workingHours:', e.message);
+        clinic.workingHours = null;
+      }
+    }
+
+    console.log('✅ [CLINIC SERVICE] Клиника найдена:', clinic.name);
+    return clinic;
+  } catch (error) {
+    console.error('🔴 [CLINIC SERVICE] Ошибка при получении клиники:', {
+      message: error.message,
+      stack: error.stack,
+      clinicId,
+    });
+    
+    // Если это ошибка Prisma, пробрасываем её дальше
+    if (error.code === 'P2002' || error.code === 'P2025') {
+      throw new Error('Clinic not found');
+    }
+    
+    throw error;
+  }
 }
 
 /**
@@ -48,66 +71,92 @@ export async function getClinicById(clinicId) {
 export async function updateClinicProfile(clinicId, updateData) {
   console.log('🔵 [CLINIC SERVICE] Обновление профиля клиники:', clinicId, updateData);
 
-  // Проверяем существование клиники
-  const existingClinic = await prisma.clinic.findUnique({
-    where: { id: clinicId },
-  });
-
-  if (!existingClinic) {
-    throw new Error('Clinic not found');
+  // Валидация clinicId
+  if (!clinicId || typeof clinicId !== 'string' || clinicId.trim() === '') {
+    console.error('🔴 [CLINIC SERVICE] Невалидный clinicId:', clinicId);
+    throw new Error('Invalid clinic ID');
   }
 
-  // Если обновляется slug, проверяем уникальность
-  if (updateData.slug && updateData.slug !== existingClinic.slug) {
-    const slugExists = await prisma.clinic.findUnique({
-      where: { slug: updateData.slug },
+  try {
+    // Проверяем существование клиники
+    const existingClinic = await prisma.clinic.findUnique({
+      where: { id: clinicId },
     });
 
-    if (slugExists) {
-      throw new Error('Clinic with this slug already exists');
+    if (!existingClinic) {
+      console.error('🔴 [CLINIC SERVICE] Клиника не найдена:', clinicId);
+      throw new Error('Clinic not found');
     }
-  }
 
-  // Если обновляется email, проверяем уникальность
-  if (updateData.email && updateData.email !== existingClinic.email) {
-    const emailExists = await prisma.clinic.findFirst({
-      where: {
-        email: updateData.email,
-        NOT: { id: clinicId },
+    // Если обновляется slug, проверяем уникальность
+    if (updateData.slug && updateData.slug !== existingClinic.slug) {
+      const slugExists = await prisma.clinic.findUnique({
+        where: { slug: updateData.slug },
+      });
+
+      if (slugExists) {
+        throw new Error('Clinic with this slug already exists');
+      }
+    }
+
+    // Если обновляется email, проверяем уникальность
+    if (updateData.email && updateData.email !== existingClinic.email) {
+      const emailExists = await prisma.clinic.findFirst({
+        where: {
+          email: updateData.email,
+          NOT: { id: clinicId },
+        },
+      });
+
+      if (emailExists) {
+        throw new Error('Clinic with this email already exists');
+      }
+    }
+
+    // Преобразуем workingHours в JSON string если это объект
+    const dataToUpdate = { ...updateData };
+    if (dataToUpdate.workingHours && typeof dataToUpdate.workingHours === 'object') {
+      dataToUpdate.workingHours = JSON.stringify(dataToUpdate.workingHours);
+    }
+
+    // Обновляем клинику
+    const updatedClinic = await prisma.clinic.update({
+      where: { id: clinicId },
+      data: dataToUpdate,
+      include: {
+        settings: true,
       },
     });
 
-    if (emailExists) {
-      throw new Error('Clinic with this email already exists');
+    // Парсим workingHours обратно
+    if (updatedClinic.workingHours) {
+      try {
+        updatedClinic.workingHours = JSON.parse(updatedClinic.workingHours);
+      } catch (e) {
+        console.warn('⚠️ [CLINIC SERVICE] Ошибка парсинга workingHours:', e.message);
+        updatedClinic.workingHours = null;
+      }
     }
-  }
 
-  // Преобразуем workingHours в JSON string если это объект
-  const dataToUpdate = { ...updateData };
-  if (dataToUpdate.workingHours && typeof dataToUpdate.workingHours === 'object') {
-    dataToUpdate.workingHours = JSON.stringify(dataToUpdate.workingHours);
-  }
+    console.log('✅ [CLINIC SERVICE] Профиль обновлен:', updatedClinic.name);
+    return updatedClinic;
+  } catch (error) {
+    console.error('🔴 [CLINIC SERVICE] Ошибка при обновлении профиля:', {
+      message: error.message,
+      stack: error.stack,
+      clinicId,
+    });
 
-  // Обновляем клинику
-  const updatedClinic = await prisma.clinic.update({
-    where: { id: clinicId },
-    data: dataToUpdate,
-    include: {
-      settings: true,
-    },
-  });
-
-  // Парсим workingHours обратно
-  if (updatedClinic.workingHours) {
-    try {
-      updatedClinic.workingHours = JSON.parse(updatedClinic.workingHours);
-    } catch (e) {
-      updatedClinic.workingHours = null;
+    // Если это ошибка Prisma, пробрасываем её дальше
+    if (error.code === 'P2002' || error.code === 'P2025') {
+      if (error.message.includes('slug')) {
+        throw new Error('Clinic with this slug already exists');
+      }
+      throw new Error('Clinic not found');
     }
-  }
 
-  console.log('✅ [CLINIC SERVICE] Профиль обновлен:', updatedClinic.name);
-  return updatedClinic;
+    throw error;
+  }
 }
 
 /**
@@ -119,19 +168,39 @@ export async function updateClinicProfile(clinicId, updateData) {
 export async function updateClinicLogo(clinicId, logoUrl) {
   console.log('🔵 [CLINIC SERVICE] Обновление логотипа клиники:', clinicId);
 
-  const clinic = await prisma.clinic.update({
-    where: { id: clinicId },
-    data: { logo: logoUrl },
-    select: {
-      id: true,
-      name: true,
-      logo: true,
-      updatedAt: true,
-    },
-  });
+  // Валидация clinicId
+  if (!clinicId || typeof clinicId !== 'string' || clinicId.trim() === '') {
+    console.error('🔴 [CLINIC SERVICE] Невалидный clinicId:', clinicId);
+    throw new Error('Invalid clinic ID');
+  }
 
-  console.log('✅ [CLINIC SERVICE] Логотип обновлен');
-  return clinic;
+  try {
+    const clinic = await prisma.clinic.update({
+      where: { id: clinicId },
+      data: { logo: logoUrl },
+      select: {
+        id: true,
+        name: true,
+        logo: true,
+        updatedAt: true,
+      },
+    });
+
+    console.log('✅ [CLINIC SERVICE] Логотип обновлен');
+    return clinic;
+  } catch (error) {
+    console.error('🔴 [CLINIC SERVICE] Ошибка при обновлении логотипа:', {
+      message: error.message,
+      stack: error.stack,
+      clinicId,
+    });
+
+    if (error.code === 'P2025') {
+      throw new Error('Clinic not found');
+    }
+
+    throw error;
+  }
 }
 
 /**
@@ -143,19 +212,39 @@ export async function updateClinicLogo(clinicId, logoUrl) {
 export async function updateClinicHeroImage(clinicId, heroImageUrl) {
   console.log('🔵 [CLINIC SERVICE] Обновление главного изображения клиники:', clinicId);
 
-  const clinic = await prisma.clinic.update({
-    where: { id: clinicId },
-    data: { heroImage: heroImageUrl },
-    select: {
-      id: true,
-      name: true,
-      heroImage: true,
-      updatedAt: true,
-    },
-  });
+  // Валидация clinicId
+  if (!clinicId || typeof clinicId !== 'string' || clinicId.trim() === '') {
+    console.error('🔴 [CLINIC SERVICE] Невалидный clinicId:', clinicId);
+    throw new Error('Invalid clinic ID');
+  }
 
-  console.log('✅ [CLINIC SERVICE] Главное изображение обновлено');
-  return clinic;
+  try {
+    const clinic = await prisma.clinic.update({
+      where: { id: clinicId },
+      data: { heroImage: heroImageUrl },
+      select: {
+        id: true,
+        name: true,
+        heroImage: true,
+        updatedAt: true,
+      },
+    });
+
+    console.log('✅ [CLINIC SERVICE] Главное изображение обновлено');
+    return clinic;
+  } catch (error) {
+    console.error('🔴 [CLINIC SERVICE] Ошибка при обновлении главного изображения:', {
+      message: error.message,
+      stack: error.stack,
+      clinicId,
+    });
+
+    if (error.code === 'P2025') {
+      throw new Error('Clinic not found');
+    }
+
+    throw error;
+  }
 }
 
 /**
@@ -166,22 +255,87 @@ export async function updateClinicHeroImage(clinicId, heroImageUrl) {
 export async function getClinicSettings(clinicId) {
   console.log('🔵 [CLINIC SERVICE] Получение настроек клиники:', clinicId);
 
-  let settings = await prisma.clinicSettings.findUnique({
-    where: { clinicId },
-  });
-
-  // Если настроек нет, создаем дефолтные
-  if (!settings) {
-    console.log('📝 [CLINIC SERVICE] Создание дефолтных настроек для клиники');
-    settings = await prisma.clinicSettings.create({
-      data: {
-        clinicId,
-      },
-    });
+  // Валидация clinicId
+  if (!clinicId || typeof clinicId !== 'string' || clinicId.trim() === '') {
+    console.error('🔴 [CLINIC SERVICE] Невалидный clinicId:', clinicId);
+    throw new Error('Invalid clinic ID');
   }
 
-  console.log('✅ [CLINIC SERVICE] Настройки получены');
-  return settings;
+  try {
+    // Проверяем подключение к базе данных
+    await prisma.$connect().catch(() => {
+      // Игнорируем ошибку если уже подключено
+    });
+    // Проверяем существование клиники
+    const clinic = await prisma.clinic.findUnique({
+      where: { id: clinicId },
+      select: { id: true },
+    });
+
+    if (!clinic) {
+      console.error('🔴 [CLINIC SERVICE] Клиника не найдена:', clinicId);
+      throw new Error('Clinic not found');
+    }
+
+    let settings = await prisma.clinicSettings.findUnique({
+      where: { clinicId },
+    });
+
+    // Если настроек нет, создаем дефолтные
+    if (!settings) {
+      console.log('📝 [CLINIC SERVICE] Создание дефолтных настроек для клиники');
+      try {
+        settings = await prisma.clinicSettings.create({
+          data: {
+            clinicId,
+          },
+        });
+        console.log('✅ [CLINIC SERVICE] Дефолтные настройки созданы');
+      } catch (createError) {
+        console.error('🔴 [CLINIC SERVICE] Ошибка при создании настроек:', {
+          message: createError.message,
+          code: createError.code,
+          meta: createError.meta,
+        });
+        
+        // Если настройки уже созданы (race condition), получаем их снова
+        if (createError.code === 'P2002') {
+          console.log('🔄 [CLINIC SERVICE] Race condition detected, получаем настройки снова');
+          settings = await prisma.clinicSettings.findUnique({
+            where: { clinicId },
+          });
+          
+          if (!settings) {
+            console.error('🔴 [CLINIC SERVICE] Настройки не найдены после race condition');
+            throw new Error('Failed to retrieve clinic settings');
+          }
+        } else {
+          throw createError;
+        }
+      }
+    }
+
+    if (!settings) {
+      console.error('🔴 [CLINIC SERVICE] Настройки не найдены после всех попыток');
+      throw new Error('Clinic settings not found');
+    }
+
+    console.log('✅ [CLINIC SERVICE] Настройки получены:', settings.id);
+    return settings;
+  } catch (error) {
+    console.error('🔴 [CLINIC SERVICE] Ошибка при получении настроек:', {
+      message: error.message,
+      stack: error.stack,
+      clinicId,
+    });
+
+    // Если это ошибка Prisma, пробрасываем её дальше
+    if (error.code === 'P2002' || error.code === 'P2025') {
+      throw new Error('Clinic not found');
+    }
+
+    throw error;
+  }
 }
 
 /**
@@ -193,27 +347,50 @@ export async function getClinicSettings(clinicId) {
 export async function updateClinicSettings(clinicId, settingsData) {
   console.log('🔵 [CLINIC SERVICE] Обновление настроек клиники:', clinicId, settingsData);
 
-  // Проверяем существование клиники
-  const clinic = await prisma.clinic.findUnique({
-    where: { id: clinicId },
-  });
-
-  if (!clinic) {
-    throw new Error('Clinic not found');
+  // Валидация clinicId
+  if (!clinicId || typeof clinicId !== 'string' || clinicId.trim() === '') {
+    console.error('🔴 [CLINIC SERVICE] Невалидный clinicId:', clinicId);
+    throw new Error('Invalid clinic ID');
   }
 
-  // Обновляем или создаем настройки
-  const settings = await prisma.clinicSettings.upsert({
-    where: { clinicId },
-    update: settingsData,
-    create: {
-      clinicId,
-      ...settingsData,
-    },
-  });
+  try {
+    // Проверяем существование клиники
+    const clinic = await prisma.clinic.findUnique({
+      where: { id: clinicId },
+      select: { id: true },
+    });
 
-  console.log('✅ [CLINIC SERVICE] Настройки обновлены');
-  return settings;
+    if (!clinic) {
+      console.error('🔴 [CLINIC SERVICE] Клиника не найдена:', clinicId);
+      throw new Error('Clinic not found');
+    }
+
+    // Обновляем или создаем настройки
+    const settings = await prisma.clinicSettings.upsert({
+      where: { clinicId },
+      update: settingsData,
+      create: {
+        clinicId,
+        ...settingsData,
+      },
+    });
+
+    console.log('✅ [CLINIC SERVICE] Настройки обновлены');
+    return settings;
+  } catch (error) {
+    console.error('🔴 [CLINIC SERVICE] Ошибка при обновлении настроек:', {
+      message: error.message,
+      stack: error.stack,
+      clinicId,
+    });
+
+    // Если это ошибка Prisma, пробрасываем её дальше
+    if (error.code === 'P2002' || error.code === 'P2025') {
+      throw new Error('Clinic not found');
+    }
+
+    throw error;
+  }
 }
 
 /**

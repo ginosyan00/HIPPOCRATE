@@ -12,15 +12,28 @@ import { successResponse, errorResponse } from '../utils/response.util.js';
  */
 export async function getClinic(req, res, next) {
   try {
+    console.log('🔵 [CLINIC CONTROLLER] Получение клиники:', {
+      userId: req.user?.userId,
+      clinicId: req.user?.clinicId,
+      role: req.user?.role,
+    });
+
     const { clinicId } = req.user;
 
     if (!clinicId) {
-      return errorResponse(res, 'User is not associated with a clinic', 403);
+      console.log('🔴 [CLINIC CONTROLLER] clinicId отсутствует');
+      return errorResponse(res, 'FORBIDDEN', 'User is not associated with a clinic', 403);
     }
 
     const clinic = await clinicService.getClinicById(clinicId);
+    console.log('✅ [CLINIC CONTROLLER] Клиника получена успешно');
     successResponse(res, clinic);
   } catch (error) {
+    console.error('🔴 [CLINIC CONTROLLER] Ошибка при получении клиники:', {
+      message: error.message,
+      stack: error.stack,
+      clinicId: req.user?.clinicId,
+    });
     next(error);
   }
 }
@@ -34,7 +47,7 @@ export async function updateClinic(req, res, next) {
     const { clinicId } = req.user;
 
     if (!clinicId) {
-      return errorResponse(res, 'User is not associated with a clinic', 403);
+      return errorResponse(res, 'FORBIDDEN', 'User is not associated with a clinic', 403);
     }
 
     const clinic = await clinicService.updateClinicProfile(clinicId, req.body);
@@ -53,7 +66,7 @@ export async function uploadLogo(req, res, next) {
     const { clinicId } = req.user;
 
     if (!clinicId) {
-      return errorResponse(res, 'User is not associated with a clinic', 403);
+      return errorResponse(res, 'FORBIDDEN', 'User is not associated with a clinic', 403);
     }
 
     const { logo } = req.body;
@@ -77,7 +90,7 @@ export async function uploadHeroImage(req, res, next) {
     const { clinicId } = req.user;
 
     if (!clinicId) {
-      return errorResponse(res, 'User is not associated with a clinic', 403);
+      return errorResponse(res, 'FORBIDDEN', 'User is not associated with a clinic', 403);
     }
 
     const { heroImage } = req.body;
@@ -98,15 +111,28 @@ export async function uploadHeroImage(req, res, next) {
  */
 export async function getSettings(req, res, next) {
   try {
+    console.log('🔵 [CLINIC CONTROLLER] Получение настроек клиники:', {
+      userId: req.user?.userId,
+      clinicId: req.user?.clinicId,
+      role: req.user?.role,
+    });
+
     const { clinicId } = req.user;
 
     if (!clinicId) {
-      return errorResponse(res, 'User is not associated with a clinic', 403);
+      console.log('🔴 [CLINIC CONTROLLER] clinicId отсутствует');
+      return errorResponse(res, 'FORBIDDEN', 'User is not associated with a clinic', 403);
     }
 
     const settings = await clinicService.getClinicSettings(clinicId);
+    console.log('✅ [CLINIC CONTROLLER] Настройки получены успешно');
     successResponse(res, settings);
   } catch (error) {
+    console.error('🔴 [CLINIC CONTROLLER] Ошибка при получении настроек:', {
+      message: error.message,
+      stack: error.stack,
+      clinicId: req.user?.clinicId,
+    });
     next(error);
   }
 }
@@ -120,7 +146,7 @@ export async function updateSettings(req, res, next) {
     const { clinicId } = req.user;
 
     if (!clinicId) {
-      return errorResponse(res, 'User is not associated with a clinic', 403);
+      return errorResponse(res, 'FORBIDDEN', 'User is not associated with a clinic', 403);
     }
 
     const settings = await clinicService.updateClinicSettings(clinicId, req.body);

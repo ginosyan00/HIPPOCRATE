@@ -31,13 +31,20 @@ export async function getAll(req, res, next) {
 /**
  * GET /api/v1/users/doctors
  * Получить список врачей
+ * Query params:
+ *   - onlyActive (boolean): Если true, возвращает только активных врачей (status: 'ACTIVE')
+ *                           По умолчанию false - возвращает всех врачей для управления
  */
 export async function getDoctors(req, res, next) {
   try {
     const clinicId = req.user.clinicId;
+    const onlyActive = req.query.onlyActive === 'true' || req.query.onlyActive === true;
 
-    const doctors = await userService.findDoctors(clinicId);
+    console.log('🔵 [USER CONTROLLER] Получение списка врачей:', { clinicId, onlyActive });
 
+    const doctors = await userService.findDoctors(clinicId, { onlyActive });
+
+    console.log(`✅ [USER CONTROLLER] Получено врачей: ${doctors.length} (onlyActive: ${onlyActive})`);
     successResponse(res, doctors, 200);
   } catch (error) {
     next(error);

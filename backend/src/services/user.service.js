@@ -243,18 +243,29 @@ export async function remove(clinicId, userId) {
 
 /**
  * Получить всех врачей клиники
- * Включает всех врачей (ACTIVE, SUSPENDED, PENDING), чтобы клиника могла видеть всех врачей и их статусы
  * @param {string} clinicId - ID клиники
+ * @param {object} options - Опции фильтрации
+ * @param {boolean} options.onlyActive - Если true, возвращает только активных врачей (status: 'ACTIVE')
  * @returns {Promise<array>} Список врачей
+ * 
+ * По умолчанию включает всех врачей (ACTIVE, SUSPENDED, PENDING), чтобы клиника могла видеть всех врачей и их статусы.
+ * Если onlyActive=true, возвращает только активных врачей для регистрации пациентов.
  */
-export async function findDoctors(clinicId) {
+export async function findDoctors(clinicId, options = {}) {
+  const { onlyActive = false } = options;
+  
+  const where = {
+    clinicId,
+    role: 'DOCTOR',
+  };
+  
+  // Если запрашиваются только активные врачи, добавляем фильтр по статусу
+  if (onlyActive) {
+    where.status = 'ACTIVE';
+  }
+  
   return await prisma.user.findMany({
-    where: {
-      clinicId,
-      role: 'DOCTOR',
-      // Убираем фильтр по status, чтобы показывать всех врачей (ACTIVE, SUSPENDED, PENDING)
-      // Клиника должна видеть всех врачей и их статусы
-    },
+    where,
     select: {
       id: true,
       name: true,

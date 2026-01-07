@@ -50,12 +50,26 @@ export const PatientAnalyticsPage: React.FC = () => {
     }
 
     const params = new URLSearchParams();
-    if (dateFromFilter) params.set('dateFrom', dateFromFilter);
-    if (dateToFilter) params.set('dateTo', dateToFilter);
-    if (weekFilter) params.set('week', weekFilter);
-    if (categoryFilter) params.set('category', categoryFilter);
-    if (doctorFilter) params.set('doctor', doctorFilter);
+    if (dateFromFilter) {
+      params.set('dataFrom', dateFromFilter);
+    }
 
+    if (dateToFilter) {
+      params.set('dataTo', dateToFilter);
+    }
+
+    if (weekFilter) {
+      params.set('week', weekFilter);
+    }
+
+    if (categoryFilter) {
+      params.set('category', categoryFilter);
+    }
+
+    if (doctorFilter) {
+      params.set('doctor', doctorFilter);
+    }
+    
     setSearchParams(params, { replace: true });
   }, [dateFromFilter, dateToFilter, weekFilter, categoryFilter, doctorFilter, setSearchParams]);
 

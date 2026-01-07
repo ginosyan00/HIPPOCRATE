@@ -19,9 +19,13 @@ export const userService = {
 
   /**
    * Получить только врачей
+   * @param onlyActive - Если true, возвращает только активных врачей (status: 'ACTIVE')
+   *                     По умолчанию false - возвращает всех врачей для управления
    */
-  async getDoctors(): Promise<User[]> {
-    const { data } = await api.get<ApiResponse<User[]>>('/users/doctors');
+  async getDoctors(onlyActive: boolean = false): Promise<User[]> {
+    const { data } = await api.get<ApiResponse<User[]>>('/users/doctors', {
+      params: { onlyActive },
+    });
     return data.data;
   },
 

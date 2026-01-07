@@ -56,12 +56,13 @@ export const CreateAppointmentModal: React.FC<CreateAppointmentModalProps> = ({
   const [busySlots, setBusySlots] = useState<Array<{ start: string; end: string; appointmentId: string }>>([]);
   const [isLoadingBusySlots, setIsLoadingBusySlots] = useState(false);
 
-  // Загрузка списка врачей
+  // Загрузка списка врачей (только активных для регистрации пациентов)
   useEffect(() => {
     const loadDoctors = async () => {
       try {
         setIsDoctorsLoading(true);
-        const doctorsList = await userService.getDoctors();
+        // Запрашиваем только активных врачей для регистрации пациентов
+        const doctorsList = await userService.getDoctors(true);
         setDoctors(doctorsList);
         // Если передан defaultDoctorId, автоматически выбираем этого врача
         if (defaultDoctorId && doctorsList.find(d => d.id === defaultDoctorId)) {

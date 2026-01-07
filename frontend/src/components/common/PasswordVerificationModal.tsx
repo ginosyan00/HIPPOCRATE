@@ -94,7 +94,6 @@ export const PasswordVerificationModal: React.FC<PasswordVerificationModalProps>
             setPassword(e.target.value);
             setError('');
           }}
-          error={error}
           required
           autoFocus
           autoComplete="current-password"

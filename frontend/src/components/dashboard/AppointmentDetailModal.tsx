@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Modal, Card, Button, Input, Spinner } from '../common';
@@ -57,6 +58,7 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
   const [notes, setNotes] = useState('');
   const [amount, setAmount] = useState('');
   const [status, setStatus] = useState<string>('pending');
+  const [cancellationReason, setCancellationReason] = useState('');
 
   // Состояние формы для пациента
   const [patientName, setPatientName] = useState('');
@@ -71,6 +73,8 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
   // Состояние для кастомного dropdown статуса
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
+  const statusButtonRef = useRef<HTMLButtonElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<{ top: number; left: number; width: number } | null>(null);
 
   // Инициализация формы при открытии модального окна
   useEffect(() => {
@@ -87,6 +91,7 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
       setNotes(appointment.notes || '');
       setAmount(appointment.amount ? String(appointment.amount) : '');
       setStatus(appointment.status);
+      setCancellationReason(appointment.cancellationReason || '');
 
       // Данные пациента
       setPatientName(appointment.patient?.name || '');
@@ -111,10 +116,29 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
     }
   }, [isOpen]);
 
+  // Вычисление позиции dropdown при открытии
+  useEffect(() => {
+    if (isStatusDropdownOpen && statusButtonRef.current) {
+      const buttonRect = statusButtonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: buttonRect.bottom + 4,
+        left: buttonRect.left,
+        width: buttonRect.width,
+      });
+    } else {
+      setDropdownPosition(null);
+    }
+  }, [isStatusDropdownOpen]);
+
   // Закрытие dropdown при клике вне его
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
+      if (
+        statusDropdownRef.current && 
+        !statusDropdownRef.current.contains(event.target as Node) &&
+        statusButtonRef.current &&
+        !statusButtonRef.current.contains(event.target as Node)
+      ) {
         setIsStatusDropdownOpen(false);
       }
     };
@@ -239,13 +263,44 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
         });
         
         // Для завершенных записей передаем amount при изменении статуса
+        // Для отмененных записей передаем cancellationReason
         const amountValue = parseAmount(amount);
         
-        await updateAppointmentStatusMutation.mutateAsync({
+        // Формируем параметры для updateStatus
+        const updateStatusParams: {
+          id: string;
+          status: string;
+          amount?: number;
+          cancellationReason?: string;
+        } = {
           id: appointment.id,
           status: status,
-          amount: status === 'completed' ? amountValue : undefined,
-        });
+        };
+        
+        // Добавляем amount только для статуса completed
+        if (status === 'completed' && amountValue !== undefined) {
+          updateStatusParams.amount = amountValue;
+        }
+        
+        // Добавляем cancellationReason только для статуса cancelled
+        if (status === 'cancelled') {
+          const reason = cancellationReason.trim();
+          if (!reason) {
+            setErrors({ cancellationReason: 'Причина отмены обязательна' });
+            setIsLoading(false);
+            return;
+          }
+          updateStatusParams.cancellationReason = reason;
+        }
+        
+        await updateAppointmentStatusMutation.mutateAsync(updateStatusParams);
+        
+        // Если статус изменен на cancelled, закрываем модальное окно сразу
+        if (status === 'cancelled') {
+          console.log('✅ [APPOINTMENT DETAIL] Приём отменён, закрываем модальное окно');
+          onClose();
+          return;
+        }
         
         // Если статус изменился с completed на другой, обновляем остальные поля отдельно
         // Если статус меняется на completed, другие поля не обновляем (только amount через updateStatus)
@@ -423,8 +478,8 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
         )}
 
         {/* Дата, время и статус */}
-        <Card padding="md" className="bg-main-10/30">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card padding="md" className="bg-main-10/30" style={{ overflow: 'visible' }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4" style={{ overflow: 'visible' }}>
             <div>
               <label className="block text-xs text-text-10 mb-2 flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />
@@ -471,8 +526,9 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
 
             <div>
               <label className="block text-xs text-text-10 mb-2">Статус</label>
-              <div className="relative" ref={statusDropdownRef}>
+              <div className="relative">
                 <button
+                  ref={statusButtonRef}
                   type="button"
                   onClick={() => !isCompleted && !isCancelled && setIsStatusDropdownOpen(!isStatusDropdownOpen)}
                   disabled={isCompleted || isCancelled}
@@ -496,33 +552,34 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-                
-                {isStatusDropdownOpen && !isCompleted && !isCancelled && (
-                  <div className="absolute z-50 w-full mt-1 bg-bg-white border border-stroke rounded-sm shadow-lg">
-                    {statusOptions.map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => {
-                          setStatus(option.value);
-                          setIsStatusDropdownOpen(false);
-                        }}
-                        className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-bg-primary transition-colors ${
-                          status === option.value ? 'bg-main-10' : ''
-                        }`}
-                      >
-                        <div
-                          className="w-3 h-3 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: option.color }}
-                        />
-                        <span>{option.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           </div>
+
+          {/* Поле для причины отмены - показывается только при статусе cancelled */}
+          {status === 'cancelled' && (
+            <div className="mt-4">
+              <label className="block text-xs text-text-10 mb-2">
+                Причина отмены {status === 'cancelled' && '*'}
+              </label>
+              <textarea
+                value={cancellationReason}
+                onChange={(e) => {
+                  setCancellationReason(e.target.value);
+                  setErrors((prev) => ({ ...prev, cancellationReason: '' }));
+                }}
+                disabled={isCancelled}
+                rows={3}
+                className={`w-full px-3 py-2 border rounded-sm bg-bg-white text-sm focus:outline-none focus:border-main-100 transition-all resize-none ${
+                  errors.cancellationReason ? 'border-red-500' : 'border-stroke'
+                } ${isCancelled ? 'bg-bg-primary cursor-not-allowed' : ''}`}
+                placeholder="Введите причину отмены приёма..."
+              />
+              {errors.cancellationReason && (
+                <p className="mt-1 text-xs text-red-600">{errors.cancellationReason}</p>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-stroke">
             <div>
@@ -732,6 +789,40 @@ export const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
           </Card>
         )}
       </div>
+      
+      {/* Dropdown статуса через портал для отображения поверх всех элементов */}
+      {isStatusDropdownOpen && !isCompleted && !isCancelled && dropdownPosition && typeof document !== 'undefined' && createPortal(
+        <div
+          ref={statusDropdownRef}
+          className="fixed z-[9999] bg-bg-white border border-stroke rounded-sm shadow-xl"
+          style={{
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            width: `${dropdownPosition.width}px`,
+          }}
+        >
+          {statusOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => {
+                setStatus(option.value);
+                setIsStatusDropdownOpen(false);
+              }}
+              className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-bg-primary transition-colors ${
+                status === option.value ? 'bg-main-10' : ''
+              }`}
+            >
+              <div
+                className="w-3 h-3 rounded-full flex-shrink-0"
+                style={{ backgroundColor: option.color }}
+              />
+              <span>{option.label}</span>
+            </button>
+          ))}
+        </div>,
+        document.body
+      )}
     </Modal>
   );
 };

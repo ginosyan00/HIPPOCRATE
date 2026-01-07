@@ -59,3 +59,8 @@ export const updateDoctorCategoriesSchema = Joi.object({
 });
 
 
+
+
+
+
+

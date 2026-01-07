@@ -23,11 +23,14 @@ export const HeroImageUpload = forwardRef<HeroImageUploadRef, HeroImageUploadPro
 }, ref) => {
   const [preview, setPreview] = useState<string | null>(currentHeroImage || null);
   const [error, setError] = useState<string | null>(null);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Синхронізуємо preview з currentHeroImage при зміні
   useEffect(() => {
     setPreview(currentHeroImage || null);
+    setIsImageLoaded(false);
+    // Изображение будет анимироваться при загрузке через onLoad
   }, [currentHeroImage]);
 
   // Експортуємо метод для отримання поточного значення
@@ -54,10 +57,12 @@ export const HeroImageUpload = forwardRef<HeroImageUploadRef, HeroImageUploadPro
     setError(null);
 
     // Читаем файл как base64 и зберігаємо локально (не завантажуємо одразу)
+    setIsImageLoaded(false);
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
       setPreview(base64String);
+      // Изображение будет анимироваться при загрузке через onLoad
     };
     reader.onerror = () => {
       setError('Ошибка при чтении файла');
@@ -67,6 +72,7 @@ export const HeroImageUpload = forwardRef<HeroImageUploadRef, HeroImageUploadPro
 
   const handleRemove = () => {
     // Просто очищаємо preview (не завантажуємо одразу)
+    setIsImageLoaded(false);
     setPreview(null);
     setError(null);
     if (fileInputRef.current) {
@@ -94,13 +100,27 @@ export const HeroImageUpload = forwardRef<HeroImageUploadRef, HeroImageUploadPro
       <div className="flex items-start gap-6">
         {/* Preview */}
         <div className="flex-shrink-0">
-          <div className="w-full max-w-md h-48 border-2 border-stroke rounded-lg overflow-hidden bg-bg-primary flex items-center justify-center">
+          <div className="w-full max-w-md h-48 border-2 border-stroke rounded-lg overflow-hidden bg-bg-primary flex items-center justify-center relative">
             {preview ? (
-              <img 
-                src={preview} 
-                alt="Hero image preview" 
-                className="w-full h-full object-cover" 
-              />
+              <>
+                {/* Shimmer effect overlay */}
+                {!isImageLoaded && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer z-10"></div>
+                )}
+                <img 
+                  src={preview} 
+                  alt="Hero image preview" 
+                  className={`w-full h-full object-cover transition-all duration-[1000ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                    isImageLoaded 
+                      ? 'opacity-100 scale-100 blur-0' 
+                      : 'opacity-0 scale-[0.92] blur-sm'
+                  }`}
+                  onLoad={() => {
+                    // Небольшая задержка для более плавного эффекта
+                    setTimeout(() => setIsImageLoaded(true), 100);
+                  }}
+                />
+              </>
             ) : (
               <div className="text-text-10 text-sm text-center p-4">
                 <svg
@@ -167,6 +187,20 @@ export const HeroImageUpload = forwardRef<HeroImageUploadRef, HeroImageUploadPro
           )}
         </div>
       </div>
+
+      <style>{`
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+        .animate-shimmer {
+          animation: shimmer 1.5s infinite;
+        }
+      `}</style>
     </div>
   );
 });

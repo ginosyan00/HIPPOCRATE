@@ -19,7 +19,7 @@ export const PatientAnalyticsPage: React.FC = () => {
 
   // Фильтры из URL параметров
   const [dateFromFilter, setDateFromFilter] = useState<string>(
-    searchParams.get('dateFrom') || ''
+    searchParams.get('dataFrom') || ''
   );
   const [dateToFilter, setDateToFilter] = useState<string>(
     searchParams.get('dateTo') || ''

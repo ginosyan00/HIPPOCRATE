@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../common/Button';
 import { Clinic } from '../../types/api.types';
 
@@ -12,20 +12,59 @@ interface ClinicHeroProps {
  * Hero секция с логотипом, названием клиники и главным изображением
  */
 export const ClinicHero: React.FC<ClinicHeroProps> = ({ clinic, onBookAppointment }) => {
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+
+  // Сбрасываем состояние загрузки при смене изображения
+  useEffect(() => {
+    setIsImageLoaded(false);
+    if (clinic.heroImage) {
+      // Небольшая задержка для плавного запуска анимации
+      const timer = setTimeout(() => {
+        const img = new Image();
+        img.src = clinic.heroImage!;
+        img.onload = () => setIsImageLoaded(true);
+        img.onerror = () => setIsImageLoaded(true); // Показываем даже при ошибке
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [clinic.heroImage]);
+
   return (
     <section className="relative w-full h-screen min-h-[600px] overflow-hidden">
       {/* Background Image */}
       {clinic.heroImage ? (
-        <div className="absolute inset-0">
-          <img
-            src={clinic.heroImage}
-            alt={clinic.name}
-            className="w-full h-full object-cover"
-          />
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Loading shimmer effect */}
+          {!isImageLoaded && (
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer-slow z-10"></div>
+          )}
+          <div className={`absolute inset-0 transition-all duration-[1200ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+            isImageLoaded 
+              ? 'opacity-100 blur-0' 
+              : 'opacity-0 blur-md'
+          }`}>
+            <img
+              src={clinic.heroImage}
+              alt={clinic.name}
+              className={`w-[120%] h-[120%] object-cover absolute top-1/2 left-1/2 transition-all duration-[1200ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+                isImageLoaded 
+                  ? 'animate-ken-burns' 
+                  : 'scale-[0.9] -translate-x-1/2 -translate-y-1/2'
+              }`}
+              onLoad={() => {
+                // Небольшая задержка для более плавного эффекта
+                setTimeout(() => setIsImageLoaded(true), 150);
+              }}
+            />
+          </div>
           {/* Dark Overlay for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70"></div>
+          <div className={`absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70 transition-opacity duration-[1000ms] ${
+            isImageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}></div>
           {/* Additional gradient overlay for depth */}
-          <div className="absolute inset-0 bg-gradient-to-br from-main-100/20 via-transparent to-main-100/10"></div>
+          <div className={`absolute inset-0 bg-gradient-to-br from-main-100/20 via-transparent to-main-100/10 transition-opacity duration-[1000ms] ${
+            isImageLoaded ? 'opacity-100' : 'opacity-0'
+          }`}></div>
         </div>
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-main-100 via-main-100/80 to-main-100/60">
@@ -109,10 +148,43 @@ export const ClinicHero: React.FC<ClinicHeroProps> = ({ clinic, onBookAppointmen
         .animate-fade-in-up {
           animation: fade-in-up 1s ease-out;
         }
+        @keyframes shimmer-slow {
+          0% {
+            transform: translateX(-100%) skewX(-15deg);
+          }
+          100% {
+            transform: translateX(200%) skewX(-15deg);
+          }
+        }
+        .animate-shimmer-slow {
+          animation: shimmer-slow 3s infinite;
+        }
+        @keyframes ken-burns {
+          0% {
+            transform: translate(-50%, -50%) scale(1) translate(-4%, -3%);
+          }
+          25% {
+            transform: translate(-50%, -50%) scale(1.08) translate(3%, -2%);
+          }
+          50% {
+            transform: translate(-50%, -50%) scale(1.12) translate(2%, 3%);
+          }
+          75% {
+            transform: translate(-50%, -50%) scale(1.06) translate(-3%, 2%);
+          }
+          100% {
+            transform: translate(-50%, -50%) scale(1.1) translate(-2%, -3%);
+          }
+        }
+        .animate-ken-burns {
+          animation: ken-burns 25s ease-in-out infinite;
+          will-change: transform;
+        }
       `}</style>
     </section>
   );
 };
+
 
 
 
